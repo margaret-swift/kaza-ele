@@ -8,7 +8,7 @@ message("\nLoading all utility functions and parameters from utilities.R\n")
 
 message('Loading base packages for all projects...')
 pacman::p_load(tidyverse, patchwork, 
-               sf, rgdal, 
+               sf, rgdal, tictoc,
                lubridate, here)
 message('   ...Packages loaded.')
 
