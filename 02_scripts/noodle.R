@@ -6,10 +6,9 @@
 #                             DATA & LIBRARY LOADING
 # ******************************************************************************
 
-# here::i_am('02_scripts/noodle.R')
-# source('02_scripts/utilities.R')
-# file = list.files(here::here('01_data', 'foldername', 'raw'), 
-#                  full.names = TRUE)
+here::i_am('02_scripts/noodle.R')
+source('02_scripts/utilities.R')
+# file = list.files(here::here('01_data', 'foldername', 'raw'), full.names = TRUE)
 
 # ******************************************************************************
 #                             DATA & LIBRARY LOADING
@@ -60,7 +59,6 @@ setMethod("initialize", "Elephant", function(.Object, ...) {
 
 
 
-
 ### ======== OTHER METHODS ======== ###
 
 # Defining a function to display object details
@@ -80,10 +78,19 @@ setMethod('update', "Elephant",
   }
 )
 
+setGeneric('takeStep', function(x) standardGeneric("takeStep"))
+setMethod("takeStep", "Elephant", 
+  function(x) {
+    print(x@PAR1) 
+  }
+)
+
 # setting generic function calls
+# get
 setGeneric('par', function(x) standardGeneric("par"))
-setGeneric("par<-", function(x, value) standardGeneric("par<-"))
 setMethod("par", "Elephant", function(x) x@PAR1)
+# set
+setGeneric("par<-", function(x, value) standardGeneric("par<-"))
 setMethod("par<-", "Elephant", function(x, value) {x@PAR1 <- value; x})
 
 # ******************************************************************************
@@ -104,11 +111,6 @@ for (i in 1:nrep) {
 ggplot() + geom_histogram(data=eles, 
                           aes(fill=SEX, x=PAR1), 
                           alpha=0.7, position="identity", bins=100)
-
-
-
-
-
 
 
 
