@@ -10,74 +10,105 @@ here::i_am('02_scripts/noodle.R')
 source('02_scripts/utilities.R')
 # file = list.files(here::here('01_data', 'foldername', 'raw'), full.names = TRUE)
 
-# ******************************************************************************
-#                             DATA & LIBRARY LOADING
-# ******************************************************************************
-
-
 
 # ******************************************************************************
 #                             MESSING AROUND WITH OOP
 # ******************************************************************************
-
+# https://adv-r.hadley.nz/s4.html
 
 # ******************************************************************************
 # __init__
-ele <- setClass("Elephant", 
-                slots=list(ID="numeric",
-                           SEX="character",
-                           X='numeric',
-                           Y='numeric',
-                           PAR1="numeric"))
-hypers <-  list("M" = list(mu=0, sd=1),
-                "F" = list(mu=5, sd=2.5))
 
+### ======== ELEPHANT CLASS ======== ###
 
-### ======== INITIALIZING CLASSES ======== ###
-setMethod("initialize", "Elephant", function(.Object, ...) {
-  .Object <- callNextMethod()
-  .Object@SEX <- toupper(substr(.Object@SEX, 0, 1))
+#' DEFINITION for the Elephant Class
+setClass("Elephant",
+  slots=list(ID=   "numeric",
+             SEX=  "character",
+             X=    "numeric",
+             Y=    "numeric",
+             HISTORY= "list",
+             PAR1= "numeric"))
+
+#' HELPER for the Elephant class
+#' - takes in the SEX slot and transforms it into a uniform M or F,
+#' - pulls hyperparameters based on the SEX, and uses these to randomly
+#'     generate various parameters that we will use in the RWs. HPs should
+#'     come from the literature.
+ele <- function(ID, SEX = "F") {
   
   # set hyper-parameters based on sex
-  if (.Object@SEX %in% c("M", "F")) { 
-    pars <- hypers[[.Object@SEX]]
+  hypers <-  list("M" = list(mu=0, sd=1),
+                  "F" = list(mu=5, sd=2.5))
+  SEX <- toupper(substr(SEX, 0, 1))
+  if (SEX %in% c("M", "F")) { 
+    pars <- hypers[[SEX]]
     hmu = pars$mu
     hsd = pars$sd
-  } else {
-    warning('SEX should be M or F')
-  }
+  } else { warning('SEX should be M or F') }
   
   # generate parameters based on hyper-parameters
-  .Object@PAR1 = rnorm(1, hmu, hsd)
+  PAR1 = rnorm(1, hmu, hsd)
   
   # randomly generate initial coordinates
-  .Object@X = rnorm(1, 0, 1)
-  .Object@Y = rnorm(1, 0, 1)
-  .Object
-})
+  X = rnorm(1, 0, 1)
+  Y = rnorm(1, 0, 1)
+  
+  new("Elephant", 
+      ID = ID, 
+      SEX = SEX,
+      X=X,
+      Y=Y,
+      HISTORY = list(list(X=X, Y=Y),
+                     list(X=X, Y=Y)),
+      PAR1=PAR1)
+}
+e=ele(123, 'f')
+e
 
 
+#' VIEWER for Elephant class
+#' Defining a function to display object details
+setMethod("show", "Elephant",
+  function(object){
+    
+    makeLoc <- function(x, y) paste0(round(x, 2), ', ', round(y, 2))
+    cur = makeLoc(object@X, object@Y)
+    hist = lapply(object@HISTORY, function(e) makeLoc(e$X, e$Y))[1:3]
+    hist = paste(paste(hist, collapse='\n     '), '\n    ...\n')
+    cat(is(object)[[1]], '\n',
+        "  ID: ", object@ID, "\n",
+        "  SEX: ", object@SEX, "\n",
+        "  PAR1: ", object@PAR1, "\n",
+        "  LOCATION: ", cur, '\n',
+        "  HISTORY:\n    ", hist, '\n')
+  }
+)
+
+#' ACCESSORS to Elephant parameters
+par <- function(x) x@PAR1
+xloc <- function(x) x@X
+yloc <- function(x) x@Y
+sex <- function(x) x@SEX
+id <- function(x) x@ID
+history <- function(x) x@HISTORY
+
+#' SETTERS to Elephant parameters
+setGeneric("par<-", function(x, value) standardGeneric("par<-"))
+setMethod("par<-", "Elephant", function(x, value) {obj@PAR1 <- value; obj})
+setGeneric("x<-", function(obj, value) standardGeneric("x<-"))
+setMethod("x<-", "Elephant", function(obj, value) {obj@Y <- value; obj})
+setGeneric("y<-", function(obj, value) standardGeneric("y<-"))
+setMethod("y<-", "Elephant", function(obj, value) {obj@Y <- value; obj})
+
+
+### ================================ ###
 
 
 ### ======== OTHER METHODS ======== ###
 
-# Defining a function to display object details
-setMethod("show", "Elephant",
-  function(object){
-    cat("ID:  ", object@ID, "\n")
-    cat("SEX: ", object@SEX, "\n")
-    cat("PAR1: ", object@PAR1, "\n")
-    cat('LOCATION: ', paste0(object@X, ', ', object@Y), '\n')
-  }
-)
-# updates
-setMethod('update', "Elephant",
-  function(object){
-    object@PAR1 <- object@PAR1 + 1
-    object
-  }
-)
 
+#' Generic to take a step
 setGeneric('takeStep', function(x) standardGeneric("takeStep"))
 setMethod("takeStep", "Elephant", 
   function(x) {
@@ -85,13 +116,6 @@ setMethod("takeStep", "Elephant",
   }
 )
 
-# setting generic function calls
-# get
-setGeneric('par', function(x) standardGeneric("par"))
-setMethod("par", "Elephant", function(x) x@PAR1)
-# set
-setGeneric("par<-", function(x, value) standardGeneric("par<-"))
-setMethod("par<-", "Elephant", function(x, value) {x@PAR1 <- value; x})
 
 # ******************************************************************************
 # __main__
