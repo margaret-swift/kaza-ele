@@ -99,35 +99,18 @@ lands.meta <- read.csv(meta.file)
 
 # read shapefile
 shp.file <- land.files[grepl('tif', land.files)]
-lc.r <- raster(shp.file)
+p4s = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+lc.r <- raster(shp.file) %>% projectRaster(crs=4326)
 
-# crop LC to a reprojected khaudum map, then reproject smaller raster to khau crs
-
-bb1 <- bb2 <- st_bbox(collar.df) 
-bb1 [['ymin']] <- bb2 [['ymax']] <- -18.59715
-
-bb1 <- bb1 %>% 
-  nominatimlite::bbox_to_poly() %>% 
-  st_transform(crs(lc.r)) %>% 
-  st_as_sf()
-
-bb2 <- bb2 %>% 
-  nominatimlite::bbox_to_poly() %>% 
-  st_transform(crs(lc.r)) %>% 
-  st_as_sf()
-
-t0 <- proc.time()[['elapsed']]
-lands.raster.1 <- crop(lc.r, bb1) %>%
-  projectRaster(crs=crs(khau), method="ngb") #### THIS TAKES FOREVER FYI ! ####
-lands.raster.2 <- crop(lc.r, bb2)%>%
-  projectRaster(crs=crs(khau), method="ngb")
-lands.raster <- stack(lands.raster.1, lands.raster.2)
-t <- proc.time()[['elapsed']] - t0
-message(round(t/60, 2), " minutes elapsed")
+# create a box
+e <- as(extent(300000, 500000, 7750000, 8050000), 'SpatialPolygons')
+crs(e) <- crs(lc.r)
+lc.r.crop = crop(lc.r, e)
+x <- reclassify(lc.r.crop, lands.meta[,c('category', 'resistance')])
 
 # now for the fences
 # helpful: https://michaelbcalles.netlify.app/post/rasterize-lines-in-r/
-temp <- raster(e, resolution = res(x1), crs = crs(x1))
+temp <- raster(extent(x), resolution = res(x), crs = crs(x))
 y <- resistanceFromShape(st_union(fence, cbpp), # function from simriv
                          baseRaster=temp,
                          binary=TRUE,
@@ -139,9 +122,7 @@ y <- reclassify(y, cbind(0, 1))
 
 cols <- hcl.colors(12, "YlOrRd", rev = TRUE)
 breaks <- seq(0, 1, length.out=13)
-image(y, col=cols, breaks=breaks)
-image(x1, add=TRUE, col=cols, breaks=breaks)
-image(x2, add=TRUE, col=cols, breaks=breaks)
+image(x, add=TRUE, col=cols, breaks=breaks)
 image(y, add=TRUE, col=cols, breaks=breaks)
 
 x = merge(x1, x2, tolerance=1)
