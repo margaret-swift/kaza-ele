@@ -37,3 +37,40 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Martin Gilbert, H
   - [ ] **Fence Structure**: Right now we’ll just treat all the fences in our dataset as the same type, but this isn’t quite the case. Is there a way to verify which fences are robust versus falling apart? Or perhaps if an extreme fence were replaced with a smaller barrier that cattle still couldn’t cross (i.e. lower the cost of crossing for elephants).
   - [ ] **Future Infrastructure**: E.g., the railway across the Caprivi strip (along the highway) or if they paved certain corridors. Railway in NE Hwange. Shirley mentioned that some of the waterholes in Hwange aren’t being filled due to budget constraints, and elephants are moving into Botswana earlier in the year to get water. What might the removal of key waterholes in Hwange or Khaudum do to elephant movements (and fence encounters)? 
  
+
+# Patterns and Metrics
+See Butts et al 2022 for a more detailed look at this EDA approach for creating an ABM.
+
+| Pattern | Scale | Features  | Metric |
+| ------------- |-------------| -----| -------|
+| Elephant movements trace along fences and channel along omiramba	| Spatial	| Fences & omiramba | |
+| Pinch points across roads and at rivers	| Spatial	| Roads and rivers	| | 
+| Habitual/repeated movement to and from water sources, especially artificial waterholes	| Spatial and Temporal	| Natural & artificial waterholes	| | 
+| Deflection/permeability differences by sex and boundary type (fence [and fence type], road, river)	| Spatial	| Fence, road, river	| Encounter and crossing rates should be similar to those found in Naidoo et al 2022 (see below) | 
+| Bulls cross fences more often in the wet season (?) and animals move away from water sources in the wet season (expansion contraction)| 	Temporal| 	fences	| | 
+| Elephant attraction to some areas with higher quality resources?	| Spatial and Temporal?	| Landcover type?	| | 
+
+
+# Spatial data
+
+| Description	| Source	| Res| Extent	| Type	| Status| 
+| ------------|---------|----|--------|-------|-------|
+| Elevation (DEM) and slope (calculated) | [USGS SRTM](https://earthexplorer.usgs.gov/) | 30m	| KAZA 	| Raster	| Obtained, reprojected, and mosaicked on ArcGIS; slope calculated in ArcGIS| 
+| Human settlements	| [ESA World Settlement Footprint 2019](https://geoservice.dlr.de/web/maps/eoc:wsf2019) (Sentinel-1 and -2)  | 10m	| Africa	| Raster	| Obtained | 
+| Landcover	| WWF (link? What dataset did these come from?)	| 10m	| Africa	| Raster	| Obtained| 
+| Ephemeral surface water	| [Schaffer-Smith et al 2022](https://doi.org/10.4211/hs.6f5b34803dc247e890925d7f26b04a3b) (Sentinel-2)  | 10m	| Khaudum 	and Bwabwata| Raster	| Obtained | 
+| | | | | | | 					
+| Fences	  | Robin... where did he get these?	| NA	| KAZA	| Vector	| Obtained| 
+| Roads	    | OpenStreetMap (Angela) (see metadata file)	| NA	| KAZA 	| Vector	| Obtained| 
+| Rivers	  | Digitized by Robin from various sources ([GAIA](http://gaia.geosci.unc.edu/rivers/)) | NA	| KAZA	| Vector	| Obtained| 
+
+
+# Feature permeability
+From Naidoo et al 2022.
+Percentage of crossings @ 1km encounter threshold
+(should we use 25km instead? What is the utility of a larger threshold if we are controlling the movements?)
+
+| | River	| Road	| Fence| 
+| --- | -------| --------| ------| 
+| Female	| 10.1	| 15.3 | 0| 
+| Male	| 14.5	| 25.8	| 3.5| 
