@@ -3,10 +3,7 @@ AHEAD x WWF collaboration with funding from Atkinson Center for Sustainability
 
 Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Martin Gilbert, Helen Lee
 
-``` diff
-! WARNING: This repository is public, but raw data files (especially elephant GPS data)   @@
-! are sensitive and never stored or tracked through GitHub.   @@
-```
+**WARNING: This repository is public, but raw data files (especially elephant GPS data) are sensitive and never stored or tracked through GitHub.**
 
 # Project steps
 ## 1.	**Agent data**
@@ -21,7 +18,7 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Martin Gilbert, H
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see Butts et al 2020) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
 
 ## 4.	**Modeling**
-  - [ ] **Basic model implementation**: Run a basic version of SimRiv and abmMovement with agent parameters from (1b) and simplified spatial rasters. This way we can make sure the behaviors seem right before dedicating the computational power needed for the main, large raster.
+  - [ ] **Basic model implementation**: Run a basic version of [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8) and [abmMovement](https://f1000research.com/articles/11-1182) with agent parameters from (1b) and simplified spatial rasters. This way we can make sure the behaviors seem right before dedicating the computational power needed for the main, large raster.
   - [ ] **Basic model assessment**: With controllable, small-scale environmental rasters, how do the movements we are seeing in the agents matching up against the metrics determined in 3a?
   - [ ] **Realistic model implementation**: Once the basic model is up and running, add in spatial layers from (2b).
   - [ ] **Model selection**: Calculate metrics from step (3a) and compare models. Which ones accurately replicate the critical spatial patterns? Is any homebrewing necessary?
