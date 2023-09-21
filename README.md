@@ -3,16 +3,15 @@ AHEAD x WWF collaboration with funding from Atkinson Center for Sustainability
 
 Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Martin Gilbert, Helen Lee
 
-
 # Project steps
 ## 1.	**Agent data**
   - [ ] **Gather elephant data**: Robin should be sending elephant data over soon.
   - [ ] **Gather agent attributes**: List movement characteristics of agents from data and gather missing parameters from literature. This includes a deeper dive into literature on elephant preferences for certain landcover types (although we can find that out through modeling our data) or responses to settlement areas, for example.
  
 ## 2.  **Spatial data**
-  - [x] **Gather spatial data**: List spatial features and gather spatial data. 
+  - [x] ~~**Gather spatial data**: List spatial features and gather spatial data~~. DONE 9/21/23
   - [ ] **Combine spatial data**: Depending on the model, there should be two separate layers: One “resistance” layer representing how difficult the landscape is to move through (landcover types, rasterized linear features, maybe Robin’s Circuitscape output?), and one “magnet” layer with features that either attract or repel elephants (water features, urban areas, cropland).
-
+  
 ## 3.  **Exploratory Data Analysis**
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see Butts et al 2020) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
 
