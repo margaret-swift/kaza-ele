@@ -39,7 +39,7 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Martin Gilbert, H
  
 
 # Patterns and Metrics
-See Butts et al 2022 for a more detailed look at this EDA approach for creating an ABM.
+See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132) for a more detailed look at this EDA approach for creating an ABM.
 
 | Pattern | Scale | Features  | Metric |
 | ------------- |-------------| -----| -------|
@@ -66,7 +66,7 @@ See Butts et al 2022 for a more detailed look at this EDA approach for creating 
 
 
 # Feature permeability
-From Naidoo et al 2022.
+From [Naidoo et al 2022](https://www.frontiersin.org/articles/10.3389/fcosc.2022.788133/).
 Percentage of crossings @ 1km encounter threshold
 (should we use 25km instead? What is the utility of a larger threshold if we are controlling the movements?)
 
