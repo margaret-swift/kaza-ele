@@ -1,5 +1,6 @@
 # KAZA Elephant Behavior Modeling Project
 AHEAD x WWF collaboration with funding from Atkinson Center for Sustainability
+
 Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Martin Gilbert, Helen Lee
 
 ``` diff
