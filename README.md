@@ -44,7 +44,8 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 | Pinch points across roads and at rivers	| Spatial	| Roads and rivers	| | 
 | Habitual/repeated movement to and from water sources, especially artificial waterholes	| Spatial and Temporal	| Natural & artificial waterholes	| | 
 | Deflection/permeability differences by sex and boundary type (fence [and fence type], road, river)	| Spatial	| Fence, road, river	| Encounter and crossing rates should be similar to those found in Naidoo et al 2022 (see below) | 
-| Bulls cross fences more often in the wet season (?) and animals move away from water sources in the wet season (expansion contraction)| 	Temporal| 	fences	| | 
+| Elephants move away from water sources in the wet season (expansion contraction)| 	Temporal| 	fences	| | 
+| 80% of roan crossings were during the wet season. Does this happen for elephant too? | Temporal | fences ||
 | Elephant attraction to some areas with higher quality resources?	| Spatial and Temporal?	| Landcover type?	| | 
 
 
