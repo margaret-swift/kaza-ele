@@ -7,7 +7,7 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, ...
 
 # Project steps
 ## 1.	**Agent data**
-  - [ ] **Gather elephant data**: Robin should be sending elephant data over soon.
+  - [x] ~~**Gather elephant data**: Robin should be sending elephant data over soon.~~. DONE 9/16/23
   - [ ] **Gather agent attributes**: List movement characteristics of agents from data and gather missing parameters from literature. This includes a deeper dive into literature on elephant preferences for certain landcover types (although we can find that out through modeling our data) or responses to settlement areas, for example.
  
 ## 2.  **Spatial data**
