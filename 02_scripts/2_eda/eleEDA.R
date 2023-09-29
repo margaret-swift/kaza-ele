@@ -13,10 +13,17 @@ load(here(procpath, 'geographic.rdata'))
 setDataPaths('elephant')
 load(here(procpath, 'ele.rdata'))
 
+# ******************************************************************************
+#                                     STATS
+# ******************************************************************************
 
+ele.df %>% 
+  group_by(ID, SEX) %>% 
+  mutate(MYSPEED = abs(DIST) / abs(as.numeric(DTM))) %>% 
+  dplyr::select(SPEED)
 
 # ******************************************************************************
-#                             PLOTTING
+#                                    PLOTTING
 # ******************************************************************************
 
 plotPath <- function(i) {
