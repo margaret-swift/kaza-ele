@@ -6,8 +6,8 @@
 #                             DATA & LIBRARY LOADING
 # ******************************************************************************
 
-here::i_am('02_scripts/eleEDA.R')
-source('02_scripts/utilities.R')
+here::i_am('02_scripts/2_eda/eleEDA.R')
+source(here('02_scripts','utilities.R'))
 setDataPaths('geographic')
 load(here(procpath, 'geographic.rdata'))
 setDataPaths('elephant')
@@ -65,10 +65,11 @@ makeHist <- function(i) {
 # Plots for all IDs
 ids <- unique(ele.df$ID)
 for (i in ids) {
-  ggsave(filename = here(outdir, "eda", "ele_freq",
-                         paste0("ele_", i, ".png")),
-         plot=makeHist(i),
-         width=10, height=5)
+  message('elephant', i)
+  # ggsave(filename = here(outdir, "eda", "ele_freq",
+  #                        paste0("ele_", i, ".png")),
+  #        plot=makeHist(i),
+  #        width=10, height=5)
   ggsave(filename = here(outdir, "eda", "ele_paths", 
                          paste0("ele_", i, ".png")),
          plot=plotPath(i))
