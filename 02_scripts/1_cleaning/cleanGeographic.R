@@ -6,10 +6,10 @@
 #                             DATA & LIBRARY LOADING
 # ******************************************************************************
 
-here::i_am('02_scripts/cleaning/cleanGeographic.R')
-source('02_scripts/utilities.R')
+here::i_am('02_scripts/1_cleaning/cleanGeographic.R')
+source(here::here('02_scripts', 'utilities.R'))
 setDataPaths('geographic')
-load(here(procpath, 'geographicData.RData'))
+load(here(procpath, 'geographic.rdata'))
 my_crs <- 4326
 
 loadData <- function(path) {
