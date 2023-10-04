@@ -8,6 +8,10 @@
 
 here::i_am('02_scripts/1_cleaning/cleanEle.R')
 source(here::here('02_scripts', 'utilities.R'))
+setDataPaths('geographic')
+load(here(procpath, 'geographic.rdata'))
+setDataPaths('precipitation')
+load(here(procpath, 'precipitation.rdata'))
 setDataPaths('elephant')
 ele <- read.csv(here(rawpath, 'nam.eles.fences.csv'))
 
@@ -16,21 +20,168 @@ ele <- read.csv(here(rawpath, 'nam.eles.fences.csv'))
 # ******************************************************************************
 ele$INX <- 1:nrow(ele)
 ids <- unique(ele$id)
-ele.df <- ele %>% 
+ele <- ele %>% 
   rename_all(toupper) %>% 
-  mutate(DATE.TIME = as.POSIXlt(DATE.TIME, tz="UTC"),
-         ANIMAL_ID = ID,
-         START.COUNT = ANIMAL_ID != lag(ANIMAL_ID),
-         START.COUNT = ifelse(is.na(START.COUNT), TRUE, START.COUNT),
-         SEX = toupper(SEX),
-         ID = match(ANIMAL_ID, ids),
-         DTS = DT, 
-         DTM = difftime(DATE.TIME, lag(DATE.TIME))
-         ) %>% 
-  dplyr::select(INX, ID, ANIMAL_ID, SEX, START.COUNT, DATE.TIME,
+  mutate( 
+    # setting up date-time stuff
+    DATE.TIME = as.POSIXlt(DATE.TIME, tz="UTC"),
+    DTS = DT, 
+    DTM = difftime(DATE.TIME, lag(DATE.TIME)),
+    MONTH = month(DATE.TIME),
+    YEAR = year(DATE.TIME),
+    
+    # renaming IDs
+    ANIMAL_ID = ID,
+    SEX = toupper(SEX),
+    ID = match(ANIMAL_ID, ids),
+    
+    # new burst after days with 0 counts, also new per ID
+    DATE = date(DATE.TIME),
+    DIFF = DATE - lag(DATE),
+    DIFF = ifelse(is.na(DIFF), 1, DIFF),
+    BURST = ID*1000 + (cumsum(!DIFF %in% c(0,1))),
+    
+    # indexing start.count on bursts
+    START.COUNT = BURST != lag(BURST),
+    START.COUNT = ifelse(is.na(START.COUNT), TRUE, START.COUNT)
+  ) 
+
+# Set fixrates
+r5 <- 18000; r1 <- 3600;
+invl <- function(r, t=3) (r-t*r):(r+t*r)
+ele$FIXRATE <- NA
+ele$FIXRATE[ele$DTS %in% invl(r5)] <- "5 hours"
+ele$FIXRATE[ele$DTS %in% invl(r1)] <- "1 hour"
+
+# distances are tied to next point, not the previous
+ele$DIST <- lag(ele$DIST) 
+
+# set SEASON based on first rainfall from precipitation.rdata
+ele$ISWET <- TRUE
+dt <- 121
+inx <- which( yday(ele$DATE) > dt )
+inx.rain <- match(ele$YEAR+1, wet.start$RAINYEAR)
+iswet <- ele$DATE > wet.start$DATE[inx.rain]
+ele$ISWET[inx] <- iswet[inx]
+ele$SEASON = ifelse(ele$ISWET, "WET", "DRY")
+
+# add precip data to ele data
+p.inx <- match(ele$DATE, precip.df$DATE)
+ele$MM.RAIN <- precip.df$MM_RAIN[p.inx]
+ele$MM.RAIN_C <- precip.df$MM_RAIN_C[p.inx]
+  
+# save to ele.df
+ele.df <- ele
+
+
+# ******************************************************************************
+#                                     STATS
+# ******************************************************************************
+makeHist <- function(i) {
+  data <- ele.df %>% 
+    filter(ID == i,
+           # DATE.TIME > as.Date('2010-12-01'),
+           # DATE.TIME < as.Date('2011-01-30')
+           ) %>% 
+    mutate(DATE = date(DATE.TIME))
+  hist.data <- data %>% 
+    group_by(DATE, .drop=FALSE) %>% 
+    summarize(n=n()) %>%
+    mutate(FLAG = ifelse(n > 27, "HIGH", ifelse(n<20, "LOW", "AVG")))
+  title = paste0('Elephant ', data$ID[1], ' (', data$SEX[1], ')')
+  cols <- list(AVG='darkgray', HIGH='#08c952', LOW='#f2055c')[unique(hist.data$FLAG)]
+  ggplot() +
+    geom_bar(data=hist.data,
+             mapping=aes(x=DATE, y=n, fill=FLAG),
+             stat="identity") +
+    ggtitle(title) + theme(axis.title.x=element_blank()) +
+    scale_fill_manual(values=cols) + ylab('number of fixes') +
+    scale_x_date(breaks='1 year', date_labels = "%Y") + theme(text=element_text(size=20))
+}
+makeY <- function(i) {
+  data <- ele.df %>% 
+    group_by(ID, SEX) %>% 
+    filter(ID == i, as.n(DTM) > 45) %>% 
+    mutate(
+      BURST = factor(BURST),
+      MONTH = month(DATE.TIME),
+      YEAR = year(DATE.TIME),
+      MONTHYEAR = paste(MONTH, YEAR),
+      MPH = DIST / (as.n(DTM)/60)) 
+  base = ggplot( data=data, 
+          mapping=aes(x=as.Date(DATE.TIME), group=MONTHYEAR, color=SEASON)) + 
+    theme(axis.title.x=element_blank()) + 
+    scale_color_brewer(palette="Dark2", direction=-1) +
+    scale_x_date(breaks='1 year', date_labels = "%Y") + theme(text=element_text(size=20))
+  base
+}
+
+# ----------------------------------
+# might have too little data: 26, 27
+# eles with higher than average bits of data: 7, 8, 20, 38
+# 38-42 have a lot of days with fewer-than-expected pings...
+# ----------------------------------
+
+
+# ******************************************************************************
+#                                     CLEANUP BY STATS
+# ******************************************************************************
+
+# some data needs to be ignored (collar obviously fell off or 
+# the elephant died). Use plots above.
+findRM <- function(i, start, end=NULL) {
+  data <- ele.df %>% filter(ID == i)
+  if (is.null(end)) end = data$INX[nrow(data)]
+  start : end
+}
+findRMDate <- function(id, start, end) {
+  data <- ele.df %>% 
+    filter(ID %in% id, DATE <= as.Date(end), DATE >= as.Date(start))
+  data$INX
+}
+# ele 5 drops at index 95020
+inx.5 <- findRM(5, 95020)
+# ele 7 drops at index 164495
+inx.7 <- findRM(7, 164495)
+# ele 19 drops at index 405397
+inx.19 <- findRM(19, 405397)
+# ele 38 drops at index 612261
+inx.38 <- findRM(38, 612261)
+# ele 1 needs dec 01 2015 removed
+inx.1_4 <- findRMDate(1:4, "2015-12-01", "2015-12-01")
+# ele 13 has a weird dip in pings after january 2019
+inx.13.1 <- findRMDate(13, "2019-01-09", "2019-01-30")
+inx.13.2 <- findRMDate(13, "2019-02-27", "2019-03-08")
+# ele 31-37 is missing data in feb 2011
+inx.31_37 <- findRMDate(31:37, "2011-02-12", "2011-02-28")
+# ele 40 missing a bunch of data in 2015 jan/feb so we will cut off
+inx.40 <- findRMDate(40, "2015-01-13", "2015-02-06")
+
+# remove dud data
+inx.rm <- c(inx.1_4, inx.5, inx.7, inx.13.1, inx.13.2, inx.19, 
+            inx.31_37, inx.38, inx.40)
+ele.df <- ele.df[-c(inx.rm),]
+
+
+
+# ******************************************************************************
+#                            Final cleanup before transformations
+# ******************************************************************************
+
+# reassign INX and pull cols in order
+ele.df$INX <- 1:nrow(ele.df)
+ele.df <- ele.df %>% 
+  dplyr::select(INX, ID, FIXRATE, BURST, START.COUNT,
+                ANIMAL_ID, SEX,
+                DATE.TIME, DATE, SEASON,
                 X, Y, DX, DY, DIST, DTS, DTM, R2N,
                 ABS.ANGLE, REL.ANGLE, SPEED,
                 COUNTRY, PROVIDER)
+
+
+# ******************************************************************************
+#                            Transforming to spatial data
+# ******************************************************************************
 
 ele.pts <- ele.df %>% 
   st_as_sf(coords=c('X', 'Y'), remove=FALSE, crs=32734) %>% 
@@ -40,6 +191,10 @@ ele.lines <- ele.pts %>%
   summarize() %>%
   st_cast("LINESTRING")
 
+
+# ******************************************************************************
+#                            STS
+# ******************************************************************************
 ## STS
 save(ele, ele.df, ele.pts, ele.lines, 
      file=here(procpath, "ele.rdata"))

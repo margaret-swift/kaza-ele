@@ -1,0 +1,9 @@
+Data collected from CHIRPS via GEE and processed over the southwestern corner of KAZA daily. 
+
+Data = daily summed rainfall across the region, then reduced to the median
+
+  var precip = filtered
+    .sum()
+    .clip(studyarea)
+    .reduceRegion(ee.Reducer.median())
+    .get('precipitation')
