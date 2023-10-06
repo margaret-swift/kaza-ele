@@ -16,24 +16,6 @@ load(here(procpath, 'ele.rdata'))
 
 
 # ******************************************************************************
-#                                    STATS on PINGS
-# ******************************************************************************
-
-# sort individuals by # days collared
-ele.df %>% 
-  group_by(ID) %>% 
-  summarize(min=min(DATE),
-            max=max(DATE),
-            days = max-min) %>% 
-  arrange(days) %>% 
-  print(n=43)
-
-ele.df %>% group_by(ID, FIXRATE) %>% 
-  summarize(n=n()) %>% 
-  arrange(FIXRATE) %>% 
-  print(n=120)
-
-# ******************************************************************************
 #                                    PLOTTING
 # ******************************************************************************
 plotXY <- function(i) {
