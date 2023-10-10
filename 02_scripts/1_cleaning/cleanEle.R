@@ -26,7 +26,7 @@ ele <- ele %>%
     # setting up date-time stuff
     DATE.TIME = as.POSIXlt(DATE.TIME, tz="UTC"),
     DTS = DT, 
-    DTM = difftime(DATE.TIME, lag(DATE.TIME)),
+    DTM = DTS / 60,
     MONTH = month(DATE.TIME),
     YEAR = year(DATE.TIME),
     
@@ -46,15 +46,20 @@ ele <- ele %>%
     START.COUNT = ifelse(is.na(START.COUNT), TRUE, START.COUNT)
   ) 
 
-# Set fixrates
-r5 <- 18000; r1 <- 3600;
-invl <- function(r, t=3) (r-t*r):(r+t*r)
-ele$FIXRATE <- NA
-ele$FIXRATE[ele$DTS %in% invl(r5)] <- "5 hours"
-ele$FIXRATE[ele$DTS %in% invl(r1)] <- "1 hour"
+# distances etc are tied to next point, not the previous... I don't like that.
+tolag <- c("DIST", "DX", "DY", "DT", "DTS", "DTM", "R2N",
+           "ABS.ANGLE", "REL.ANGLE", "SPEED")
+# ele[,tolag] <- lag(ele[,tolag]) 
+# ele[ele$START.COUNT,tolag] <- NA
+ele$MPS <- ele$DIST / ele$DTS
 
-# distances are tied to next point, not the previous
-ele$DIST <- lag(ele$DIST) 
+# Set fixrates
+r1 <- 3000:4000
+r5 <- 16000:20000
+ele$FIXRATE <- NA
+ele$FIXRATE[ele$DTS %in% r5] <- "5 hours"
+ele$FIXRATE[ele$DTS %in% r1] <- "1 hour"
+ele$FIXRATE[ele$START.COUNT] <- ele$FIXRATE[which(ele$START.COUNT)+1]
 
 # set SEASON based on first rainfall from precipitation.rdata
 ele$ISWET <- TRUE
@@ -65,11 +70,6 @@ iswet <- ele$DATE > wet.start$DATE[inx.rain]
 ele$ISWET[inx] <- iswet[inx]
 ele$SEASON = ifelse(ele$ISWET, "WET", "DRY")
 
-# add precip data to ele data
-p.inx <- match(ele$DATE, precip.df$DATE)
-ele$MM.RAIN <- precip.df$MM_RAIN[p.inx]
-ele$MM.RAIN_C <- precip.df$MM_RAIN_C[p.inx]
-  
 # save to ele.df
 ele.df <- ele
 
@@ -77,44 +77,44 @@ ele.df <- ele
 # ******************************************************************************
 #                                     STATS
 # ******************************************************************************
-makeHist <- function(i) {
-  data <- ele.df %>% 
-    filter(ID == i,
-           # DATE.TIME > as.Date('2010-12-01'),
-           # DATE.TIME < as.Date('2011-01-30')
-           ) %>% 
-    mutate(DATE = date(DATE.TIME))
-  hist.data <- data %>% 
-    group_by(DATE, .drop=FALSE) %>% 
-    summarize(n=n()) %>%
-    mutate(FLAG = ifelse(n > 27, "HIGH", ifelse(n<20, "LOW", "AVG")))
-  title = paste0('Elephant ', data$ID[1], ' (', data$SEX[1], ')')
-  cols <- list(AVG='darkgray', HIGH='#08c952', LOW='#f2055c')[unique(hist.data$FLAG)]
-  ggplot() +
-    geom_bar(data=hist.data,
-             mapping=aes(x=DATE, y=n, fill=FLAG),
-             stat="identity") +
-    ggtitle(title) + theme(axis.title.x=element_blank()) +
-    scale_fill_manual(values=cols) + ylab('number of fixes') +
-    scale_x_date(breaks='1 year', date_labels = "%Y") + theme(text=element_text(size=20))
-}
-makeY <- function(i) {
-  data <- ele.df %>% 
-    group_by(ID, SEX) %>% 
-    filter(ID == i, as.n(DTM) > 45) %>% 
-    mutate(
-      BURST = factor(BURST),
-      MONTH = month(DATE.TIME),
-      YEAR = year(DATE.TIME),
-      MONTHYEAR = paste(MONTH, YEAR),
-      MPH = DIST / (as.n(DTM)/60)) 
-  base = ggplot( data=data, 
-          mapping=aes(x=as.Date(DATE.TIME), group=MONTHYEAR, color=SEASON)) + 
-    theme(axis.title.x=element_blank()) + 
-    scale_color_brewer(palette="Dark2", direction=-1) +
-    scale_x_date(breaks='1 year', date_labels = "%Y") + theme(text=element_text(size=20))
-  base
-}
+# makeHist <- function(i) {
+#   data <- ele.df %>% 
+#     filter(ID == i,
+#            # DATE.TIME > as.Date('2010-12-01'),
+#            # DATE.TIME < as.Date('2011-01-30')
+#            ) %>% 
+#     mutate(DATE = date(DATE.TIME))
+#   hist.data <- data %>% 
+#     group_by(DATE, .drop=FALSE) %>% 
+#     summarize(n=n()) %>%
+#     mutate(FLAG = ifelse(n > 27, "HIGH", ifelse(n<20, "LOW", "AVG")))
+#   title = paste0('Elephant ', data$ID[1], ' (', data$SEX[1], ')')
+#   cols <- list(AVG='darkgray', HIGH='#08c952', LOW='#f2055c')[unique(hist.data$FLAG)]
+#   ggplot() +
+#     geom_bar(data=hist.data,
+#              mapping=aes(x=DATE, y=n, fill=FLAG),
+#              stat="identity") +
+#     ggtitle(title) + theme(axis.title.x=element_blank()) +
+#     scale_fill_manual(values=cols) + ylab('number of fixes') +
+#     scale_x_date(breaks='1 year', date_labels = "%Y") + theme(text=element_text(size=20))
+# }
+# makeY <- function(i) {
+#   data <- ele.df %>% 
+#     group_by(ID, SEX) %>% 
+#     filter(ID == i, as.n(DTM) > 45) %>% 
+#     mutate(
+#       BURST = factor(BURST),
+#       MONTH = month(DATE.TIME),
+#       YEAR = year(DATE.TIME),
+#       MONTHYEAR = paste(MONTH, YEAR),
+#       MPH = DIST / (as.n(DTM)/60)) 
+#   base = ggplot( data=data, 
+#           mapping=aes(x=as.Date(DATE.TIME), group=MONTHYEAR, color=SEASON)) + 
+#     theme(axis.title.x=element_blank()) + 
+#     scale_color_brewer(palette="Dark2", direction=-1) +
+#     scale_x_date(breaks='1 year', date_labels = "%Y") + theme(text=element_text(size=20))
+#   base
+# }
 
 # ----------------------------------
 # might have too little data: 26, 27
@@ -171,30 +171,30 @@ ele.df <- ele.df[-c(inx.rm),]
 # reassign INX and pull cols in order
 ele.df$INX <- 1:nrow(ele.df)
 ele.df <- ele.df %>% 
-  dplyr::select(INX, ID, FIXRATE, BURST, START.COUNT,
+  dplyr::select(INX, ID, BURST, START.COUNT,
                 ANIMAL_ID, SEX,
                 DATE.TIME, DATE, SEASON,
-                X, Y, DX, DY, DIST, DTS, DTM, R2N,
-                ABS.ANGLE, REL.ANGLE, SPEED,
-                COUNTRY, PROVIDER)
+                X, Y, DX, DY, DIST, DTM, R2N,
+                ABS.ANGLE, REL.ANGLE, MPS,
+                FIXRATE, COUNTRY, PROVIDER)
 
 
 # ******************************************************************************
 #                            Transforming to spatial data
 # ******************************************************************************
 
-ele.pts <- ele.df %>% 
-  st_as_sf(coords=c('X', 'Y'), remove=FALSE, crs=32734) %>% 
+ele.df <- ele.df %>% 
+  st_as_sf(coords=c('X', 'Y'), crs=32734) %>% 
   st_transform(crs = st_crs(khau))
-ele.lines <- ele.pts %>% 
-  group_by(ID, ANIMAL_ID, SEX) %>% 
-  summarize() %>%
-  st_cast("LINESTRING")
 
+# add latlon
+latlon <- st_coordinates(ele.df)
+colnames(latlon) <- c('LON', "LAT")
+ele.df <- cbind(ele.df, latlon)
 
 # ******************************************************************************
-#                            STS
+#                                       STS
 # ******************************************************************************
-## STS
-save(ele, ele.df, ele.pts, ele.lines, 
-     file=here(procpath, "ele.rdata"))
+
+setDataPaths('elephant')
+save(ele.df, file=here(procpath, "ele.rdata"))
