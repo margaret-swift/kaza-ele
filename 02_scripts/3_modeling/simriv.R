@@ -14,11 +14,18 @@
 # ******************************************************************************
 
 library(here)
+<<<<<<< HEAD
 i_am('02_scripts/3_modeling/simriv.R')
 source(here('02_scripts','utilities.R'))
 p_load("SiMRiv", #v1.0.6
        "raster") 
 load(here(outdir, 'hmmShort.rdata'))
+=======
+i_am(here('02_scripts', 'modeling', 'simriv.R'))
+source(here('02_scripts','utilities.R'))
+p_load("SiMRiv", #v1.0.6
+       "raster") 
+>>>>>>> 153847358d2badc07d7c2857d9e2e749a2ce53ca
 
 # ******************************************************************************
 #                           MESSING AROUND WITH SIMRIV
@@ -27,6 +34,7 @@ load(here(outdir, 'hmmShort.rdata'))
 # define a species with a single-state movement type
 # characterized by a random walk
 SL = 15
+<<<<<<< HEAD
 # rand.walker <- species(state.CRW(0.98) + SL)
 # sim.rw <- simulate(rand.walker, 10000)
 # plot(sim.rw, type = "l", asp = 1, main = "Random walk")
@@ -34,6 +42,14 @@ SL = 15
 
 # Levy walks
 tm <- transitionMatrix( as.n( hmm$mle$beta ) )
+=======
+rand.walker <- species(state.CRW(0.98) + SL)
+sim.rw <- simulate(rand.walker, 10000)
+plot(sim.rw, type = "l", asp = 1, main = "Random walk")
+
+
+# Levy walks
+>>>>>>> 153847358d2badc07d7c2857d9e2e749a2ce53ca
 tm <- transitionMatrix(0.005, 0.01, #state 1>2 and 1>3
                        0.05,  0.02, #state 2>1 and 2>3
                        0.05,  0.005)#state 3>1 and 3>2
