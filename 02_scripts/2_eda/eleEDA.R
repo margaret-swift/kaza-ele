@@ -18,8 +18,24 @@ load(here(procpath, 'ele.rdata'))
 # ******************************************************************************
 #                                    PLOTTING
 # ******************************************************************************
+makeHist <- function(i) {
+  data <- ele.df %>% nog() %>% filter(ID == i)
+  hist.data <- data %>%
+    group_by(DATE, .drop=FALSE) %>%
+    summarize(n=n()) %>%
+    mutate(FLAG = ifelse(n > 27, "HIGH", ifelse(n<20, "LOW", "AVG")))
+  title = paste0('Elephant ', data$ID[1], ' (', data$SEX[1], ')')
+  cols <- list(AVG='darkgray', HIGH='#08c952', LOW='#f2055c')[unique(hist.data$FLAG)]
+  ggplot() +
+    geom_bar(data=hist.data,
+             mapping=aes(x=DATE, y=n, fill=FLAG),
+             stat="identity") +
+    ggtitle(title) + theme(axis.title.x=element_blank()) +
+    scale_fill_manual(values=cols) + ylab('number of fixes') +
+    scale_x_date(breaks='1 year', date_labels = "%Y") + theme(text=element_text(size=20))
+}
 plotXY <- function(i) {
-  data <- ele.df %>% 
+  data <- ele.df %>% nog() %>% 
     filter(ID == i) %>% 
     mutate(
       BURST = factor(BURST),
@@ -45,24 +61,8 @@ plotXY <- function(i) {
                aes(y=Y), color='black', size=2)
   px / py
 }
-plotPath <- function(i) {
-  data <- ele.lines[i,]
-  title = paste0('Elephant ', data$ID, ' (', data$SEX, ')')
-  bb <- st_bbox(data)
-  cols <- ifelse(data$SEX == "F", 'black', 'orange')
-  ggplot() +
-    geom_sf(data=waters_nat, color='lightblue') + 
-    geom_sf(data=waters_art, color='darkblue', size=3) + 
-    geom_sf(data=data, mapping=aes(color=SEX)) +
-    geom_sf(data=fences, fill=NA, color='red', linewidth=2) +
-    ggtitle(title) + plot.theme +
-    scale_color_manual(values=cols) +
-    guides(color="none") +
-    coord_sf(xlim=c(bb['xmin'], bb['xmax']), 
-             ylim=c(bb['ymin'], bb['ymax']))
-}
 plotRegion <- function(i) {
-  bb <- ele.pts %>% filter(ID==i) %>% st_bbox()
+  bb <- ele.df %>% filter(ID==i) %>% st_bbox()
   t=2
   ggplot() + 
     geom_sf(data=kaza, linewidth=1, fill=NA) +
@@ -78,7 +78,7 @@ plotRegion <- function(i) {
              ylim=c(bb['ymin']-t, bb['ymax']+t))
 }
 plotPoints <- function(i) {
-  data <- ele.pts %>% filter(ID==i) %>% sample_frac(0.5)
+  data <- ele.df %>% filter(ID==i) %>% sample_frac(0.5)
   bb <- st_bbox(data)
   width=abs(bb[['xmin']] - bb[['xmax']])
   height=abs(bb[['ymin']] - bb[['ymax']])
@@ -118,13 +118,14 @@ plotPoints(1)
 
 # Plot all and save
 ids <- unique(ele.df$ID)
+tic()
 for (i in ids) {
   message(i)
   ggsave(filename = here(outdir, "eda", "ele_all",
                          paste0("ele_", i, ".png")),
          plot=plotAll(i), width=21, height=13)
 }
-
+toc()
 
 
 # ******************************************************************************

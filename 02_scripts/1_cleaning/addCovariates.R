@@ -59,7 +59,7 @@ ele.df$LC_CATEG <- factor( LC.df$LC_CATEG, levels=lands.meta$class )
 data <- ele.df %>% nog() %>% 
   rename(lat=LAT, lon=LON, date.time=DATE.TIME) %>% 
   mutate(date = as.Date(as.POSIXct(date.time)))
-sun.times <- getSunlightTimes(data=data[,1:3])
+sun.times <- getSunlightTimes(data=data[,c('date', 'lat', 'lon')])
 findDiff <- function(e) difftime( e, data$date.time )
 
 dawn <- difftime (sun.times$dawn, data$date.time ) %>% as.n()
