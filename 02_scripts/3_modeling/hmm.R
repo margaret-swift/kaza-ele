@@ -10,7 +10,7 @@ i_am('02_scripts/3_modeling/hmm.R')
 source(here('02_scripts','utilities.R'))
 setDataPaths('elephant')
 load(here(procpath, 'ele.rdata'))
-load(here(outdir, 'hmm.rdata'))
+# load(here(outdir, 'hmm.rdata'))
 
 # ******************************************************************************
 #                                HMM PREP DATA
@@ -39,8 +39,8 @@ pdata <- prepData( data,
                               'SEX',
                               'INX',
                               'DIST'))
-which(pdata$step > max(data$DIST, na.rm=TRUE))
-pdata[3155:3157,]
+# which(pdata$step > max(data$DIST, na.rm=TRUE))
+# pdata[3155:3157,]
 
 # ******************************************************************************
 #                                PARAMETERS
