@@ -49,13 +49,8 @@ ele <- ele %>%
 # distances etc are tied to next point, not the previous... I don't like that.
 tolag <- c("DIST", "DX", "DY", "DT", "DTS", "DTM", "R2N",
            "ABS.ANGLE", "REL.ANGLE", "SPEED")
-<<<<<<< HEAD
 # ele[,tolag] <- lag(ele[,tolag]) 
 # ele[ele$START.COUNT,tolag] <- NA
-=======
-ele[,tolag] <- lag(ele[,tolag]) 
-ele[ele$START.COUNT,tolag] <- NA
->>>>>>> 153847358d2badc07d7c2857d9e2e749a2ce53ca
 ele$MPS <- ele$DIST / ele$DTS
 
 # Set fixrates

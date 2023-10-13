@@ -10,16 +10,15 @@ i_am('02_scripts/3_modeling/hmm.R')
 source(here('02_scripts','utilities.R'))
 setDataPaths('elephant')
 load(here(procpath, 'ele.rdata'))
-load(here(outdir, 'hmm.rdata'))
+load(here(outdir, 'hmmShort.rdata'))
 
 # ******************************************************************************
 #                                HMM PREP DATA
 # ******************************************************************************
 
 data <- ele %>% nog() %>% 
-  filter(ID == 1,
-         FIXRATE == "1 hour", 
-         YEAR == 2016) %>%
+  filter(SEX == "M", ID < 38, !(ID %in% c(26, 27)), 
+         FIXRATE == "1 hour") %>%
   dplyr::select(INX, SEASON, ANIMAL_ID, SEX, DIST,
                 DATE.TIME, BURST, X, Y) %>% 
   rename(ID=BURST)
@@ -60,10 +59,10 @@ sd0 <- c(5, 300, 1000)
 # sd0 <- c(200, 1200)
 
 # plotting hist and params
-hist(pdata$step, breaks=200)
-abline(v=mu0, col='red')
-abline(v=mu0+sd0, col='pink')
-abline(v=mu0-sd0, col='pink')
+# hist(pdata$step, breaks=200)
+# abline(v=mu0, col='red')
+# abline(v=mu0+sd0, col='pink')
+# abline(v=mu0-sd0, col='pink')
 
 zm0 <- c(0.005, 0.001, 0.0005)
 angleMean0 <- c(pi,0,0) # initial means (one for each state)
@@ -73,7 +72,7 @@ angleCon0 <- c(0.5, 0.5, 0.85) # initial concentrations (one for each state)
 # angleCon0 <- c(0.5, 0.85) # initial concentrations (one for each state)
 
 #put it all together
-Par0 = list(step = c(mu0, sd0),# zm0), 
+Par0 = list(step = c(mu0, sd0),#, zm0), 
             angle = c(angleMean0, angleCon0))
 
 
@@ -98,10 +97,11 @@ hmm <- momentuHMM::fitHMM(
 toc()
 
 # decoding states and adding to data
-pdata$STATE <- stateNames[viterbi(hmm)]
-data$STATE <- stateNames[viterbi(hmm)]
-
-save(hmm, file=here(outdir, 'hmmShort.rdata'))
+pdata$STATE <- data$STATE <- stateNames[viterbi(hmm)]
+pdata.m <- pdata
+data.m <- data
+hmm.m <- hmm
+save(hmm.m, pdata.m, data.m, file=here(outdir, 'hmmLongM.rdata'))
 
 
 # ******************************************************************************
