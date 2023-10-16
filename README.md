@@ -16,6 +16,9 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, ...
   
 ## 3.  **Exploratory Data Analysis**
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
+  - [ ] **Segment activity states**: Segment GPS paths by activity state
+    - [ ] Hidden Markov Model ([McClintock & Michelot 2018](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12995))
+    - [ ] M4 Model ([Cullen et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13745))
 
 ## 4.	**Modeling**
   - [ ] **Basic model implementation**: Run a basic version of [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8) and [abmMovement](https://f1000research.com/articles/11-1182) with agent parameters from (1b) and simplified spatial rasters. This way we can make sure the behaviors seem right before dedicating the computational power needed for the main, large raster.
