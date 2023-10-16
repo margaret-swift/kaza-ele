@@ -5,5 +5,4 @@
 /00_metadata/**
 /01_data/geographic/raw/**
 /01_data/elephant/**
-/03_output/eda/ele_paths/**
-/03_output/eda/ele_all/**
+/03_output/**
