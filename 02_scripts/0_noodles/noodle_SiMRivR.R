@@ -51,8 +51,8 @@ plot(sim.lw, type='l', asp=1, main='levy walker')
 
 # import some data
 setDataPaths('geographic')
-load(here(procpath, 'fences.Rdata')) #two fences: 'fence' and 'cbpp'
-load(here(procpath, 'geographicData.RData'))
+load(here(procpath, 'geographic.rdata')) #two fences: 'fence' and 'cbpp'
+load(here(procpath, 'landcover_rasters.rdata'))
 
 # set resistances for different landscape types
 # 0 = no resistance
@@ -80,7 +80,7 @@ lands.meta$resistance = c(
 
 x1 <- reclassify(lands.raster.1, lands.meta[,c('category', 'resistance')])
 x2 <- reclassify(lands.raster.2, lands.meta[,c('category', 'resistance')])
-crs(x1) <- crs(x2) <- crs(fence)
+crs(x1) <- crs(x2) <- crs(fences)
 e1 <- extent(x1)
 e2 <- extent(x2)
 e <- merge(e1, e2)
@@ -91,14 +91,14 @@ extent(x11) <- extent(x22) <- e
 s <- mosaic(x11, x22, tolerance=0.5, fun=sum)
 
 
-land.files <- list.files(rawpath, full.names=TRUE)
 
 # read LC categories metadata
-meta.file <-  land.files[grepl('csv', land.files)]
+meta.file <-  here(rawpath, 'kaza_landcover', 'landcover_class_resistance.csv')
 lands.meta <- read.csv(meta.file)
 
 # read shapefile
-shp.file <- land.files[grepl('tif', land.files)]
+land.files <- list.files(here(rawpath, 'kaza_landcover'), full.names=TRUE)
+shp.file <- land.files[grepl('tif$', land.files)]
 p4s = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 lc.r <- raster(shp.file) %>% projectRaster(crs=4326)
 
@@ -126,6 +126,7 @@ image(x, add=TRUE, col=cols, breaks=breaks)
 image(y, add=TRUE, col=cols, breaks=breaks)
 
 x = merge(x1, x2, tolerance=1)
+
 
 
 

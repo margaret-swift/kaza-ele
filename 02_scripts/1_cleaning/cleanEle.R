@@ -163,9 +163,22 @@ inx.rm <- c(inx.1_4, inx.5, inx.7, inx.13.1, inx.13.2, inx.19,
 ele.df <- ele.df[-c(inx.rm),]
 
 
+# ******************************************************************************
+#                            Transforming to spatial data
+# ******************************************************************************
+
+ele.df <- ele.df %>% 
+  st_as_sf(coords=c('X', 'Y'), crs=32734, remove=FALSE) %>% 
+  st_transform(crs = st_crs(khau))
+
+# add latlon
+latlon <- st_coordinates(ele.df)
+colnames(latlon) <- c('LON', "LAT")
+ele.df <- cbind(ele.df, latlon)
+
 
 # ******************************************************************************
-#                            Final cleanup before transformations
+#                                  Final cleanup 
 # ******************************************************************************
 
 # reassign INX and pull cols in order
@@ -173,24 +186,11 @@ ele.df$INX <- 1:nrow(ele.df)
 ele.df <- ele.df %>% 
   dplyr::select(INX, ID, BURST, START.COUNT,
                 ANIMAL_ID, SEX,
-                DATE.TIME, DATE, SEASON,
+                DATE.TIME, DATE, SEASON, LON, LAT,
                 X, Y, DX, DY, DIST, DTM, R2N,
                 ABS.ANGLE, REL.ANGLE, MPS,
                 FIXRATE, COUNTRY, PROVIDER)
 
-
-# ******************************************************************************
-#                            Transforming to spatial data
-# ******************************************************************************
-
-ele.df <- ele.df %>% 
-  st_as_sf(coords=c('X', 'Y'), crs=32734) %>% 
-  st_transform(crs = st_crs(khau))
-
-# add latlon
-latlon <- st_coordinates(ele.df)
-colnames(latlon) <- c('LON', "LAT")
-ele.df <- cbind(ele.df, latlon)
 
 # ******************************************************************************
 #                                       STS
