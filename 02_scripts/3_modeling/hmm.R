@@ -10,11 +10,7 @@ i_am('02_scripts/3_modeling/hmm.R')
 source(here('02_scripts','utilities.R'))
 setDataPaths('elephant')
 load(here(procpath, 'ele.rdata'))
-<<<<<<< HEAD
-load(here(outdir, 'hmmShort.rdata'))
-=======
-# load(here(outdir, 'hmm.rdata'))
->>>>>>> 04a56611bd5655e0733491dcb95f8162f3d24a05
+load(here(outdir, 'hmmLongF.rdata'))
 
 # ******************************************************************************
 #                                HMM PREP DATA
@@ -116,13 +112,14 @@ save(hmm.m, pdata.m, data.m, file=here(outdir, 'hmmLongM.rdata'))
 plot(data, compact=T)
 
 # show model outputs
+hmm <- hmm.f
 hmm
 
 # plot model outputs
 plot(hmm, plotCI=TRUE)
-points(data$X[data$STATE=="resting"],
-     data$Y[data$STATE=="resting"],
-     col='orange', cex=0.5, pch=19)
+# points(data$X[data$STATE=="resting"],
+#      data$Y[data$STATE=="resting"],
+#      col='orange', cex=0.5, pch=19)
 
 plotStationary(m.roan, plotCI=TRUE)
 

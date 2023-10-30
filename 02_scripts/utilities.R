@@ -56,34 +56,44 @@ fixNames <- function(d) {
   d
 }
 
-makeDataPaths <- function(dataname, verbose=TRUE, print.length=5) {
-  datapath <<- file.path(datadir, dataname)
-  files <- list.files(datapath)
-  if (!length(files)) {
-    warning('No files found in data directory "', dataname, 
-            '".\nPossible data file names: ',
+# functions to set user-friendly datapath options
+metapath <- function(...) .metapath(...)
+rawpath  <- function(...) .rawpath(...)
+procpath <- function(...) .procpath(...)
+setDataPaths <- function(dataname, verbose=TRUE, print.length=5) {
+  datapath <- file.path(datadir, dataname)
+  if (!dir.exists(datapath)) {
+    warning('\n  Data directory "', dataname, 
+            '" not found. Did you mean one of these in /0_data/? ',
             paste("\n     -", list.files(datadir)))
   } else {
-    metapath <<- file.path(datapath, 'meta')
-    rawpath  <<- file.path(datapath, 'raw')
-    procpath <<- file.path(datapath, 'processed')
+    .metapath <<- function(...) file.path(datapath, 'meta', ...)
+    .rawpath  <<- function(...) file.path(datapath, 'raw', ...)
+    .procpath <<- function(...) file.path(datapath, 'processed', ...)
     
     if (verbose) {
-      printPathFiles <- function(path) {
-        cat(gsub(".*01_data", "", path))
-        files <- list.files(path)
+      # function to easily print path names and files within
+      printPathFiles <- function(slug) {
+        # print directory name
+        shortslug <- substr(slug, 0, 4)
+        fname <- file.path(gsub(".*01_data", "", datapath), slug)
+        fprint<- ifelse(str_count(shortslug) == 4,'path() <-','path()  <-' )
+        cat('  ', paste0(shortslug, fprint), fname)
+        
+        # print files
+        files <- list.files(file.path(datapath, slug))
         L=min(length(files), print.length)
         message(paste("\n     -", files[1:L]))
-        if (length(files)>print.length) message('     ...')
+        if (length(files) > print.length) message('     ...')
       }
-      cat('resetting data paths to...\n')
-      printPathFiles(metapath)
-      printPathFiles(rawpath)
-      printPathFiles(procpath)
+      cat('rebasing data grabber function paths to...\n')
+      printPathFiles('meta')
+      printPathFiles('raw')
+      printPathFiles('processed')
     }
   }
 }
-setDataPaths <- makeDataPaths
+makeDataPaths <- setDataPaths #because I always forget which is which
 message("   ...Basic functions loaded.")
 
 # ******************************************************************************
@@ -106,7 +116,7 @@ message("   ...Plotting functions loaded.")
 #                          OTHER CUSTOM FUNCTIONS
 # ******************************************************************************
 
-message("   ...Custom functions loaded.")
+# message("   ...Custom functions loaded.")
 
 
 # ******************************************************************************

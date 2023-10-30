@@ -136,7 +136,7 @@ toc()
 # moving window
 
 i=1; j=25;
-data <- ele.pts %>% filter(ID == i)
+data <- ele.df %>% filter(ID == i)
 data.sp <- data %>%
   nog() %>% 
   dplyr::select(X, Y) %>% 
@@ -176,3 +176,5 @@ ggplot() +
 plot(kernel.ref)
 points(max, pch=19, col='black', cex=1)
 points(max, pch=19, col='white', cex=0.5)
+
+#Wayne Getz
