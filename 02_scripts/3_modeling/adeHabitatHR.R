@@ -130,17 +130,15 @@ toc()
 
 # ******************************************************************************
 
-# measuring displacement
 
-
-# moving window
-
+# kernel density calculations
 i=1; j=25;
 data <- ele.df %>% filter(ID == i)
 data.sp <- data %>%
   nog() %>% 
   dplyr::select(X, Y) %>% 
   SpatialPoints()
+
 kernel.ref <- kernelUD(data.sp, h='href')
 max = findmax(kernel.ref)
 max.pts <- max %>% 
@@ -173,8 +171,24 @@ ggplot() +
   geom_sf(data=max.pts, mapping=aes(color=SINK), size=1.5)
 
 # plot UD kernel
+bb <- st_bbox(data)
+ggplot(data) + 
+  geom_sf(data=fences, color='red', linewidth=2) + 
+  geom_sf(alpha=0.2) + 
+  geom_sf(data=max.pts, color='green', size=4) +
+  coord_sf(xlim = bb[c(1,3)],
+           ylim = bb[c(2,4)])
+
 plot(kernel.ref)
 points(max, pch=19, col='black', cex=1)
 points(max, pch=19, col='white', cex=0.5)
+contour(as.image.SpatialGridDataFrame(kernel.ref), add=TRUE, col='white')
+
+# home range size
+# hr = getverticeshr(kernel.ref)
+# plot(hr)
+
+
+
 
 #Wayne Getz

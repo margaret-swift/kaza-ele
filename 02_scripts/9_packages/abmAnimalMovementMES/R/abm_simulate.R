@@ -134,7 +134,8 @@ abm_simulate <- function(start, timesteps,
                          foragingMatrix,
                          movementMatrix,
 
-                         fence){
+                         fence,
+                         p_cross = 0){
 
 
 # Verify/check inputs -----------------------------------------------------
@@ -290,20 +291,14 @@ abm_simulate <- function(start, timesteps,
   avoidPoints_xIN <- avoidPoints[,1]
   avoidPoints_yIN <- avoidPoints[,2]
 
+  # Declaring the fence
+  # here is where you manipulate the dataset put into fence by casting to MULTIPOINT
 
-  # Declaring the fence
-  # here is where you manipulate the dataset put into fence by casting to MULTIPOINT
-  fence_x1 <- c(100, 100)
-  fence_y1 <- c(80,  80)
-  fence_x2 <- c(100, 115)
-  fence_y2 <- c(100, 80)
-  # Declaring the fence
-  # here is where you manipulate the dataset put into fence by casting to MULTIPOINT
-  # fence_x1 <- fences$x
-  # fence_y1 <- fences$y
-  # fence_x2 <- fences$xend
-  # fence_y2 <- fences$yend
-  #
+  fence_x1 <- fence$x
+  fence_y1 <- fence$y
+  fence_x2 <- fence$xend
+  fence_y2 <- fence$yend
+
 
   # how many additional cycles have been provided, and get that value ready for
   # C++
@@ -362,7 +357,8 @@ abm_simulate <- function(start, timesteps,
     fence_x1,
     fence_x2,
     fence_y1,
-    fence_y2
+    fence_y2,
+    p_cross
   )
 
   # tidy up all objects parse via the
@@ -465,7 +461,8 @@ run_abm_simulate <- function(startx, starty,
                              fence_x1,
                              fence_x2,
                              fence_y1,
-                             fence_y2
+                             fence_y2,
+                             p_cross
 ){
   .Call("_abmAnimalMovementMES_cpp_abm_simulate",
         startx, starty,
@@ -511,7 +508,8 @@ run_abm_simulate <- function(startx, starty,
         fence_x1,
         fence_x2,
         fence_y1,
-        fence_y2
+        fence_y2,
+        p_cross
         )
 }
 

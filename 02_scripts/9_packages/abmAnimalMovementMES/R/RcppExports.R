@@ -2,82 +2,10 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @name cpp_abm_simulate
-#' @title cpp_abm_simulate
-#' @description The C++ function that runs the agent based animal movement
-#'   model.
-#' @param startx The x coordinate start location
-#' @param starty The y coordinate start location
-#' @param timesteps The number of timesteps to be simulated
-#' @param ndes The number of possible destination considered for foraging.
-#' @param nopt The number of options to be considered at each timestep
-#' @param shelter_locs_x A vector of shelter locations x coordinates.
-#' @param shelter_locs_y A vector of shelter locations y coordinates.
-#' @param sSiteSize A double dictating at what range the animal's movements
-#'   will dramatically drop simulating (near-)stationary behaviour.
-#' @param avoidPoints_x A vector of avoidance point x coordinates.
-#' @param avoidPoints_y A vector of avoidance point y coordinates.
-#' @param k_desRange Shape parameter describing the gamma distribution
-#'   destinations can be draw from.
-#' @param s_desRange Scale parameter describing the gamma distribution
-#'   destinations can be draw from.
-#' @param mu_desDir Mean of the turn angle destinations are drawn from.
-#' @param k_desDir Concentration of the turn angles destinations are drawn
-#'   from.
-#' @param destinationTrans 0 - no transformation applied to the distance to
-#'   destination weighting, 1 - distance to destination weighing is
-#'   square-rooted, 2 - distance to destination weighting is squared
-#' @param destinationMod A coefficient to be applied to the distance to
-#'   destination weighting.
-#' @param avoidTrans 0 - no transformation applied to the distance to avoidance
-#'   points weighting, 1 - distance to avoidance points weighing is
-#'   square-rooted, 2 - distance to avoidance points weighting is squared
-#' @param avoidMod A coefficient to be applied to the avoidance points
-#'   weighting.
-#' @param k_step Parameter describing step length
-#' @param s_step Parameter describing step
-#' @param mu_angle Parameter describing angle
-#' @param k_angle Parameter describing angle variation
-#' @param rescale A value that describes the cell size of the environmental
-#'   matrices relative to the units of the step lengths. Must be greater than
-#'   zero. The step lengths returned are on the scale of the matrix and need to
-#'   be back transformed to match the input step length units for comparison.
-#'   Default is 1, step and matrix unit are the same.
-#' @param b0_Options Behave transitional probs for behave 0
-#' @param b1_Options Behave transitional probs for behave 1
-#' @param b2_Options Behave transitional probs for behave 2
-#' @param rest_Cycle_A The amplitude of the resting/active cycle.
-#' @param rest_Cycle_M The cycle offset from 0 (Midline Statistic Of Rhythm) of
-#'   the resting/active cycle.
-#' @param rest_Cycle_PHI The offset of the cycle (\eqn{\phi}; i.e., acrophase)
-#'   of the resting/active cycle.
-#' @param rest_Cycle_TAU Cycle frequency (\eqn{\tau}; i.e., period) of the
-#'   resting/active cycle.
-#' @param addCycles A integer describing how many additional activity cycles to
-#'   include, can be zero.
-#' @param add_Cycle_A The amplitude of the additional active cycles, should be
-#'   a vector of doubles.
-#' @param add_Cycle_M The cycle offset from 0 (Midline Statistic Of Rhythm) of
-#'   the additional active cycles, should be a vector of doubles.
-#' @param add_Cycle_PHI The offset of the cycle (\eqn{\phi}; i.e., acrophase)
-#'   of the additional active cycles, should be a vector of doubles.
-#' @param add_Cycle_TAU Cycle frequency (\eqn{\tau}; i.e., period) of the
-#'   additional active cycles, should be a vector of doubles.
-#' @param shelterMatrix The matrix describing shelter site quality.
-#' @param forageMatrix The matrix describing foraging site quality.
-#' @param moveMatrix The matrix describing movement ease.
-#' @param fence_x1 MAGGIE - x points, fence start
-#' @param fence_x2 MAGGIE - x points, fence end
-#' @param fence_y1 MAGGIE - above but y points
-#' @param fence_y2 MAGGIE -
-#' @return A list of simulated animal details to be passed and handled by R
-#'   function to make easier to use.
-#' @details Requires cmath and headers for smaller C++ functions for draws.
-#' @seealso [abm_simulate()] is the R function wrap with more in depth
-#'   documentation.
 NULL
 
-cpp_abm_simulate <- function(startx, starty, timesteps, ndes, nopt, shelter_locs_x, shelter_locs_y, sSiteSize, avoidPoints_x, avoidPoints_y, k_desRange, s_desRange, mu_desDir, k_desDir, destinationTrans, destinationMod, avoidTrans, avoidMod, k_step, s_step, mu_angle, k_angle, rescale, b0_Options, b1_Options, b2_Options, rest_Cycle_A, rest_Cycle_M, rest_Cycle_PHI, rest_Cycle_TAU, addCycles, add_Cycle_A, add_Cycle_M, add_Cycle_PHI, add_Cycle_TAU, shelterMatrix, forageMatrix, moveMatrix, fence_x1, fence_x2, fence_y1, fence_y2) {
-    .Call('_abmAnimalMovementMES_cpp_abm_simulate', PACKAGE = 'abmAnimalMovementMES', startx, starty, timesteps, ndes, nopt, shelter_locs_x, shelter_locs_y, sSiteSize, avoidPoints_x, avoidPoints_y, k_desRange, s_desRange, mu_desDir, k_desDir, destinationTrans, destinationMod, avoidTrans, avoidMod, k_step, s_step, mu_angle, k_angle, rescale, b0_Options, b1_Options, b2_Options, rest_Cycle_A, rest_Cycle_M, rest_Cycle_PHI, rest_Cycle_TAU, addCycles, add_Cycle_A, add_Cycle_M, add_Cycle_PHI, add_Cycle_TAU, shelterMatrix, forageMatrix, moveMatrix, fence_x1, fence_x2, fence_y1, fence_y2)
+cpp_abm_simulate <- function(startx, starty, timesteps, ndes, nopt, shelter_locs_x, shelter_locs_y, sSiteSize, avoidPoints_x, avoidPoints_y, k_desRange, s_desRange, mu_desDir, k_desDir, destinationTrans, destinationMod, avoidTrans, avoidMod, k_step, s_step, mu_angle, k_angle, rescale, b0_Options, b1_Options, b2_Options, rest_Cycle_A, rest_Cycle_M, rest_Cycle_PHI, rest_Cycle_TAU, addCycles, add_Cycle_A, add_Cycle_M, add_Cycle_PHI, add_Cycle_TAU, shelterMatrix, forageMatrix, moveMatrix, fence_x1, fence_x2, fence_y1, fence_y2, p_cross) {
+    .Call('_abmAnimalMovementMES_cpp_abm_simulate', PACKAGE = 'abmAnimalMovementMES', startx, starty, timesteps, ndes, nopt, shelter_locs_x, shelter_locs_y, sSiteSize, avoidPoints_x, avoidPoints_y, k_desRange, s_desRange, mu_desDir, k_desDir, destinationTrans, destinationMod, avoidTrans, avoidMod, k_step, s_step, mu_angle, k_angle, rescale, b0_Options, b1_Options, b2_Options, rest_Cycle_A, rest_Cycle_M, rest_Cycle_PHI, rest_Cycle_TAU, addCycles, add_Cycle_A, add_Cycle_M, add_Cycle_PHI, add_Cycle_TAU, shelterMatrix, forageMatrix, moveMatrix, fence_x1, fence_x2, fence_y1, fence_y2, p_cross)
 }
 
 #' Check if a line segment (step option) crosses a fence

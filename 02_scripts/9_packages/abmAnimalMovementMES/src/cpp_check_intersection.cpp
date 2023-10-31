@@ -43,7 +43,7 @@ int orientation(Point p, Point q, Point r) {
   // 2 --> Counterclockwise
   // See https://www.geeksforgeeks.org/orientation-3-ordered-points/
   // for details of below formula.
-  // MAKE SURE THIS IS A DOUBEAE AND NOT AN INTEGER!
+  // MAKE SURE THIS IS A DOUBLE AND NOT AN INTEGER!
   double val = ( (q.y - p.y) * (r.x - q.x) ) - ( (q.x - p.x) * (r.y - q.y) );
   if (val == 0) return 0;  // collinear
   return (val > 0)? 1: 2; // clockwise or counterclockwise

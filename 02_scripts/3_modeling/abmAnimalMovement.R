@@ -62,38 +62,35 @@ pkg.path <- here("02_scripts", "9_packages", "abmAnimalMovementMES")
 # ******************************************************************************
 #                         Get transition matrix from HMM
 # ******************************************************************************
-# 
-# # get estimates for females
-# hmm <- hmm.f
-# 
-# vals <- 1:3
-# probs.df <- data.frame(matrix(nrow=1, ncol=9))
-# names(probs.df) <- paste(rep(vals, each=3), vals, sep=" -> ")
-# mat <- hmm$mle$beta
-# for (i in vals) {
-#   types <- paste(i, vals[vals != i], sep=" -> ")
-# 
-#   d2 <- exp(mat[,types[1]])
-#   d3 <- exp(mat[,types[2]])
-#   sum <- d2 + d3
-# 
-#   p2 <- d2 / ( 1 + sum )
-#   p3 <- d3 / ( 1 + sum )
-#   p1 <- 1 - ( p2 + p3 )
-# 
-#   probs <- data.frame( p1, p2, p3 )
-#   names(probs) <- c(paste(i, i, sep=" -> "), types)
-#   probs.df[,names(probs)] <- probs
-# }
-# probs.df <- unlist(probs.df)
-probs.df <- c(0.68719185, 0.2962346, 0.01657354,
-  0.13275791, 0.7859501, 0.08129195,
-  0.01519633, 0.2423039, 0.74249974)
+
+# get estimates for females
+hmm <- hmm.f
+
+vals <- 1:3
+probs.df <- data.frame(matrix(nrow=1, ncol=9))
+names(probs.df) <- paste(rep(vals, each=3), vals, sep=" -> ")
+mat <- hmm$mle$beta
+for (i in vals) {
+  types <- paste(i, vals[vals != i], sep=" -> ")
+
+  d2 <- exp(mat[,types[1]])
+  d3 <- exp(mat[,types[2]])
+  sum <- d2 + d3
+
+  p2 <- d2 / ( 1 + sum )
+  p3 <- d3 / ( 1 + sum )
+  p1 <- 1 - ( p2 + p3 )
+
+  probs <- data.frame( p1, p2, p3 )
+  names(probs) <- c(paste(i, i, sep=" -> "), types)
+  probs.df[,names(probs)] <- probs
+}
+probs.df <- unlist(probs.df)
 tm <- matrix(probs.df, nrow=3, byrow=TRUE)
 
 
 # ******************************************************************************
-#                       Trying out with the badger example
+#                             Badger example parameters
 # ******************************************************************************
 
 row <- 200; col <- 200;
@@ -109,11 +106,6 @@ BADGER_move <- landscapeLayersList$movement
 # rast <- BADGER_forage * 0 + runif(n=row*col, 0, 0.25)
 # rast[80:85,80:85] <- 1
 # BADGER_forage <- rast
-
-
-
-
-
 
 # shelters
 BADGER_shelterLocs <- data.frame(
@@ -167,12 +159,14 @@ options=12
 
 # Declaring the fence 
 fence_points = matrix(data=c(100, 80, 100, 100,
+                             100, 50, 100, 77,
                              100, 80, 115, 80),
-                      nrow=2,
+                      ncol=4,
                       byrow=TRUE)
 fence_display = as.data.frame(fence_points)
 names(fence_display) = c('x', 'y', 'xend', 'yend')
 
+## Add in the real fences 
 # fences.df <- fences[102:103,] %>% 
 #   st_cast('MULTIPOINT') 
 # ggplot() + 
@@ -182,6 +176,7 @@ names(fence_display) = c('x', 'y', 'xend', 'yend')
 #           mapping=aes(color=Name))
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                            FUNCTIONS FOR SIMULATIONS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 createMoveRast <- function(simRes) {
   locs <- simRes$locations
@@ -238,8 +233,7 @@ myPlot <- function(simRes, seed=1001, inx=NULL) {
   p
 }
 
-runSim <- function(seed=1001) {
-  # Good seeds: 292, 
+runSim <- function(seed=1001, p_cross=0) {
   set.seed(seed)
   simRes <- abmAnimalMovementMES::abm_simulate(
     start = start, timesteps = timesteps, des_options = des_options,options = options,
@@ -253,165 +247,41 @@ runSim <- function(seed=1001) {
     behave_Tmat = BADGER_behaveMatrix,rest_Cycle = BADGER_rest_Cycle,
     additional_Cycles = BADGER_additional_Cycles,shelteringMatrix = BADGER_shelter,
     foragingMatrix = BADGER_forage,movementMatrix = BADGER_move,
-    fence=fence_display
+    fence=fence_display, p_cross = p_cross
   )
-  message('seed ', seed)
+  message('seed ', seed, "; p_cross ", p_cross)
   p <- myPlot(simRes, seed)
   print(p)
 }
 
-# devtools::load_all(path=pkg.path)'
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                         SIMULATE ELEPHANT MOVEMENTS
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+## Run these just once at the start of simulations (or when you've updated ++)
+devtools::load_all(path=pkg.path)
+set.seed(1001)
 randseeds <- floor(runif(1e5, 0, 1) * 1e5)
 i = 0
 
-# run this as a chunk
-# # good seeds: 85984; 61862; 78735; 50575
+## Run this as a chunk to generate random maps of elephant movements
 i = i+1
 seed <- randseeds[i]
 runSim(seed)
 
+## Particular seeds that show off the movements well
+# - 61862; 78735; 50575; 85984 show fence behaviors really well 
+# - 46536; 33712; has good action on both sides of the fence
+runSim(33712)
 
+timesteps = 100000
+runSim(85984)
+runSim(85984, p_cross=0.5)
+runSim(85984, p_cross=0.85)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
-
-
-
-
-
-
-
-
-
-# 
-# 
-# 
-# 
-# 
-# # my visualizations
-# move_rast <- data.frame(x = rep(1:200, each=200),
-#                         y = rep(1:200, times=200),
-#                         shelter=NA, forage=NA, move=NA)
-# filterToData <- function(df) {
-#   locs <- simRes$locations
-#   df <- df %>%
-#     dplyr::filter(x > min(locs$x),
-#            x < max(locs$x),
-#            y > min(locs$y),
-#            y < max(locs$y),
-#     )
-#   df
-# }
-# move_rast <- filterToData(move_rast)
-# for(i in 1:nrow(move_rast)) {
-#   y <- move_rast$y[i]; x <- move_rast$x[i];
-#   move_rast$shelter[i] <- BADGER_shelter[y,x]
-#   move_rast$forage[i] <- BADGER_forage[y,x]
-#   move_rast$move[i] <- BADGER_move[y,x]
-# }
-# 
-# 
-# myPlot <- function(base = "move", inx=1:nrow(simRes$locations)) {
-#   # dat <- move_rast %>%
-#   #   dplyr::select_at(c('x', 'y', base))
-#   # names(dat) <- c('x', 'y', 'base')
-#   # dat$base <- factor(dat$base)
-#   path <- simRes$locations[inx,]
-#   path$INX <- 1:nrow(path)
-#   xlim = c(min(path$x), max(path$x))
-#   ylim = c(min(path$y), max(path$y))
-#   title = paste0("Ele movement, seed = ", seed)
-#   p <- ggplot() +
-#     geom_rect(aes(xmin=100, xmax=105, ymin=-Inf, ymax=Inf), fill='darkgray') +
-#     geom_segment(data=fence_display, aes(x=x, y=y, xend=xend, yend=yend), linewidth=2) +
-#     geom_path(data=path,
-#               mapping=aes(x=x, y=y, color=INX),
-#               linewidth=1) +
-#     geom_point(data=simRes$locations[1,],
-#                mapping=aes(x=x, y=y),
-#                color='black', size=5) +
-#     geom_point(data=simRes$locations[1,],
-#                mapping=aes(x=x, y=y),
-#                color='white', size=3) +
-#     scale_color_distiller(palette='Spectral', direction=1) +
-#     coord_sf(xlim=xlim, ylim=ylim) +
-#     ggtitle(title)
-#   p
-# }
-# 
-# 
-# myPlot()
-
-# p2 <- myPlot('forage')
-# p3 <- myPlot('shelter')
-# p1 + p2 + p3 + plot_layout(guides='collect', nrow=1)
-
-
-
-simRes <- abmAnimalMovementMES::abm_simulate(
-  # a data frame with x and y coordinates
-  start = start,
-  # an integer describing the length of the simulation
-  timesteps = timesteps,
-  # an integer describing the number of foraging destination options an animal
-  # is offered
-  des_options = des_options,
-  # an integer describing the number of movement options an animal is offered
-  options = options,
-  # a data frame providing x and y coordinates of the shelter locations
-  shelterLocations = BADGER_shelterLocs,
-  # a value describing the radius around shelter sites that movement step
-  # lengths are reduced
-  shelterSize = BADGER_shelterSize,
-  # a data frame providing x and y coordinates of the avoidance locations
-  avoidPoints = BADGER_avoidLocs,
-  # a numeric vector of length two that contains the shape and scale values
-  # that describe the Gamma distribution for potential foraging destinations
-  destinationRange = BADGER_destinationRange,
-  # a numeric vector of length two that contains the mean and concentration values
-  # that describe the Von Mises distribution for potential foraging destinations
-  destinationDirection = BADGER_destinationDirection,
-  # a value to chose the type of transformation applied to the animal’s
-  # attraction to a chosen destination
-  destinationTransformation = BADGER_destinationTransformation,
-  # a value modifying the animal’s attraction to a chosen destination
-  destinationModifier = BADGER_destinationModifier,
-  # a value to chose the type of transformation applied to the animal’s
-  # avoidance to a avoidance locations
-  avoidTransformation = BADGER_avoidTransformation,
-  # a value modifying the animal’s avoidance of avoidance locations
-  avoidModifier = BADGER_avoidModifier,
-  # a vector of three numbers describing the three behavioural state’s Gamma
-  # distributions’ shape parameter for step lengths
-  k_step = BADGER_k_step,
-  # a vector of three numbers describing the three behavioural state’s Gamma
-  # distributions’ scale parameter for step lengths
-  s_step = BADGER_s_step,
-  # a vector of three numbers describing the three behavioural state’s Von Mises
-  # distributions’ mean parameter for turn angles
-  mu_angle = BADGER_mu_angle,
-  # a vector of three numbers describing the three behavioural state’s Von Mises
-  # distributions’ concentration parameter for turn angles
-  k_angle = BADGER_k_angle,
-  # a numeric value to specify the size of the environmental matrices cells
-  rescale_step2cell = BADGER_rescale,
-  # a 3x3 numeric matrix describing the transition probabilities between the
-  # three behavioural states
-  behave_Tmat = BADGER_behaveMatrix,
-  # A vector length 4 for amplitude, midline, offset and frequency to define the
-  # resting/active cycle
-  rest_Cycle = BADGER_rest_Cycle,
-  # A data.frame 4 columns wide for amplitude, midline, offset and frequency to
-  # define any additional activity cycles, where each row is another cycle
-  additional_Cycles = BADGER_additional_Cycles,
-  # Three arguments for the three matrices describing the landscape the
-  # simulated animal occupies
-  shelteringMatrix = BADGER_shelter,
-  foragingMatrix   = BADGER_forage,
-  movementMatrix   = BADGER_move
-)
 

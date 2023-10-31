@@ -82,7 +82,7 @@ Par0 = list(step = c(mu0, sd0),#, zm0),
 # ******************************************************************************
 
 # formula
-form <- formula( ~ 1 )
+form <- formula( ~ SEASON )
 
 tic()
 # fit model
