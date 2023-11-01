@@ -25,7 +25,7 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, ...
     - [x] ~~M4 Model ([Cullen et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13745))~~
 
 ## 4.	**Modeling**
-  - [ ] ~~**Basic model implementation**: Run a basic version of [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8) and [abmMovement](https://f1000research.com/articles/11-1182) with agent parameters from (1b) and simplified spatial rasters. This way we can make sure the behaviors seem right before dedicating the computational power needed for the main, large raster.
+  - [ ] **Basic model implementation**: Run a basic version of [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8) and [abmMovement](https://f1000research.com/articles/11-1182) with agent parameters from (1b) and simplified spatial rasters. This way we can make sure the behaviors seem right before dedicating the computational power needed for the main, large raster.
     - [x] ~~Fence response behavior~~
     - [ ] Selectively permeable fences with probability changing based on sex, season, and activity state
     - [ ] Attraction to range centroids
