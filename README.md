@@ -5,6 +5,9 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, ...
 
 **WARNING: This repository is public, but raw data files (especially elephant GPS data) are sensitive and never stored or tracked through GitHub.**
 
+Agent-based model code is housed at: www.github.com/margaret-swift/abmFences
+
+
 # Project steps
 ## 1.	**Agent data**
   - [x] ~~**Gather elephant data**: Robin should be sending elephant data over soon.~~. DONE 9/16/23
