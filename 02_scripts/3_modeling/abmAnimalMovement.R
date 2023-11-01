@@ -55,7 +55,7 @@ load(here(outdir, 'hmmLongM.rdata'))
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
 # location for updated abmAnimalMovementMES
-pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R/abmFences"
+pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R_Packages/abmFences"
 devtools::load_all(path=pkg.path)
 devtools::install_github("margaret-swift/abmFences")
 
