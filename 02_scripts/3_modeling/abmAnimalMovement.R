@@ -55,9 +55,9 @@ load(here(outdir, 'hmmLongM.rdata'))
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
 # location for updated abmAnimalMovementMES
-pkg.path <- here("02_scripts", "9_packages", "abmAnimalMovementMES")
-# devtools::load_all(path=pkg.path)
-
+pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R/abmFences"
+devtools::load_all(path=pkg.path)
+devtools::install_github("margaret-swift/abmFences")
 
 # ******************************************************************************
 #                         Get transition matrix from HMM
