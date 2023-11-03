@@ -98,40 +98,32 @@ landscapeLayersList <- list(
   "shelter" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
   "forage" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
   "movement" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col))
-BADGER_shelter <- landscapeLayersList$shelter
-BADGER_forage <- landscapeLayersList$forage
-BADGER_move <- landscapeLayersList$movement
-
-# # give them only a few good foraging spots
-# rast <- BADGER_forage * 0 + runif(n=row*col, 0, 0.25)
-# rast[80:85,80:85] <- 1
-# BADGER_forage <- rast
+ELE_shelter <- landscapeLayersList$shelter
+ELE_forage <- landscapeLayersList$forage
+ELE_move <- landscapeLayersList$movement
 
 # shelters
-BADGER_shelterLocs <- data.frame(
+ELE_shelterLocs <- data.frame(
   "x" = c(90, 95, 110),
   "y" = c(90, 75, 90))
-BADGER_shelterSize <- 5
+ELE_shelterSize <- 5
 
-# b0 <- c(0.97, 0.01, 0.001) # rest
-# b1 <- c(0.0002, 0.95, 0.0008) # explore/move
-# b2 <- c(0.001, 0.00001, 0.99) # forage
-# BADGER_behaveMatrix <- rbind(b0, b1, b2)
-BADGER_behaveMatrix <- tm
+#behavior matrix
+ELE_behaveMatrix <- tm
 
 # step params
-BADGER_k_step <- c(0.3*60, 1.25*60, 0.25*60)
-BADGER_s_step <- c(0.8, 0.25, 0.5)
-BADGER_mu_angle <- c(0, 0, 0)
-BADGER_k_angle <- c(0.6, 0.99, 0.6)
+ELE_k_step <- c(0.3*60, 1.25*60, 0.25*60)
+ELE_s_step <- c(0.8, 0.25, 0.5)
+ELE_mu_angle <- c(0, 0, 0)
+ELE_k_angle <- c(0.6, 0.99, 0.6)
 
 # destination params
-BADGER_destinationRange <- c(3, 120)
-BADGER_destinationDirection <- c(0, 0.01)
-BADGER_destinationTransformation <- 2
-BADGER_destinationModifier <- 2
+ELE_destinationRange <- c(3, 120)
+ELE_destinationDirection <- c(0, 0.01)
+ELE_destinationTransformation <- 2
+ELE_destinationModifier <- 2
 
-BADGER_rescale <- 50
+ELE_rescale <- 50
 
 # avoiding
 # avoidTrans 0 - no transformation applied to the distance to avoidance 
@@ -140,16 +132,16 @@ BADGER_rescale <- 50
 #            2 - distance to avoidance points weighting is squared
 # avoidMod  A coefficient to be applied to the avoidance points weighting.
 nrep=1e3
-BADGER_avoidLocs <- data.frame(
+ELE_avoidLocs <- data.frame(
   "x" = 5,
   "y" = 5)
-BADGER_avoidTransformation <- 2
-BADGER_avoidModifier <- 4
+ELE_avoidTransformation <- 2
+ELE_avoidModifier <- 4
 
 # additional cycles
-BADGER_rest_Cycle <- c(0.12, 0, 24, 24)
+ELE_rest_Cycle <- c(0.12, 0, 24, 24)
 c0 <- c(0.075, 0, 24* (365/2), 24* 365) # seasonal
-BADGER_additional_Cycles <- rbind(c0)
+ELE_additional_Cycles <- rbind(c0)
 
 # startLocation <- sample(90:110, 2, replace = TRUE)
 start <- c(95, 95)
@@ -178,88 +170,149 @@ names(fence_display) = c('x', 'y', 'xend', 'yend')
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                            FUNCTIONS FOR SIMULATIONS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-createMoveRast <- function(simRes) {
-  locs <- simRes$locations
+createMoveRast <- function(locs) {
   df <- data.frame( x = rep(1:200, each=200),
                     y = rep(1:200, times=200),
                     shelter=NA, forage=NA, move=NA) %>%
     dplyr::filter(x > min(locs$x), x < max(locs$x),
                   y > min(locs$y), y < max(locs$y))
+  
+  for(i in 1:nrow(df)) {
+    y <- df$y[i]; x <- df$x[i];
+    df$shelter[i] <- ELE_shelter[y,x]
+    df$forage[i] <- ELE_forage[y,x]
+    df$move[i] <- ELE_move[y,x]
+  }
   df
 }
-myPlot <- function(simRes, seed=1001, inx=NULL) {
-  # get rasters 
-  move_rast <- createMoveRast(simRes)
-  for(i in 1:nrow(move_rast)) {
-    y <- move_rast$y[i]; x <- move_rast$x[i];
-    move_rast$shelter[i] <- BADGER_shelter[y,x]
-    move_rast$forage[i] <- BADGER_forage[y,x]
-    move_rast$move[i] <- BADGER_move[y,x]
+plotBase <- function(move_rast, activity=NULL, seed=1001) {
+  if (is.null(activity)) {
+    base <- ggplot()
+    title <- paste0("Simulated ele path, seed = ", seed)
+  } else {
+    if (!(activity %in% names(move_rast))) {
+      message("WARNING: activity type '", activity, "' not found")
+      return()
+    }
+    color.ref <- list(forage="Greens", move="Reds", shelter="Purples")
+    move_rast$selected <- move_rast[,activity]
+    title = paste0(toupper(activity), ", seed = ", seed)
+    base <- ggplot() +
+      geom_tile(data = move_rast,
+                mapping=aes(x=x, y=y, fill=selected),
+                alpha=0.25) + 
+      scale_fill_distiller(palette=color.ref[[activity]], direction=1, name=activity)
   }
-  
+  p <- base + 
+    theme(axis.title=element_blank(),
+          axis.text=element_text(size=18)) +
+    ggtitle(title)
+  return(p)
+}
+plotPaths <- function(simRes, seed=1001, activity=NULL, inx=NULL, colorby=NULL) {
   # get paths of walking
   path <- simRes$locations
   if (!is.null(inx)) path <- path[inx,]
   path$INX <- 1:nrow(path)
   xlim = c(min(path$x), max(path$x))
   ylim = c(min(path$y), max(path$y))
-  title = paste0("Ele movement, seed = ", seed)
-  p <- ggplot() +
-    # geom_tile(data = move_rast,
-              # mapping=aes(x=x, y=y, fill=forage),
-              # alpha=0.4) +
-    geom_segment(data=fence_display, aes(x=x, y=y, xend=xend, yend=yend), linewidth=2) +
-    geom_point(data=BADGER_shelterLocs, 
-               mapping=aes(x=x, y=y), color="#dbafed", alpha=0.3,
-               size=BADGER_shelterSize*19.5) +
+  
+  # pull raster data 
+  move_rast <- createMoveRast(path)
+
+  # plot paths on raster base
+  p1 <- plotBase(move_rast, activity, seed) +
+    geom_segment(data=fence_display, 
+                 mapping=aes(x=x, y=y, xend=xend, yend=yend), linewidth=2) +
+    # geom_point(data=ELE_shelterLocs,
+    #   mapping=aes(x=x, y=y), color="#dbafed", alpha=0.3,
+    #   size=ELE_shelterSize*19.5) +
     geom_point(data=simRes$locations[1,], 
                mapping=aes(x=x, y=y), color="red", alpha=0.3, 
-               size=20) +
-    geom_path(data=path,
-              mapping=aes(x=x, y=y, color=INX),
-              linewidth=1) +
-    geom_point(data=simRes$locations[1,],
-               mapping=aes(x=x, y=y),
-               color='black', size=5) +
-    geom_point(data=simRes$locations[1,],
-               mapping=aes(x=x, y=y),
-               color='white', size=3) +
-    geom_point(data=BADGER_shelterLocs, 
-               mapping=aes(x=x, y=y), color="purple", size=4) +
-    scale_color_distiller(palette='Spectral', direction=1) +
-    scale_fill_distiller(palette="Greens", direction=1) +
-    coord_sf(xlim=xlim, ylim=ylim) +
-    ggtitle(title)
-  p
+               size=20) + 
+    coord_sf(xlim=xlim, ylim=ylim)
+  
+  # choose how to color paths
+  if (is.null(colorby)) {
+    p2 <- p1 + geom_path(data=path, mapping=aes(x=x, y=y), color='orange', linewidth=1)
+  } else if (colorby == "inx") {
+    p2 <- p1 + 
+      geom_path(data=path,
+                mapping=aes(x=x, y=y, color=INX),
+                linewidth=1, alpha=0.5) +
+      scale_color_distiller(palette='Spectral', direction=1)
+  } else if (colorby == "activity") {
+    path$behave <- factor(path$behave)
+    p2 <- p1 + 
+      geom_path(data=path,
+                mapping=aes(x=x, y=y, color=behave),
+                linewidth=1, alpha=0.5) +
+      scale_color_brewer(palette='Dark2', direction=1)
+  }
+
+  # add on starting point, foraging destination, and shelter locations
+  dests <- path %>% 
+    mutate(grp = paste(destination_x, destination_y)) %>% 
+    group_by(grp, destination_x, destination_y) %>% 
+    summarize(.groups="drop") %>% dplyr::select(-grp) %>% 
+    rename(x=destination_x, y=destination_y)
+  p3 <- p2 + 
+    geom_point(data=dests, aes(x=x, y=y), color="black", size=3, shape=15) +
+    geom_point(data=path[1,], aes(x=x, y=y), color='black', size=5) +
+    geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3) +
+    geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
+  
+  p3 + transition_time(timestep)
 }
 
-runSim <- function(seed=1001, p_cross=0) {
+runSim <- function(seed=1001, p_cross=0, show=NULL, colorby=NULL) {
   set.seed(seed)
-  simRes <- abmAnimalMovementMES::abm_simulate(
+  simRes <- abmFences::abm_simulate(
     start = start, timesteps = timesteps, des_options = des_options,options = options,
-    shelterLocations = BADGER_shelterLocs,shelterSize = BADGER_shelterSize,
-    avoidPoints = BADGER_avoidLocs,destinationRange = BADGER_destinationRange,
-    destinationDirection = BADGER_destinationDirection,
-    destinationTransformation = BADGER_destinationTransformation,
-    destinationModifier = BADGER_destinationModifier, avoidTransformation = BADGER_avoidTransformation,
-    avoidModifier = BADGER_avoidModifier,k_step = BADGER_k_step,s_step = BADGER_s_step,
-    mu_angle = BADGER_mu_angle,k_angle = BADGER_k_angle, rescale_step2cell = BADGER_rescale,
-    behave_Tmat = BADGER_behaveMatrix,rest_Cycle = BADGER_rest_Cycle,
-    additional_Cycles = BADGER_additional_Cycles,shelteringMatrix = BADGER_shelter,
-    foragingMatrix = BADGER_forage,movementMatrix = BADGER_move,
+    shelterLocations = ELE_shelterLocs,shelterSize = ELE_shelterSize,
+    avoidPoints = ELE_avoidLocs,destinationRange = ELE_destinationRange,
+    destinationDirection = ELE_destinationDirection,
+    destinationTransformation = ELE_destinationTransformation,
+    destinationModifier = ELE_destinationModifier, avoidTransformation = ELE_avoidTransformation,
+    avoidModifier = ELE_avoidModifier,k_step = ELE_k_step,s_step = ELE_s_step,
+    mu_angle = ELE_mu_angle,k_angle = ELE_k_angle, rescale_step2cell = ELE_rescale,
+    behave_Tmat = ELE_behaveMatrix,rest_Cycle = ELE_rest_Cycle,
+    additional_Cycles = ELE_additional_Cycles,shelteringMatrix = ELE_shelter,
+    foragingMatrix = ELE_forage,movementMatrix = ELE_move,
     fence=fence_display, p_cross = p_cross
   )
   message('seed ', seed, "; p_cross ", p_cross)
-  p <- myPlot(simRes, seed)
+  if (is.null(show)) { 
+    p <- plotPaths(simRes, seed, colorby)
+  } else {
+    plot_list <- list(
+      move   = plotPaths(simRes, seed, activity = 'move',   colorby=colorby),
+      forage = plotPaths(simRes, seed, activity = 'forage', colorby=colorby),
+      shelter= plotPaths(simRes, seed, activity = 'shelter',colorby=colorby) 
+      )
+    p <- ggpubr::ggarrange(plotlist = plot_list[show])
+  }
   print(p)
 }
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                         SIMULATE ELEPHANT MOVEMENTS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# give them only a few good foraging spots
+rast <- ELE_forage * 0 + rbeta(n=row*col, 0.25, 0.25)
+rast[85:95, 85:95] <- 1
+rast[83:86, 105:110] <- 1
+ELE_forage <- rast
+
+# create a movement corridor
+rast <- ELE_forage * 0 + runif(n=row*col, 0, 0.1)
+rast[0:200, 92:95] <- 1
+ELE_move <- rast
+
+timesteps=3e4
 
 ## Run these just once at the start of simulations (or when you've updated ++)
-devtools::load_all(path=pkg.path)
+# devtools::load_all(path=pkg.path)
 set.seed(1001)
 randseeds <- floor(runif(1e5, 0, 1) * 1e5)
 i = 0
@@ -267,17 +320,12 @@ i = 0
 ## Run this as a chunk to generate random maps of elephant movements
 i = i+1
 seed <- randseeds[i]
-runSim(seed)
+runSim(seed, show=c('forage', 'move'), colorby='inx')
 
 ## Particular seeds that show off the movements well
 # - 61862; 78735; 50575; 85984 show fence behaviors really well 
 # - 46536; 33712; has good action on both sides of the fence
-runSim(33712)
 
-timesteps = 100000
-runSim(85984)
-runSim(85984, p_cross=0.5)
-runSim(85984, p_cross=0.85)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
