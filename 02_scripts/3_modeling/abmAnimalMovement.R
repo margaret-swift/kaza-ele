@@ -55,8 +55,8 @@ load(here(outdir, 'hmmLongM.rdata'))
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
 # location for updated abmAnimalMovementMES
-pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R_Packages/abmFences"
-devtools::load_all(path=pkg.path)
+# pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R_Packages/abmFences"
+# devtools::load_all(path=pkg.path)
 devtools::install_github("margaret-swift/abmFences")
 
 # ******************************************************************************
@@ -158,14 +158,9 @@ fence_points = matrix(data=c(100, 80, 100, 100,
 fence_display = as.data.frame(fence_points)
 names(fence_display) = c('x', 'y', 'xend', 'yend')
 
-## Add in the real fences 
-# fences.df <- fences[102:103,] %>% 
-#   st_cast('MULTIPOINT') 
-# ggplot() + 
-#   geom_sf(data=fences[102:103,], 
-#           color='gray', linewidth=2) +
-#   geom_sf(data=fences.df, 
-#           mapping=aes(color=Name))
+# now using real data!!!
+fence_display = generateBarriers(list(fences, rivers), c(0, 0.25))
+
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                            FUNCTIONS FOR SIMULATIONS

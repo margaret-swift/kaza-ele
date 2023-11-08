@@ -9,11 +9,11 @@
 here::i_am('02_scripts/1_cleaning/cleanEle.R')
 source(here::here('02_scripts', 'utilities.R'))
 setDataPaths('geographic')
-load(here(procpath, 'geographic.rdata'))
+load(procpath('geographic.rdata'))
 setDataPaths('precipitation')
-load(here(procpath, 'precipitation.rdata'))
+load(procpath('precipitation.rdata'))
 setDataPaths('elephant')
-ele <- read.csv(here(rawpath, 'nam.eles.fences.csv'))
+ele <- read.csv(rawpath('nam.eles.fences.csv'))
 
 # ******************************************************************************
 #                             Initial looks
@@ -197,4 +197,9 @@ ele.df <- ele.df %>%
 # ******************************************************************************
 
 setDataPaths('elephant')
-save(ele.df, file=here(procpath, "ele.rdata"))
+ele.df$YEAR = year(ele.df$DATE.TIME)
+save(ele.df, file=procpath("ele.rdata"))
+path <- file.path("C:/Users/mes473/OneDrive - Cornell University/Documents/Research/KAZA Ele Fencing",
+                  "geographic-files", "elephant_points.shp")
+st_write(ele.df, 
+         dsn=path)
