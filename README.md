@@ -18,6 +18,10 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
 | [Display](#5displaying-simulations-0) | 0% |
 | [Extensions](#6extending-simulations-0) | 0% |
 
+### Tables
+- [Spatial data](#spatial-data)
+- [Patterns and metrics](#patterns-and-metrics)
+- [Elephant step statistics](#elephant-step-statistics)
 
 # Project steps
 ## 1.	Gather data (100%) 
@@ -69,7 +73,21 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-# Patterns and Metrics
+# Tables
+## Spatial data
+| Description	| Source	| Res| Extent	| Type	| Status| 
+| ------------|---------|----|--------|-------|-------|
+| Elevation (DEM) and slope (calculated) | [USGS SRTM](https://earthexplorer.usgs.gov/) | 30m	| KAZA 	| Raster	| Obtained, reprojected, and mosaicked on ArcGIS; slope calculated in ArcGIS| 
+| Human settlements	| [ESA World Settlement Footprint 2019](https://geoservice.dlr.de/web/maps/eoc:wsf2019) (Sentinel-1 and -2)  | 10m	| Africa	| Raster	| Obtained | 
+| Landcover	| WWF (link? What dataset did these come from?)	| 10m	| Africa	| Raster	| Obtained| 
+| Ephemeral surface water	| [Schaffer-Smith et al 2022](https://doi.org/10.4211/hs.6f5b34803dc247e890925d7f26b04a3b) (Sentinel-2)  | 10m	| Khaudum 	and Bwabwata| Raster	| Obtained | 
+| Fire Incidence | MODIS Burned Area product ([Fire CCI](https://climate.esa.int/en/projects/fire/)) | 250m | KAZA | Raster | Obtained | 
+| | | | | | | 					
+| Fences	  | Robin... where did he get these?	| NA	| KAZA	| Vector	| Obtained| 
+| Roads	    | OpenStreetMap (Angela) (see metadata file)	| NA	| KAZA 	| Vector	| Obtained| 
+| Rivers	  | Digitized by Robin from various sources ([GAIA](http://gaia.geosci.unc.edu/rivers/)) | NA	| KAZA	| Vector	| Obtained| 
+
+## Patterns and Metrics
 See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132) for a more detailed look at this EDA approach for creating an ABM.
 
 | Pattern | Scale | Features  | Metric |
@@ -84,10 +102,10 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-# Elephant step statistics
+## Elephant step statistics
 See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132) for a more detailed look at this EDA approach for creating an ABM.
 
-# Feature permeability (literature)
+### Feature permeability (literature)
 From [Naidoo et al 2022](https://www.frontiersin.org/articles/10.3389/fcosc.2022.788133/).
 Percentage of crossings @ 1km encounter threshold
 (should we use 25km instead? What is the utility of a larger threshold if we are controlling the movements?)
@@ -99,7 +117,7 @@ Percentage of crossings @ 1km encounter threshold
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## Average step size
+### Average step size
 | Sex | Season  | Activity State | Value |
 |-------------| -----| -------| ------- |
 | Female	| Dry	| Resting | XX |
@@ -117,7 +135,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## Average home range size (females only)
+### Average home range size (females only)
 | Season | Value | 
 |--------| ------ |
 | Dry	season | XX |
@@ -125,9 +143,9 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## Average barrier crossing rates
+### Average barrier crossing rates
 
-### Fences (males only)
+#### Fences (males only)
 | Season | Activity state | Value | 
 |--------| -------------- | ---- |
 | Dry season | Resting | XX |
@@ -137,7 +155,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 | Dry season | Exploring | XX |
 | Wet season | Exploring | XX |
 
-### Rivers
+#### Rivers
 | Season | Sex | Value | 
 |--------| --- | ----- |
 | Dry season | Female | XX |
@@ -145,7 +163,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 | Wet	season | Female | XX |
 | Wet	season | Male | XX |
 
-### Roads
+#### Roads
 | Season | Sex | Value | 
 |--------| --- | ----- |
 | Dry season | Female | XX |
@@ -155,17 +173,5 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-# Spatial data
-| Description	| Source	| Res| Extent	| Type	| Status| 
-| ------------|---------|----|--------|-------|-------|
-| Elevation (DEM) and slope (calculated) | [USGS SRTM](https://earthexplorer.usgs.gov/) | 30m	| KAZA 	| Raster	| Obtained, reprojected, and mosaicked on ArcGIS; slope calculated in ArcGIS| 
-| Human settlements	| [ESA World Settlement Footprint 2019](https://geoservice.dlr.de/web/maps/eoc:wsf2019) (Sentinel-1 and -2)  | 10m	| Africa	| Raster	| Obtained | 
-| Landcover	| WWF (link? What dataset did these come from?)	| 10m	| Africa	| Raster	| Obtained| 
-| Ephemeral surface water	| [Schaffer-Smith et al 2022](https://doi.org/10.4211/hs.6f5b34803dc247e890925d7f26b04a3b) (Sentinel-2)  | 10m	| Khaudum 	and Bwabwata| Raster	| Obtained | 
-| Fire Incidence | MODIS Burned Area product ([Fire CCI](https://climate.esa.int/en/projects/fire/)) | 250m | KAZA | Raster | Obtained | 
-| | | | | | | 					
-| Fences	  | Robin... where did he get these?	| NA	| KAZA	| Vector	| Obtained| 
-| Roads	    | OpenStreetMap (Angela) (see metadata file)	| NA	| KAZA 	| Vector	| Obtained| 
-| Rivers	  | Digitized by Robin from various sources ([GAIA](http://gaia.geosci.unc.edu/rivers/)) | NA	| KAZA	| Vector	| Obtained| 
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
