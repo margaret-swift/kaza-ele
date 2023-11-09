@@ -87,6 +87,8 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 | Roads	    | OpenStreetMap (Angela) (see metadata file)	| NA	| KAZA 	| Vector	| Obtained| 
 | Rivers	  | Digitized by Robin from various sources ([GAIA](http://gaia.geosci.unc.edu/rivers/)) | NA	| KAZA	| Vector	| Obtained| 
 
+_[^Top^](#kaza-elephant-behavior-modeling-project)_
+
 ## Patterns and Metrics
 See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132) for a more detailed look at this EDA approach for creating an ABM.
 
@@ -170,8 +172,5 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 | Dry season | Male | XX |
 | Wet	season | Female | XX |
 | Wet	season | Male | XX |
-
-_[^Top^](#kaza-elephant-behavior-modeling-project)_
-
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
