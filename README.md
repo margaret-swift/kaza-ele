@@ -12,7 +12,7 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
 | Step | Progress |
 | -----| -------- |
 | [Gather Data](#1gather-data-100)| 100% |
-| [EDA](#2-exploratory-data-analysis-75)) | 75% |
+| [EDA](#2-exploratory-data-analysis-75) | 75% |
 | [Model landscape use](#3modeling-landscape-use-0) | 0% |
 | [Simulate elephant movements](#4simulating-elephant-movements-25) | 25% |
 | [Display](#5displaying-simulations-0) | 0% |
