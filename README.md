@@ -11,12 +11,12 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
 
 | Step | Progress |
 | -----| -------- |
-| [Gather Data](#1gather-data-100)| 100% |
-| [EDA](#2-exploratory-data-analysis-75) | 75% |
-| [Model landscape use](#3modeling-landscape-use-0) | 0% |
-| [Simulate elephant movements](#4simulating-elephant-movements-25) | 25% |
-| [Display](#5displaying-simulations-0) | 0% |
-| [Extensions](#6extending-simulations-0) | 0% |
+| [Gather Data](#1gather-data)| 100% |
+| [EDA](#2-exploratory-data-analysis) | 75% |
+| [Model landscape use](#3modeling-landscape-use) | 0% |
+| [Simulate elephant movements](#4simulating-elephant-movements) | 25% |
+| [Display](#5displaying-simulations) | 0% |
+| [Extensions](#6extending-simulations) | 0% |
 
 ### Tables
 - [Spatial data](#spatial-data)
@@ -24,13 +24,13 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
 - [Elephant step statistics](#elephant-step-statistics)
 
 # Project steps
-## 1.	Gather data (100%) 
+## 1.	Gather data
   - [x] **Data for elephants** collared in Namibia have been provided by **Robin Naidoo**; I have reached out to **Anna Songhurst** (11/6/23) about a possible collaboration to bring her expertise and data for elephants collared in Botswana.
   - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## 2. Exploratory Data Analysis (75%) 
+## 2. Exploratory Data Analysis
   - [x] **Agent movement statistics** have been collected in [02_scripts/2_eda/eleStats.R](https://github.com/margaret-swift/kaza-ele/blob/main/02_scripts/2_eda/eleStats.R); these data are provided [below](#elephant-step-statistics), and include:
     - [x] Home range size (female only), by **season**
     - [x] Rates of fence crossing by **activity type** and **season** (male only)
@@ -41,13 +41,13 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## 3.	Modeling Landscape Use (0%) 
+## 3.	Modeling Landscape Use 
   - [ ] **Integrated Step Selection**: In order to more accurately simulate elephant movements, we have to understand how they use the landscape currently and then transfer this knowledge onto the spatial data to calculate accurate resistance rasters. To do this, we will run an Integrated Step Selection Function ([iSSF](https://www.biorxiv.org/content/10.1101/2023.08.10.552754v1)) to estimate elephant responses to various landscape features, then apply the results of this model in the next step.
   - [ ] **Create resistance rasters**: Spatial data should be transformed into rasters that represent an agent's willingness to travel through each cell, depending on **sex, season,** and **activity state.** These rasters should hold values from 0 to 1, where higher values are more likely to be chosen (see [Marshall and Duthie 2022](https://f1000research.com/articles/11-1182), Fig. 3).
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## 4.	Simulating elephant movements (25%) 
+## 4.	Simulating elephant movements 
   - [x] **Basic agent-based model** has been implemented. At first, I tried [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8), but found that its structure did not allow for flexibility in seasonal/diel cycles or attractive landmarks (waterholes). I then chose [abmAnimalMovement](https://f1000research.com/articles/11-1182) and found that this structure was flexible enough for our needs.
   - [ ] **Augment chosen ABM** Currently, I am in the process of augmenting the abmAnimalMovement code in a new package I've termed '[abmFences](https://github.com/margaret-swift/abmFences)'. The following is a list of important features that need to be added to the code in order to move forward:
     - [x] ~~Fence response behavior~~
@@ -60,12 +60,12 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## 5.	Displaying simulations (0%) 
+## 5.	Displaying simulations
   - [ ] **Model with and without key fences**
   - [ ] **Create display of our results**
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## 6.	Extending simulations (0%) 
+## 6.	Extending simulations
   - [ ] **Activity states**: Could draw from TOD, time since last state change, etc. and determine whether the agent is foraging, exploring, or resting. This would then determine the characteristics of the distribution from which we’re drawing step lengths and turning angles (internal state x landscape resistance perhaps). 
   - [ ] **Additional Species**: Once we have the model working, we could extend this to any number of species, including roan, oryx, buffalo, or even a general species X with Y characteristics. Steve suggests prioritizing buffalo and cattle since they’re the impetus for putting these fences up in the first place. Robin suggests using buffalo data from the Caprivi strip, Shirley on zebra; zebra and buffalo don’t cross often. What about expanding more beyond N and B into the rest of KAZA? 
   - [ ] **Fence Structure**: Right now we’ll just treat all the fences in our dataset as the same type, but this isn’t quite the case. Is there a way to verify which fences are robust versus falling apart? Or perhaps if an extreme fence were replaced with a smaller barrier that cattle still couldn’t cross (i.e. lower the cost of crossing for elephants).
