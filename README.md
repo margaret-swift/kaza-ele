@@ -70,6 +70,16 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 # Elephant step statistics
 See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132) for a more detailed look at this EDA approach for creating an ABM.
 
+# Feature permeability (literature)
+From [Naidoo et al 2022](https://www.frontiersin.org/articles/10.3389/fcosc.2022.788133/).
+Percentage of crossings @ 1km encounter threshold
+(should we use 25km instead? What is the utility of a larger threshold if we are controlling the movements?)
+
+| | River	| Road	| Fence| 
+| --- | -------| --------| ------| 
+| Female	| 10.1	| 15.3 | 0| 
+| Male	| 14.5	| 25.8	| 3.5| 
+
 ## Average step size
 | Sex | Season  | Activity State | Value |
 |-------------| -----| -------| ------- |
@@ -132,14 +142,3 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 | Fences	  | Robin... where did he get these?	| NA	| KAZA	| Vector	| Obtained| 
 | Roads	    | OpenStreetMap (Angela) (see metadata file)	| NA	| KAZA 	| Vector	| Obtained| 
 | Rivers	  | Digitized by Robin from various sources ([GAIA](http://gaia.geosci.unc.edu/rivers/)) | NA	| KAZA	| Vector	| Obtained| 
-
-
-# Feature permeability
-From [Naidoo et al 2022](https://www.frontiersin.org/articles/10.3389/fcosc.2022.788133/).
-Percentage of crossings @ 1km encounter threshold
-(should we use 25km instead? What is the utility of a larger threshold if we are controlling the movements?)
-
-| | River	| Road	| Fence| 
-| --- | -------| --------| ------| 
-| Female	| 10.1	| 15.3 | 0| 
-| Male	| 14.5	| 25.8	| 3.5| 
