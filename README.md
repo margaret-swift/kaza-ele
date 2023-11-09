@@ -9,13 +9,22 @@ Other possible collaborators: Anna Songhurst (contacted)
 
 Agent-based model code is housed at: [abmFences](https://github.com/margaret-swift/abmFences) 
 
+| Step | Progress |
+| -----| -------- |
+| [Gather Data](#1gather-data-100)| 100% |
+| [EDA](#2exploratory-data-analysis-75) | 75% |
+| [Model landscape use](#3modeling-landscape-use-0) | 0% |
+| [Simulate elephant movements](#4simulating-elephant-movements-25) | 25% |
+| [Display](#5displaying-simulations-0) | 0% |
+| [Extensions](#6extending-simulations-0) | 0% |
+
 
 # Project steps
-## 1.	**Gather data** (100%) 
+## 1.	Gather data (100%) 
   - [x] **Data for elephants** collared in Namibia have been provided by **Robin Naidoo**; I have reached out to **Anna Songhurst** (11/6/23) about a possible collaboration to bring her expertise and data for elephants collared in Botswana.
   - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
   
-## 2.  **Exploratory Data Analysis** (75%) 
+## 2. Exploratory Data Analysis (75%) 
   - [x] **Agent movement statistics** have been collected in [02_scripts/2_eda/eleStats.R](https://github.com/margaret-swift/kaza-ele/blob/main/02_scripts/2_eda/eleStats.R); these data are provided [below](#elephant-step-statistics), and include:
     - [x] Home range size (female only), by **season**
     - [x] Rates of fence crossing by **activity type** and **season** (male only)
@@ -39,11 +48,11 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
   - [ ] **Model selection**: Calculate metrics from step (3a) and compare models. Which ones accurately replicate the critical spatial patterns? Is any homebrewing necessary?
   - [ ] **Model improvement**: Temporal and individual elements should then be added to the model to better reflect the seasonality of water supply, vegetation, temperature, and elephant movements. In addition, individual elephants likely would remember waterholes and fence gaps in particular; they shouldn’t be treated like a random molecule. In addition, bulls are known to create fence gaps; should agents be able to modify their landscape in this capacity?
 
-## 5.	**Display** (0%) 
+## 5.	**Displaying simulations** (0%) 
   - [ ] **Model with and without key fences**
   - [ ] **Create display of our results**
 
-## 6.	**Extensions** (0%) 
+## 6.	**Extending simulations** (0%) 
   - [ ] **Activity states**: Could draw from TOD, time since last state change, etc. and determine whether the agent is foraging, exploring, or resting. This would then determine the characteristics of the distribution from which we’re drawing step lengths and turning angles (internal state x landscape resistance perhaps). 
   - [ ] **Additional Species**: Once we have the model working, we could extend this to any number of species, including roan, oryx, buffalo, or even a general species X with Y characteristics. Steve suggests prioritizing buffalo and cattle since they’re the impetus for putting these fences up in the first place. Robin suggests using buffalo data from the Caprivi strip, Shirley on zebra; zebra and buffalo don’t cross often. What about expanding more beyond N and B into the rest of KAZA? 
   - [ ] **Fence Structure**: Right now we’ll just treat all the fences in our dataset as the same type, but this isn’t quite the case. Is there a way to verify which fences are robust versus falling apart? Or perhaps if an extreme fence were replaced with a smaller barrier that cattle still couldn’t cross (i.e. lower the cost of crossing for elephants).
