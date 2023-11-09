@@ -7,7 +7,7 @@ Other possible collaborators: Anna Songhurst (contacted)
 
 **WARNING: This repository is public, but raw data files (especially elephant GPS data) are sensitive and never stored or tracked through GitHub.**
 
-Agent-based model code is housed at: [abmFences](https://github.com/margaret-swift/abmFences)
+Agent-based model code is housed at: [abmFences](https://github.com/margaret-swift/abmFences) 
 
 
 # Project steps
