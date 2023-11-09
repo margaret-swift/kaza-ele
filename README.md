@@ -12,10 +12,10 @@ Agent-based model code is housed at: www.github.com/margaret-swift/abmFences
 ## 1.	**Agent data**
   - [x] ~~**Gather elephant data**: Robin should be sending elephant data over soon.~~. DONE 9/16/23
   - [x] ~~**Gather agent attributes**: List movement characteristics of agents from data and gather missing parameters from literature. This includes a deeper dive into literature on elephant preferences for certain landcover types (although we can find that out through modeling our data) or responses to settlement areas, for example.~~ DONE, saved in 02_scripts/2_eda/eleStats.R
-    - [ ] Definition and transition matrix for activity states by **sex** and **season**
-    - [ ] Home range size (female only), by **season**
-    - [ ] Rates of fence crossing by **activity type** and **season** (male only)
-    - [ ] Step size by **state, sex, season**
+    - [ ] Definition and transition matrix for activity states by **sex** and **season** (from HMM)
+    - [x] Home range size (female only), by **season**
+    - [x] Rates of fence crossing by **activity type** and **season** (male only)
+    - [x] Step size by **state, sex, season**
  
 ## 2.  **Spatial data**
   - [x] ~~**Gather spatial data**: List spatial features and gather spatial data~~. DONE 9/21/23
