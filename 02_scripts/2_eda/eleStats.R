@@ -21,7 +21,7 @@ here::i_am('02_scripts/2_eda/eleStats.R')
 source(here::here('02_scripts','utilities.R'))
 pacman::p_load(sp, adehabitatHR, reshape2)
 setDataPaths('elephant')
-load(here(procpath, 'ele.rdata'))
+load(procpath('ele.rdata'))
 load(here(outdir, 'hmmLongF.rdata'))
 load(here(outdir, 'hmmLongM.rdata'))
 
@@ -57,15 +57,16 @@ speeds <- ele.df %>%
 
 ( speeds %>% 
     group_by(SEX, STATE, SEASON) %>% 
-    summarize(MPS.m   = mean(MPS, na.rm=TRUE),
-              MPS.med = median(MPS, na.rm=TRUE),
-              MPS.sd  = sd(MPS, na.rm=TRUE),
-              MPS.max = max(MPS, na.rm=TRUE),
-              DIST.m  = mean(DIST, na.rm=TRUE),
-              DIST.med = median(DIST, na.rm=TRUE),
+    summarize(DIST.m  = mean(DIST, na.rm=TRUE),
+              # DIST.med = median(DIST, na.rm=TRUE),
               DIST.sd  = sd(DIST, na.rm=TRUE),
-              DIST.max = max(DIST, na.rm=TRUE),
-              n=n())
+              # DIST.max = max(DIST, na.rm=TRUE),
+              MPS.m   = mean(MPS, na.rm=TRUE),
+              # MPS.med = median(MPS, na.rm=TRUE),
+              MPS.sd  = sd(MPS, na.rm=TRUE)
+              # MPS.max = max(MPS, na.rm=TRUE),
+              # n=n())
+    )
 )
 
 
@@ -135,9 +136,21 @@ for ( i in 1:nrow(ref.table) ) {
   ref.table$AREA[i] <- hr$area
 }
 
+
+means.ref <- ref.table %>% 
+  filter(SEASON == "DRY") %>% 
+  group_by(ID) %>% 
+  summarize(DRY_AREA = mean(AREA)) %>% 
+  column_to_rownames(var = "ID")
+
+
 ref.table %>% 
+  mutate(
+    DRY_AVG = means.ref[ID,"DRY_AREA"],
+    PERC_DIFF = (AREA - DRY_AVG) / DRY_AVG) %>% 
   group_by(SEX, SEASON) %>% 
-  summarize(AREA = mean(AREA)) # WAY too small!
+  summarize(AREA = mean(AREA),
+            PERC_DIFF = mean(PERC_DIFF, na.rm=TRUE)) # WAY too small!
 
 p_load(inlabru)
 mycrs <- fm_CRS(sp)
