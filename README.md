@@ -3,6 +3,8 @@ AHEAD x WWF collaboration with funding from Atkinson Center for Sustainability
 
 Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, ...
 
+Other possible collaborators: Anna Songhurst (contacted)
+
 **WARNING: This repository is public, but raw data files (especially elephant GPS data) are sensitive and never stored or tracked through GitHub.**
 
 Agent-based model code is housed at: www.github.com/margaret-swift/abmFences
@@ -10,16 +12,15 @@ Agent-based model code is housed at: www.github.com/margaret-swift/abmFences
 
 # Project steps
 ## 1.	**Agent data**
-  - [x] ~~**Gather elephant data**: Robin should be sending elephant data over soon.~~. DONE 9/16/23
-  - [x] ~~**Gather agent attributes**: List movement characteristics of agents from data and gather missing parameters from literature. This includes a deeper dive into literature on elephant preferences for certain landcover types (although we can find that out through modeling our data) or responses to settlement areas, for example.~~ DONE, saved in 02_scripts/2_eda/eleStats.R
-    - [ ] Definition and transition matrix for activity states by **sex** and **season** (from HMM)
+  - [x] **Data for elephants** collared in Namibia have been provided by **Robin Naidoo**; I have reached out to **Anna Songhurst** (11/6/23) about a possible collaboration to bring her expertise and data for elephants collared in Botswana.
+  - [x] **Agent movement statistics** have been collected in [02_scripts/2_eda/eleStats.R](https://github.com/margaret-swift/kaza-ele/blob/main/02_scripts/2_eda/eleStats.R); these data are provided [below](#elephant-step-statistics), and include:
     - [x] Home range size (female only), by **season**
     - [x] Rates of fence crossing by **activity type** and **season** (male only)
     - [x] Step size by **state, sex, season**
+    - [ ] Definition and transition matrix for activity states by **sex** and **season** (from HMM)
  
 ## 2.  **Spatial data**
-  - [x] ~~**Gather spatial data**: List spatial features and gather spatial data~~. DONE 9/21/23
-  - [x] **Combine spatial data**: Depending on the model, there should be two separate layers: One “resistance” layer representing how difficult the landscape is to move through (landcover types, rasterized linear features, maybe Robin’s Circuitscape output?), and one “magnet” layer with features that either attract or repel elephants (water features, urban areas, cropland).
+  - [x] **Landscape-level spatial data** have been collected and are provided below in Table 4.
   
 ## 3.  **Exploratory Data Analysis**
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
@@ -27,14 +28,18 @@ Agent-based model code is housed at: www.github.com/margaret-swift/abmFences
     - [x] ~~Hidden Markov Model ([McClintock & Michelot 2018](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12995))~~
     - [x] ~~M4 Model ([Cullen et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13745))~~
 
-## 4.	**Modeling**
-  - [ ] **Basic model implementation**: Run a basic version of [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8) and [abmMovement](https://f1000research.com/articles/11-1182) with agent parameters from (1b) and simplified spatial rasters. This way we can make sure the behaviors seem right before dedicating the computational power needed for the main, large raster.
+## 4.	**Modeling Landscape Use**
+  - [ ] **Integrated Step Selection**: In order to more accurately simulate elephant movements, we have to understand how they use the landscape currently and then transfer this knowledge onto the spatial data to calculate accurate resistance rasters. To do this, we will run an Integrated Step Selection Function ([iSSF](https://www.biorxiv.org/content/10.1101/2023.08.10.552754v1)) to estimate elephant responses to various landscape features, then apply the results of this model in the next step.
+  - [ ] **Create resistance rasters**: Spatial data should be transformed into rasters that represent an agent's willingness to travel through each cell, depending on **sex, season,** and **activity state.** These rasters should hold values from 0 to 1, where higher values are more likely to be chosen (see [Marshall and Duthie 2022](https://f1000research.com/articles/11-1182), Fig. 3).
+
+## 5.	**Modeling**
+  - [x] **Basic agent-based model** has been implemented. At first, I tried [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8), but found that its structure did not allow for flexibility in seasonal/diel cycles or attractive landmarks (waterholes). I then chose [abmAnimalMovement](https://f1000research.com/articles/11-1182) and found that this structure was flexible enough for our needs.
+  - [ ] **Augment chosen ABM** Currently, I am in the process of augmenting the abmAnimalMovement code in a new package I've termed '[abmFences](www.github.com/margaret-swift/abmFences)'. The following is a list of important features that need to be added to the code in order to move forward:
     - [x] ~~Fence response behavior~~
     - [x] ~~Selectively permeable fences with probability changing based on sex, season, and activity state~~
     - [x] ~~Attraction to range centroids~~
-    - [ ] interactions with landscape raster values
-  - [ ] **Basic model assessment**: With controllable, small-scale environmental rasters, how do the movements we are seeing in the agents matching up against the metrics determined in 3a?
-  - [ ] **Realistic model implementation**: Once the basic model is up and running, add in spatial layers from (2b).
+    - [ ] Interactions with landscape raster values
+  - [ ] **Realistic model implementation**: Once the basic model is up and running, add in spatial layers from (4b) and real transition matrix values from (1b).
   - [ ] **Model selection**: Calculate metrics from step (3a) and compare models. Which ones accurately replicate the critical spatial patterns? Is any homebrewing necessary?
   - [ ] **Model improvement**: Temporal and individual elements should then be added to the model to better reflect the seasonality of water supply, vegetation, temperature, and elephant movements. In addition, individual elephants likely would remember waterholes and fence gaps in particular; they shouldn’t be treated like a random molecule. In addition, bulls are known to create fence gaps; should agents be able to modify their landscape in this capacity?
 
@@ -62,9 +67,44 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 | 80% of roan crossings were during the wet season. Does this happen for elephant too? | Temporal | fences ||
 | Elephant attraction to some areas with higher quality resources?	| Spatial and Temporal?	| Landcover type?	| | 
 
+# Elephant step statistics
+See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132) for a more detailed look at this EDA approach for creating an ABM.
+
+## Average step size
+| Sex | Season  | Activity State | Value |
+|-------------| -----| -------| ------- |
+| Female	| Dry	| Resting | XX |
+| Male	| Dry	| Resting | XX |
+| Female	| Wet	| Resting | XX |
+| Male	| Wet	| Resting | XX |
+| Female	| Dry	| Foraging | XX |
+| Male	| Dry	| Foraging | XX |
+| Female	| Wet	| Foraging | XX |
+| Male	| Wet	| Foraging | XX |
+| Female	| Dry	| Exploring | XX |
+| Male	| Dry	| Exploring | XX |
+| Female	| Wet	| Exploring | XX |
+| Male	| Wet	| Exploring | XX |
+
+## Average home range size (females only)
+| Season | Value | 
+|--------| ------ |
+| Dry	season | XX |
+| Wet season | XX |
+
+## Average fence crossing rate (males only)
+| Season | Activity state | Value | 
+|-------------| ------ | ---- |
+| Dry season | Resting | XX |
+| Wet	season | Resting | XX |
+| Dry season | Foraging | XX |
+| Wet	season | Foraging | XX |
+| Dry season | Exploring | XX |
+| Wet season | Exploring | XX |
+
+
 
 # Spatial data
-
 | Description	| Source	| Res| Extent	| Type	| Status| 
 | ------------|---------|----|--------|-------|-------|
 | Elevation (DEM) and slope (calculated) | [USGS SRTM](https://earthexplorer.usgs.gov/) | 30m	| KAZA 	| Raster	| Obtained, reprojected, and mosaicked on ArcGIS; slope calculated in ArcGIS| 
