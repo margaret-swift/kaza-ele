@@ -21,7 +21,7 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
     - [x] Rates of fence crossing by **activity type** and **season** (male only)
     - [x] Step size by **state, sex, season**
   - [x] **Activity states** have been defined using a Hidden Markov Model ([McClintock & Michelot 2018](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12995)). Also approached was the M4 Model ([Cullen et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13745)); I may return to this later.
-  - [ ] I need to re-run this model with **season** as well as **sex** and gather transition matrices.
+    - [ ] I need to re-run this model with **season** as well as **sex** and gather transition matrices.
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
        
 ## 3.	**Modeling Landscape Use** (0%) 
