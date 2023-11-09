@@ -71,6 +71,7 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 | Human settlements	| [ESA World Settlement Footprint 2019](https://geoservice.dlr.de/web/maps/eoc:wsf2019) (Sentinel-1 and -2)  | 10m	| Africa	| Raster	| Obtained | 
 | Landcover	| WWF (link? What dataset did these come from?)	| 10m	| Africa	| Raster	| Obtained| 
 | Ephemeral surface water	| [Schaffer-Smith et al 2022](https://doi.org/10.4211/hs.6f5b34803dc247e890925d7f26b04a3b) (Sentinel-2)  | 10m	| Khaudum 	and Bwabwata| Raster	| Obtained | 
+| Fire Incidence | MODIS Burned Area product ([Fire CCI](https://climate.esa.int/en/projects/fire/)) | 250m | KAZA | Raster | Obtained | 
 | | | | | | | 					
 | Fences	  | Robin... where did he get these?	| NA	| KAZA	| Vector	| Obtained| 
 | Roads	    | OpenStreetMap (Angela) (see metadata file)	| NA	| KAZA 	| Vector	| Obtained| 
