@@ -120,39 +120,23 @@ Percentage of crossings @ 1km encounter threshold
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-### Average step size
-| Sex | Season  | Activity State | Value |
-|-------------| -----| -------| ------- |
-| Female	| Dry	| Resting | XX |
-| Male	| Dry	| Resting | XX |
-| Female	| Wet	| Resting | XX |
-| Male	| Wet	| Resting | XX |
-| Female	| Dry	| Foraging | XX |
-| Male	| Dry	| Foraging | XX |
-| Female	| Wet	| Foraging | XX |
-| Male	| Wet	| Foraging | XX |
-| Female	| Dry	| Exploring | XX |
-| Male	| Dry	| Exploring | XX |
-| Female	| Wet	| Exploring | XX |
-| Male	| Wet	| Exploring | XX |
-
 ### Average step size (m) and speed (meters per second)
 | Sex | Activity state | Season | distance $\mu$ | distance $\sigma$ | speed $\mu$ | speed $\sigma$ |
 | --- | -------------- | ------ | -------------- | ----------------- | ----------- | -------------- |
 | F | correlated walk |DRY  |  671 |    829 |0.183    |0.240|
-| M | correlated walk | DRY |  598 |    854 | 0.152   |0.220|
 | F | correlated walk |WET  |  777 |    883 | 0.206   |0.240|
+| M | correlated walk | DRY |  598 |    854 | 0.152   |0.220|
 | M | correlated walk |WET  |  559 |    692 | 0.154   |0.197|
+| | | | | | | |
 | F | foraging |    DRY |  563|    734| 0.164     |0.257|
-| M | foraging |    DRY |  554|    791| 0.138     |0.187|
 | F | foraging |    WET |  630|    817| 0.170     |0.217|
+| M | foraging |    DRY |  554|    791| 0.138     |0.187|
 | M | foraging |    WET |  451|    581| 0.124     |0.157|
+| | | | | | | |
 | F | resting |     DRY |  524|    737| 0.144     |0.225|
-| M | resting |     DRY |  486|    717| 0.124     |0.173|
 | F | resting |     WET |  620|    838| 0.164     |0.221|
+| M | resting |     DRY |  486|    717| 0.124     |0.173|
 | M | resting |     WET |  468|    581| 0.131     |0.182|
-
-
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
