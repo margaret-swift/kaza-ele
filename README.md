@@ -30,8 +30,9 @@ Agent-based model code is housed at: www.github.com/margaret-swift/abmFences
 ## 4.	**Modeling**
   - [ ] **Basic model implementation**: Run a basic version of [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8) and [abmMovement](https://f1000research.com/articles/11-1182) with agent parameters from (1b) and simplified spatial rasters. This way we can make sure the behaviors seem right before dedicating the computational power needed for the main, large raster.
     - [x] ~~Fence response behavior~~
-    - [ ] Selectively permeable fences with probability changing based on sex, season, and activity state
-    - [ ] Attraction to range centroids
+    - [x] ~~Selectively permeable fences with probability changing based on sex, season, and activity state~~
+    - [x] ~~Attraction to range centroids~~
+    - [ ] interactions with landscape raster values
   - [ ] **Basic model assessment**: With controllable, small-scale environmental rasters, how do the movements we are seeing in the agents matching up against the metrics determined in 3a?
   - [ ] **Realistic model implementation**: Once the basic model is up and running, add in spatial layers from (2b).
   - [ ] **Model selection**: Calculate metrics from step (3a) and compare models. Which ones accurately replicate the critical spatial patterns? Is any homebrewing necessary?
