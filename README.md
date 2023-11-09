@@ -11,28 +11,24 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
 
 
 # Project steps
-## 1.	**Agent data**
+## 1.	**Gather data**
   - [x] **Data for elephants** collared in Namibia have been provided by **Robin Naidoo**; I have reached out to **Anna Songhurst** (11/6/23) about a possible collaboration to bring her expertise and data for elephants collared in Botswana.
+  - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
+  
+## 2.  **Exploratory Data Analysis**
   - [x] **Agent movement statistics** have been collected in [02_scripts/2_eda/eleStats.R](https://github.com/margaret-swift/kaza-ele/blob/main/02_scripts/2_eda/eleStats.R); these data are provided [below](#elephant-step-statistics), and include:
     - [x] Home range size (female only), by **season**
     - [x] Rates of fence crossing by **activity type** and **season** (male only)
     - [x] Step size by **state, sex, season**
     - [ ] Definition and transition matrix for activity states by **sex** and **season** (from HMM)
- 
-## 2.  **Spatial data**
-  - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
-  
-## 3.  **Exploratory Data Analysis**
+  - [x] **Activity states** have been defined using a Hidden Markov Model ([McClintock & Michelot 2018](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12995)). Also approached was the M4 Model ([Cullen et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13745)); I may return to this later.
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
-  - [x] ~~**Segment activity states**: Segment GPS paths by activity state~~
-    - [x] ~~Hidden Markov Model ([McClintock & Michelot 2018](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12995))~~
-    - [x] ~~M4 Model ([Cullen et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13745))~~
-
-## 4.	**Modeling Landscape Use**
+       
+## 3.	**Modeling Landscape Use**
   - [ ] **Integrated Step Selection**: In order to more accurately simulate elephant movements, we have to understand how they use the landscape currently and then transfer this knowledge onto the spatial data to calculate accurate resistance rasters. To do this, we will run an Integrated Step Selection Function ([iSSF](https://www.biorxiv.org/content/10.1101/2023.08.10.552754v1)) to estimate elephant responses to various landscape features, then apply the results of this model in the next step.
   - [ ] **Create resistance rasters**: Spatial data should be transformed into rasters that represent an agent's willingness to travel through each cell, depending on **sex, season,** and **activity state.** These rasters should hold values from 0 to 1, where higher values are more likely to be chosen (see [Marshall and Duthie 2022](https://f1000research.com/articles/11-1182), Fig. 3).
 
-## 5.	**Simulating elephant movements**
+## 4.	**Simulating elephant movements**
   - [x] **Basic agent-based model** has been implemented. At first, I tried [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8), but found that its structure did not allow for flexibility in seasonal/diel cycles or attractive landmarks (waterholes). I then chose [abmAnimalMovement](https://f1000research.com/articles/11-1182) and found that this structure was flexible enough for our needs.
   - [ ] **Augment chosen ABM** Currently, I am in the process of augmenting the abmAnimalMovement code in a new package I've termed '[abmFences](https://github.com/margaret-swift/abmFences)'. The following is a list of important features that need to be added to the code in order to move forward:
     - [x] ~~Fence response behavior~~
