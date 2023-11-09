@@ -20,7 +20,7 @@ Agent-based model code is housed at: www.github.com/margaret-swift/abmFences
     - [ ] Definition and transition matrix for activity states by **sex** and **season** (from HMM)
  
 ## 2.  **Spatial data**
-  - [x] **Landscape-level spatial data** have been collected and are provided below in Table 4.
+  - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
   
 ## 3.  **Exploratory Data Analysis**
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
@@ -92,9 +92,11 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 | Dry	season | XX |
 | Wet season | XX |
 
-## Average fence crossing rate (males only)
+## Average barrier crossing rates
+
+### Fences (males only)
 | Season | Activity state | Value | 
-|-------------| ------ | ---- |
+|--------| -------------- | ---- |
 | Dry season | Resting | XX |
 | Wet	season | Resting | XX |
 | Dry season | Foraging | XX |
@@ -102,7 +104,21 @@ See [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S030438
 | Dry season | Exploring | XX |
 | Wet season | Exploring | XX |
 
+### Rivers
+| Season | Sex | Value | 
+|--------| --- | ----- |
+| Dry season | Female | XX |
+| Dry season | Male | XX |
+| Wet	season | Female | XX |
+| Wet	season | Male | XX |
 
+### Roads
+| Season | Sex | Value | 
+|--------| --- | ----- |
+| Dry season | Female | XX |
+| Dry season | Male | XX |
+| Wet	season | Female | XX |
+| Wet	season | Male | XX |
 
 # Spatial data
 | Description	| Source	| Res| Extent	| Type	| Status| 
