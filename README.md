@@ -63,6 +63,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 ## 5.	Displaying simulations
   - [ ] **Model with and without key fences**
   - [ ] **Create display of our results**
+        
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 ## 6.	Extending simulations
