@@ -141,7 +141,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 ### Average home range size (females only)
-| Season | $\mu$ | $\sigma$ |
+| Season | $\mu$ (m2) | $\sigma$ |
 |--------| ----- | ---------|
 | Dry	season | 191,738 | 260,010 |
 | Wet season | 282,596 | 250,076 |
