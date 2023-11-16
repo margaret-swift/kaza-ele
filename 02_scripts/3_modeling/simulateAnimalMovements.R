@@ -1,4 +1,4 @@
-# abmAnimalMovement.R
+# simulateAnimalMovements.R
 # Created 16 Oct 2023
 # Margaret Swift <mes114@duke.edu>
 
@@ -57,10 +57,10 @@ setDataPaths('geographic')
 load(procpath('geographic.rdata'))
 
 # location for updated abmFences
-# pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R_Packages/abmFences"
-# roxygen2::roxygenize(path=pkg.path)
-devtools::install_github("margaret-swift/abmFences")
-library(abmFences)
+pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R_Packages/abmFences"
+roxygen2::roxygenize(package.dir=pkg.path)
+# devtools::install_github("margaret-swift/abmFences")
+# library(abmFences)
 
 # ******************************************************************************
 #                         Get transition matrix from HMM
@@ -153,18 +153,21 @@ timesteps <- 5000#24*60*31
 des_options=10
 options=12
 
-# Declaring the fence 
-fence_points = matrix(data=c(100, 80, 100, 100,
-                             100, 50, 100, 77,
-                             100, 80, 115, 80),
-                      ncol=4,
-                      byrow=TRUE)
-fence_display = as.data.frame(fence_points) %>% 
-  mutate(perm=c(0,0,0.25), id=0)
-names(fence_display) = c('x', 'y', 'xend', 'yend', 'perm', 'id')
+# # Fake fence data
+# fence_points = matrix(data=c(100, 80, 100, 100,
+#                              100, 50, 100, 77,
+#                              100, 80, 115, 80),
+#                       ncol=4,
+#                       byrow=TRUE)
+# fence_display = as.data.frame(fence_points) %>% 
+#   mutate(perm=c(0,0,0.25), id=0)
+# names(fence_display) = c('x', 'y', 'xend', 'yend', 'perm', 'id')
 
-# now using real data!!!
-# fence_display = generateBarriers(list(fences, rivers), c(0, 0.25))
+# Real fence encounter rate data from Naidoo et al 2022, at 1km encounter threshold
+fence_data_f = generateBarriers(list(fences, rivers, roads),
+                                   c(0, 0.101, 0.153))
+fence_data_m = generateBarriers(list(fences, rivers, roads),
+                                   c(0.035, 0.145, 0.258))
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

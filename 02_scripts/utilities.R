@@ -10,6 +10,7 @@ message('Loading base packages for all projects...')
 pacman::p_load(tidyverse, patchwork, 
                sf, rgdal, tictoc,
                lubridate, here, pacman)
+sf_use_s2(FALSE) #fix errors for spherical geometry
 message('   ...Packages loaded.')
 
 message("Setting base objects...")
@@ -108,6 +109,41 @@ message("   ...Basic functions loaded.")
 #     geom_sf(fill=fill, linewidth=lwd, ...) + 
 #     plot.theme
 # }
+# plotting hist and params for step length
+plotParams <- function(par1, par2, type="step") {
+  createWC <- function(x, k, mu, rho) CircStats::dwrpcauchy(x, mu=mu, rho=rho) * k
+  createVM <- function(x, k, mu, kap) circular::dvonmises(x, mu=mu, kappa=kap) * k
+  createGamma <- function(x, k, mu, sd) {
+    gam <- gammaParamsConvert(mean=mu,sd=sd)
+    dgamma(x, shape=gam$shape, scale=gam$scale) * k
+  }
+  if (type == "gamma") {
+    paramFun <- createGamma
+    data <- pdata$step
+  } else if (type == "vonmises") {
+    paramFun <- createVM
+    data <- pdata$angle
+  } else if (type == "wrpcauchy") {
+    paramFun <- createWC
+    data <- pdata$angle
+  } else {
+    message("WARNING: 'type' should be one of: gamma, vonmises, wrpcauchy")
+    stop()
+  }
+  data <- data[!is.na(data)]
+  h = hist(data, breaks=200)
+  k = diff(h$mids[1:2]) * length(data)
+  x = seq(min(data), max(data),length=400)
+  pal <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", 
+           "#0072B2", "#D55E00", "#CC79A7")
+  
+  for (i in 1:length(par1) ) {
+    lines(x, paramFun(x, k, par1[i], par2[i]), col=pal[i], lwd=2)
+  }
+  legend(max(data)*0.5, max(h$counts)*0.8, 
+         legend=c("resting", "foraging", "correlated walk"),
+         col=pal, lty=1, cex=0.8, bty="n")
+}
 
 message("   ...Plotting functions loaded.")
 
@@ -212,7 +248,7 @@ plotPaths <- function(simRes, seed=1001, activity=NULL, inx=NULL, colorby=NULL) 
   # p3 + transition_time(timestep)
 }
 
-runSim <- function(seed=1001, show=NULL, colorby=NULL, ts=5000) {
+runSim <- function(seed=1001, barriers, show=NULL, colorby=NULL, ts=5000) {
   set.seed(seed)
   message('seed ', seed)
   simRes <- abmFences::abm_simulate(
@@ -227,7 +263,7 @@ runSim <- function(seed=1001, show=NULL, colorby=NULL, ts=5000) {
     behave_Tmat = ELE_behaveMatrix,rest_Cycle = ELE_rest_Cycle,
     additional_Cycles = ELE_additional_Cycles,shelteringMatrix = ELE_shelter,
     foragingMatrix = ELE_forage,movementMatrix = ELE_move,
-    fence=fence_display
+    fence=barriers
   )
   if (is.null(show)) { 
     p <- plotPaths(simRes, seed=seed, colorby=colorby)

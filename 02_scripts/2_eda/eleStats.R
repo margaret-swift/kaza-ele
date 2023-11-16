@@ -10,8 +10,6 @@
 
 # TODO: 
 # - run HMM again with ~SEASON as formula
-# - figure out the units for home ranges (they are WAY too small)
-
  
 # ******************************************************************************
 #                             DATA & LIBRARY LOADING
@@ -22,8 +20,8 @@ source(here::here('02_scripts','utilities.R'))
 pacman::p_load(sp, adehabitatHR, reshape2)
 setDataPaths('elephant')
 load(procpath('ele.rdata'))
-load(here(outdir, 'hmmLongF.rdata'))
-load(here(outdir, 'hmmLongM.rdata'))
+# load(here(outdir, 'hmmLongF.rdata'))
+# load(here(outdir, 'hmmLongM.rdata'))
 
 
 # ******************************************************************************
@@ -107,7 +105,7 @@ tm.m <- findTransitionMatrix(hmm.m)
 
 
 # ******************************************************************************
-#                               Home ranges
+#                                 Home ranges
 # ******************************************************************************
 
 # Set up data to find home ranges for each i-s-y
@@ -120,41 +118,26 @@ ref.table <- ele.df %>% nog() %>%
             NDAYS = (date(DATE.END) - date(DATE.START)),
             NDAYS = as.numeric(NDAYS)) %>% 
   filter(NDAYS > 100) %>% #has to have enough data
-  mutate(AREA = NA)
+  mutate(id = paste(ID, YEAR, SEASON, sep="_"), 
+         ID = as.c(ID))
 
-# Pull area of each individual-season-year (~17sec)
-# TODO: Figure out the units on this thing?? should be meters but area calc makes NO sense
-for ( i in 1:nrow(ref.table) ) {
-  row <- ref.table[i,]
-  sp <- ele.df %>% 
-    filter(ID == row$ID, 
-           year(DATE.TIME) == row$YEAR,
-           SEASON == row$SEASON) %>%
-    as("Spatial")
-  kud <- kernelUD(sp, h='href')
-  hr <- getverticeshr(kud, percent=95, unin='m', unout='m2')
-  ref.table$AREA[i] <- hr$area
-}
-
-
-means.ref <- ref.table %>% 
-  filter(SEASON == "DRY") %>% 
-  group_by(ID) %>% 
-  summarize(DRY_AREA = mean(AREA)) %>% 
-  column_to_rownames(var = "ID")
-
+# Pull area of each individual-season-year
+sp <- ele.df %>% nog() %>% 
+  mutate(
+    YEAR = year(DATE.TIME),
+    id = paste(ID, YEAR, SEASON, sep="_"))
+sp <- SpatialPointsDataFrame(coords=sp[,c('X', 'Y')], data=sp)[,c('id')]
+# kud <- kernelUD(sp, h='href')
+# hr <- lapply(kud[1:10], function(e)
+  # getverticeshr(e, percent=95, unin='m', unout='m2'))
+mcp.df <- mcp(sp, percent=95) %>% as.data.frame()
 
 ref.table %>% 
-  mutate(
-    DRY_AVG = means.ref[ID,"DRY_AREA"],
-    PERC_DIFF = (AREA - DRY_AVG) / DRY_AVG) %>% 
+  left_join(mcp.df, by='id') %>% 
   group_by(SEX, SEASON) %>% 
-  summarize(AREA = mean(AREA),
-            PERC_DIFF = mean(PERC_DIFF, na.rm=TRUE)) # WAY too small!
+  summarize(AREA_M = mean(area, na.rm=TRUE),
+            AREA_SD = sd(area, na.rm=TRUE))
 
-p_load(inlabru)
-mycrs <- fm_CRS(sp)
-crs(sp)
 
 
 

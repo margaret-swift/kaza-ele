@@ -1,4 +1,4 @@
-# eleEDA.R
+# findHomeRanges.R
 # Created 26 Sept 2023
 # Margaret Swift <margaret.swift@cornell.edu>
 
@@ -10,9 +10,9 @@ here::i_am('02_scripts/2_eda/eleEDA.R')
 source(here::here('02_scripts','utilities.R'))
 pacman::p_load(sp, adehabitatHR, reshape2)
 setDataPaths('geographic')
-load(here(procpath, 'geographic.rdata'))
+load(procpath('geographic.rdata'))
 setDataPaths('elephant')
-load(here(procpath, 'ele.rdata'))
+load(procpath('ele.rdata'))
 
 
 # ******************************************************************************
@@ -185,8 +185,8 @@ points(max, pch=19, col='white', cex=0.5)
 contour(as.image.SpatialGridDataFrame(kernel.ref), add=TRUE, col='white')
 
 # home range size
-# hr = getverticeshr(kernel.ref)
-# plot(hr)
+hr = getverticeshr(kernel.ref)
+plot(hr)
 
 
 
