@@ -12,9 +12,9 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
 | Step | Progress |
 | -----| -------- |
 | [Gather Data](#1gather-data)| 100% |
-| [EDA](#2-exploratory-data-analysis) | 75% |
+| [EDA](#2-exploratory-data-analysis) | 80% |
 | [Model landscape use](#3modeling-landscape-use) | 0% |
-| [Simulate elephant movements](#4simulating-elephant-movements) | 25% |
+| [Simulate elephant movements](#4simulating-elephant-movements) | 40% |
 | [Display](#5displaying-simulations) | 0% |
 | [Extensions](#6extending-simulations) | 0% |
 
@@ -36,7 +36,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
     - [x] Rates of fence crossing by **activity type** and **season** (male only)
     - [x] Step size by **state, sex, season**
   - [x] **Activity states** have been defined using a Hidden Markov Model ([McClintock & Michelot 2018](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12995)). Also approached was the M4 Model ([Cullen et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/abs/10.1111/2041-210X.13745)); I may return to this later.
-    - [ ] I need to re-run this model with **season** as well as **sex** and gather transition matrices.
+    - [x] I need to re-run this model with **season** as well as **sex** and gather transition matrices.
   - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
@@ -54,7 +54,6 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
     - [x] ~~Selectively permeable fences with probability changing based on sex, season, and activity state~~
     - [x] ~~Attraction to range centroids~~
     - [ ] Interactions with landscape raster values
-  - [ ] **Realistic model implementation**: Once the basic model is up and running, add in spatial layers from (4b) and real transition matrix values from (1b).
   - [ ] **Model selection**: Calculate metrics from step (3a) and compare models. Which ones accurately replicate the critical spatial patterns? Is any homebrewing necessary?
   - [ ] **Model improvement**: Temporal and individual elements should then be added to the model to better reflect the seasonality of water supply, vegetation, temperature, and elephant movements. In addition, individual elephants likely would remember waterholes and fence gaps in particular; they shouldn’t be treated like a random molecule. In addition, bulls are known to create fence gaps; should agents be able to modify their landscape in this capacity?
 
