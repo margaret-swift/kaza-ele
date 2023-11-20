@@ -100,8 +100,8 @@ tm <- matrix(probs.df, nrow=3, byrow=TRUE)
 row <- 200; col <- 200;
 landscapeLayersList <- list(
   "shelter" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
-  "forage" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
-  "movement" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col))
+  "forage"  = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
+  "movement"= matrix(runif(row*col, 0, 1), nrow = row, ncol = col))
 ELE_shelter <- landscapeLayersList$shelter
 ELE_forage <- landscapeLayersList$forage
 ELE_move <- landscapeLayersList$movement
@@ -148,26 +148,17 @@ c0 <- c(0.075, 0, 24* (365/2), 24* 365) # seasonal
 ELE_additional_Cycles <- rbind(c0)
 
 # startLocation <- sample(90:110, 2, replace = TRUE)
-start <- c(95, 95)
+start <- c(26, -20)
 timesteps <- 5000#24*60*31
 des_options=10
 options=12
 
-# # Fake fence data
-# fence_points = matrix(data=c(100, 80, 100, 100,
-#                              100, 50, 100, 77,
-#                              100, 80, 115, 80),
-#                       ncol=4,
-#                       byrow=TRUE)
-# fence_display = as.data.frame(fence_points) %>% 
-#   mutate(perm=c(0,0,0.25), id=0)
-# names(fence_display) = c('x', 'y', 'xend', 'yend', 'perm', 'id')
-
 # Real fence encounter rate data from Naidoo et al 2022, at 1km encounter threshold
-fence_data_f = generateBarriers(list(fences, rivers, roads),
-                                   c(0, 0.101, 0.153))
-fence_data_m = generateBarriers(list(fences, rivers, roads),
-                                   c(0.035, 0.145, 0.258))
+barriers <- list(fences, rivers)#, roads)
+perm_f = c(0, 0.101) #0.153)
+perm_m = c(0.035, 0.145) #0.258)
+barriers_data_f <- generateBarriers(barriers, perm_f)
+barriers_data_m <- generateBarriers(barriers, perm_m)
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -195,11 +186,8 @@ i = 0
 ## Run this as a chunk to generate random maps of elephant movements
 i = i+1
 seed <- randseeds[i]
-runSim(seed, colorby='inx')
+runSim(seed, barriers, barriers_data_f, perm_f, colorby='inx')
 
-## Particular seeds that show off the movements well
-# - 61862; 78735; 50575; 85984 show fence behaviors really well 
-# - 46536; 33712; has good action on both sides of the fence
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

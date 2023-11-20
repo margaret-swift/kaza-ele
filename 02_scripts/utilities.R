@@ -147,9 +147,14 @@ plotParams <- function(par1, par2, type="step") {
 
 message("   ...Plotting functions loaded.")
 
+
+
+
+
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                            FUNCTIONS FOR SIMULATIONS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 createMoveRast <- function(locs) {
   df <- data.frame( x = rep(1:200, each=200),
                     y = rep(1:200, times=200),
@@ -189,7 +194,8 @@ plotBase <- function(move_rast, activity=NULL, seed=1001) {
     ggtitle(title)
   return(p)
 }
-plotPaths <- function(simRes, seed=1001, activity=NULL, inx=NULL, colorby=NULL) {
+plotPaths <- function(simRes, barriers, perms,
+                      seed=1001, activity=NULL, inx=NULL, colorby=NULL) {
   # get paths of walking
   path <- simRes$locations
   if (!is.null(inx)) path <- path[inx,]
@@ -201,12 +207,17 @@ plotPaths <- function(simRes, seed=1001, activity=NULL, inx=NULL, colorby=NULL) 
   move_rast <- createMoveRast(path)
   
   # plot paths on raster base
-  fd <- fence_display %>% mutate(perm = factor(perm))
+  for (i in 1:length(barriers)) {
+    barriers[[i]]$perm <- perms[i]
+  }
+  fd <- bind_rows(barriers) %>% 
+    as.data.frame() %>% 
+    mutate(perm=factor((1-perm)*100)) %>% 
+    st_as_sf()
   p1 <- plotBase(move_rast, activity, seed) +
-    geom_segment(data=fence_display, 
-                 mapping=aes(x=x, y=y, xend=xend, yend=yend, 
-                             alpha=perm), linewidth=2) +
-    scale_alpha_continuous(range = c(1, 0.25)) +
+    geom_sf( data=fd, 
+             mapping=aes(alpha=perm), linewidth=2) + 
+    guides(alpha=guide_legend("% movement \nblocked")) +
     # geom_point(data=ELE_shelterLocs,
     #   mapping=aes(x=x, y=y), color="#dbafed", alpha=0.3,
     #   size=ELE_shelterSize*19.5) +
@@ -244,34 +255,46 @@ plotPaths <- function(simRes, seed=1001, activity=NULL, inx=NULL, colorby=NULL) 
     geom_point(data=path[1,], aes(x=x, y=y), color='black', size=5) +
     geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3) +
     geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
-  
-  # p3 + transition_time(timestep)
 }
 
-runSim <- function(seed=1001, barriers, show=NULL, colorby=NULL, ts=5000) {
+runSim <- function(seed=1001, barriers, barrier_data, perms, 
+                   show=NULL, colorby=NULL, ts=5000) {
   set.seed(seed)
   message('seed ', seed)
   simRes <- abmFences::abm_simulate(
-    start = start, timesteps = ts, des_options = des_options,options = options,
-    shelterLocations = ELE_shelterLocs,shelterSize = ELE_shelterSize,
-    avoidPoints = ELE_avoidLocs,destinationRange = ELE_destinationRange,
+    start = start, 
+    timesteps = ts, 
+    des_options = des_options,
+    options = options,
+    shelterLocations = ELE_shelterLocs,
+    shelterSize = ELE_shelterSize,
+    avoidPoints = ELE_avoidLocs,
+    destinationRange = ELE_destinationRange,
     destinationDirection = ELE_destinationDirection,
     destinationTransformation = ELE_destinationTransformation,
-    destinationModifier = ELE_destinationModifier, avoidTransformation = ELE_avoidTransformation,
-    avoidModifier = ELE_avoidModifier,k_step = ELE_k_step,s_step = ELE_s_step,
-    mu_angle = ELE_mu_angle,k_angle = ELE_k_angle, rescale_step2cell = ELE_rescale,
-    behave_Tmat = ELE_behaveMatrix,rest_Cycle = ELE_rest_Cycle,
-    additional_Cycles = ELE_additional_Cycles,shelteringMatrix = ELE_shelter,
-    foragingMatrix = ELE_forage,movementMatrix = ELE_move,
-    fence=barriers
+    destinationModifier = ELE_destinationModifier, 
+    avoidTransformation = ELE_avoidTransformation,
+    avoidModifier = ELE_avoidModifier,
+    k_step = ELE_k_step,
+    s_step = ELE_s_step,
+    mu_angle = ELE_mu_angle,
+    k_angle = ELE_k_angle, 
+    rescale_step2cell = ELE_rescale,
+    behave_Tmat = ELE_behaveMatrix,
+    rest_Cycle = ELE_rest_Cycle,
+    additional_Cycles = ELE_additional_Cycles,
+    shelteringMatrix = ELE_shelter,
+    foragingMatrix = ELE_forage,
+    movementMatrix = ELE_move,
+    fence=barrier_data
   )
   if (is.null(show)) { 
-    p <- plotPaths(simRes, seed=seed, colorby=colorby)
+    p <- plotPaths(simRes, barriers, perms, seed=seed, colorby=colorby)
   } else {
     plot_list <- list(
-      move   = plotPaths(simRes, seed, activity = 'move',   colorby=colorby),
-      forage = plotPaths(simRes, seed, activity = 'forage', colorby=colorby),
-      shelter= plotPaths(simRes, seed, activity = 'shelter',colorby=colorby) 
+      move   = plotPaths(simRes, barriers, perms, seed, activity = 'move',   colorby=colorby),
+      forage = plotPaths(simRes, barriers, perms, seed, activity = 'forage', colorby=colorby),
+      shelter= plotPaths(simRes, barriers, perms, seed, activity = 'shelter',colorby=colorby) 
     )
     p <- ggpubr::ggarrange(plotlist = plot_list[show])
   }
