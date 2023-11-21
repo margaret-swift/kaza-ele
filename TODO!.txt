@@ -1,9 +1,7 @@
 TODO:
 
-It looks like there's not currently a way to link up the raster/matrix to a real origin location (like the fences have). 
+NEXT STEP: Change the matrix references in cpp_get_values_rast() to terra::raster types.
 
-I want the random start point to be in latlon like the fences are, so what to do?
+See https://github.com/ecohealthalliance/fasterize/blob/main/src/edge.h for inspiration :) 
 
-
-Maybe change the user-defined start location into a row/col on raster?
-It might be easier to take the code as it is and update it so that the raster 
+Percolate these changes up through the function call once you've got it!

@@ -93,9 +93,9 @@ for (i in 1:3) {
   ELE_behaveMatrix[i,] <- c( p1, p2, p3 )
 }
 
-# step length
-ELE_k_step <- mle$step['mean',] / 24
-ELE_s_step <- mle$step['sd',] / 24
+# step length (CPP CODE ASSUMES MINUTE SCALE)
+ELE_k_step <- mle$step['mean',] / 60
+ELE_s_step <- mle$step['sd',] / 60
 
 # turning angle
 ELE_mu_angle <- mle$angle['mean',]
@@ -112,11 +112,12 @@ ELE_move   <- move.mat
 
 # barriers -- skip roads for now
 barriers <- list(fences, rivers)#, roads)
+barriers <- sapply(barriers, function(e) st_transform(e, crs=32735))
 barriers_data <- generateBarriers(barriers, perm[1:2])
 
 
 # ******************************************************************************
-#                       Remaining simulation parameters
+#                         Remaining simulation parameters
 # ******************************************************************************
 
 # shelters
@@ -131,8 +132,8 @@ ELE_destinationDirection <- c(0, 0.01)
 ELE_destinationTransformation <- 2
 ELE_destinationModifier <- 2
 
-# scale of raster
-ELE_rescale <- 250
+# scale of raster resolution
+ELE_rescale <- mat.res[1] #should be around 10
 
 # avoiding
 # avoidTrans 0 - no transformation applied to the distance to avoidance 
@@ -140,9 +141,7 @@ ELE_rescale <- 250
 #            1 - distance to avoidance points weighing is square-rooted, 
 #            2 - distance to avoidance points weighting is squared
 # avoidMod  A coefficient to be applied to the avoidance points weighting.
-ELE_avoidLocs <- data.frame(
-  "x" = 5,
-  "y" = 5)
+ELE_avoidLocs <- data.frame( "x" = 5, "y" = 5 )
 ELE_avoidTransformation <- 2
 ELE_avoidModifier <- 4
 
@@ -160,15 +159,10 @@ des_options=10; options=12;
 #                         SIMULATE ELEPHANT MOVEMENTS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-## Run these just once at the start of simulations (or when you've updated ++)
-# devtools::load_all(path=pkg.path)
 set.seed(1001)
-randseeds <- floor(runif(1e5, 0, 1) * 1e5)
-i = 0
 
 ## Run this as a chunk to generate random maps of elephant movements
-i = i+1
-seed <- randseeds[i]
+seed <- floor(runif(1, 0, 1) * 1e5)
 runSim(seed, barriers, barriers_data, perm, colorby='inx')
 
 

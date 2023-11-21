@@ -286,7 +286,7 @@ runSim <- function(seed=1001, barriers, barrier_data, perms,
     shelteringMatrix = ELE_shelter,
     foragingMatrix = ELE_forage,
     movementMatrix = ELE_move,
-    fence=barrier_data
+    barrier=barrier_data
   )
   if (is.null(show)) { 
     p <- plotPaths(simRes, barriers, perms, seed=seed, colorby=colorby)

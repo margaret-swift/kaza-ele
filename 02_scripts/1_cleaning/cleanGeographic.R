@@ -44,7 +44,8 @@ f1 <- here('03_output', 'tmp', 'test1.tif')
 f2 <- here('03_output', 'tmp', 'test2.tif')
 r1 <- writeRaster(lands.raster.1, f1, overwrite=TRUE)
 r2 <- writeRaster(lands.raster.2, f2, overwrite=TRUE)
-lands.vrt <- vrt(c(f1, f2), "03_output/tmp/test.vrt", overwrite=TRUE) 
+lands.vrt <- terra::vrt(c(f1, f2), "03_output/tmp/test.vrt", overwrite=TRUE) 
+lands.proj <- terra::project(lands.vrt, 'EPSG:32735')
 
 # define movement ease 
 # 0 = no movement
@@ -117,13 +118,12 @@ lands.meta$shelter = c(
   1,   # water bodies permanent
   1    # water bodies seasonal
 )
-
-forage.mat <- classify(lands.vrt, lands.meta[,c('category', 'forage')]) %>%
-  as.matrix(wide=TRUE)
-move.mat <- classify(lands.vrt, lands.meta[,c('category', 'movement')]) %>%
-  as.matrix(wide=TRUE)
-shelter.mat <- classify(lands.vrt, lands.meta[,c('category', 'shelter')]) %>%
-  as.matrix(wide=TRUE)
-
-save(shelter.mat, move.mat, forage.mat, file=procpath('landsmats.rdata'))
+reclass <- function(type) terra::classify(lands.proj, lands.meta[,c('category', type)])
+move.mat   <- reclass('movement')
+forage.mat <- reclass('forage')
+shelter.mat<- reclass('shelter')
+mat.ext <- terra::ext(lands.proj)
+mat.res <- terra::res(lands.proj)
+save(shelter.mat, move.mat, forage.mat, mat.ext, mat.res,
+     file=procpath('landsmats.rdata'))
 
