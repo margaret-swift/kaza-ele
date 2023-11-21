@@ -1,0 +1,9 @@
+TODO:
+
+It looks like there's not currently a way to link up the raster/matrix to a real origin location (like the fences have). 
+
+I want the random start point to be in latlon like the fences are, so what to do?
+
+
+Maybe change the user-defined start location into a row/col on raster?
+It might be easier to take the code as it is and update it so that the raster 

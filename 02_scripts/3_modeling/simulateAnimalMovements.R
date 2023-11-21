@@ -50,61 +50,74 @@ pacman::p_load(here,
 source(here('02_scripts','utilities.R'))
 setDataPaths('elephant')
 load(procpath('ele.rdata'))
-load(here(outdir, 'hmmLongF.rdata'))
-load(here(outdir, 'hmmLongM.rdata'))
 
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
+load(procpath('landsmats.rdata'))
 
-# location for updated abmFences
-pkg.path <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R_Packages/abmFences"
-roxygen2::roxygenize(package.dir=pkg.path)
+# install abmFences
+roxygen2::roxygenize("~/R_Packages/abmFences")
 # devtools::install_github("margaret-swift/abmFences")
 # library(abmFences)
 
-# ******************************************************************************
-#                         Get transition matrix from HMM
-# ******************************************************************************
+# set flag for which sex to simulate
+sex <- "F" #"M"
 
-# get estimates for females
-hmm <- hmm.f
-
-
-vals <- 1:3
-probs.df <- data.frame(matrix(nrow=1, ncol=9))
-names(probs.df) <- paste(rep(vals, each=3), vals, sep=" -> ")
-mat <- hmm$mle$beta
-for (i in vals) {
-  types <- paste(i, vals[vals != i], sep=" -> ")
-
-  d2 <- exp(mat[,types[1]])
-  d3 <- exp(mat[,types[2]])
-  sum <- d2 + d3
-
-  p2 <- d2 / ( 1 + sum )
-  p3 <- d3 / ( 1 + sum )
-  p1 <- 1 - ( p2 + p3 )
-
-  probs <- data.frame( p1, p2, p3 )
-  names(probs) <- c(paste(i, i, sep=" -> "), types)
-  probs.df[,names(probs)] <- probs
+# sex-specific parameters
+# Real fence encounter rate data from Naidoo et al 2022, at 1km threshold
+# for fences, rivers, and roads
+if (sex == "F") {
+  load(here(outdir, 'hmmLongF.rdata'))
+  mle <- hmm.f$mle
+  perm <- c(0, 0.101, 0.153)
+} else { 
+  load(here(outdir, 'hmmLongM.rdata')) 
+  mle <- hmm.m$mle
+  perm <- c(0.035, 0.145, 0.258)
 }
-probs.df <- unlist(probs.df)
-tm <- matrix(probs.df, nrow=3, byrow=TRUE)
+
+# ******************************************************************************
+#                     Get transition matrix and params from HMM
+# ******************************************************************************
+
+ELE_behaveMatrix <- matrix(nrow=3, ncol=3)
+for (i in 1:3) {
+  # get transition matrix data from HMM MLE
+  d2 <- exp(mle$beta[,(i*2)-1])
+  d3 <- exp(mle$beta[,(i*2)])
+  #calculate probs
+  p2 <- d2 / ( 1 + d2 + d3 )
+  p3 <- d3 / ( 1 + d2 + d3 )
+  p1 <- 1 - ( p2 + p3 )
+  #save
+  ELE_behaveMatrix[i,] <- c( p1, p2, p3 )
+}
+
+# step length
+ELE_k_step <- mle$step['mean',] / 24
+ELE_s_step <- mle$step['sd',] / 24
+
+# turning angle
+ELE_mu_angle <- mle$angle['mean',]
+ELE_k_angle  <- mle$angle['concentration',]
 
 
 # ******************************************************************************
-#                             Badger example parameters
+#                         Set up raster and barrier layers
 # ******************************************************************************
 
-row <- 200; col <- 200;
-landscapeLayersList <- list(
-  "shelter" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
-  "forage"  = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
-  "movement"= matrix(runif(row*col, 0, 1), nrow = row, ncol = col))
-ELE_shelter <- landscapeLayersList$shelter
-ELE_forage <- landscapeLayersList$forage
-ELE_move <- landscapeLayersList$movement
+ELE_shelter<- shelter.mat
+ELE_forage <- forage.mat
+ELE_move   <- move.mat
+
+# barriers -- skip roads for now
+barriers <- list(fences, rivers)#, roads)
+barriers_data <- generateBarriers(barriers, perm[1:2])
+
+
+# ******************************************************************************
+#                       Remaining simulation parameters
+# ******************************************************************************
 
 # shelters
 ELE_shelterLocs <- data.frame(
@@ -112,22 +125,14 @@ ELE_shelterLocs <- data.frame(
   "y" = c(90, 75, 90))
 ELE_shelterSize <- 5
 
-#behavior matrix
-ELE_behaveMatrix <- tm
-
-# step params
-ELE_k_step <- c(0.3*60, 1.25*60, 0.25*60)
-ELE_s_step <- c(0.8, 0.25, 0.5)
-ELE_mu_angle <- c(0, 0, 0)
-ELE_k_angle <- c(0.6, 0.99, 0.6)
-
 # destination params
 ELE_destinationRange <- c(3, 120)
 ELE_destinationDirection <- c(0, 0.01)
 ELE_destinationTransformation <- 2
 ELE_destinationModifier <- 2
 
-ELE_rescale <- 50
+# scale of raster
+ELE_rescale <- 250
 
 # avoiding
 # avoidTrans 0 - no transformation applied to the distance to avoidance 
@@ -135,7 +140,6 @@ ELE_rescale <- 50
 #            1 - distance to avoidance points weighing is square-rooted, 
 #            2 - distance to avoidance points weighting is squared
 # avoidMod  A coefficient to be applied to the avoidance points weighting.
-nrep=1e3
 ELE_avoidLocs <- data.frame(
   "x" = 5,
   "y" = 5)
@@ -147,35 +151,14 @@ ELE_rest_Cycle <- c(0.12, 0, 24, 24)
 c0 <- c(0.075, 0, 24* (365/2), 24* 365) # seasonal
 ELE_additional_Cycles <- rbind(c0)
 
-# startLocation <- sample(90:110, 2, replace = TRUE)
+# choose start location and options
 start <- c(26, -20)
-timesteps <- 5000#24*60*31
-des_options=10
-options=12
-
-# Real fence encounter rate data from Naidoo et al 2022, at 1km encounter threshold
-barriers <- list(fences, rivers)#, roads)
-perm_f = c(0, 0.101) #0.153)
-perm_m = c(0.035, 0.145) #0.258)
-barriers_data_f <- generateBarriers(barriers, perm_f)
-barriers_data_m <- generateBarriers(barriers, perm_m)
-
+timesteps <- 5000 #24*60*31
+des_options=10; options=12;
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                         SIMULATE ELEPHANT MOVEMENTS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# give them only a few good foraging spots
-rast <- ELE_forage * 0 + rbeta(n=row*col, 0.25, 0.25)
-rast[85:95, 85:95] <- 1
-rast[83:86, 105:110] <- 1
-ELE_forage <- rast
-
-# create a movement corridor
-rast <- ELE_forage * 0 + runif(n=row*col, 0, 0.1)
-rast[0:200, 92:95] <- 1
-ELE_move <- rast
-
-timesteps=3e4
 
 ## Run these just once at the start of simulations (or when you've updated ++)
 # devtools::load_all(path=pkg.path)
@@ -186,7 +169,23 @@ i = 0
 ## Run this as a chunk to generate random maps of elephant movements
 i = i+1
 seed <- randseeds[i]
-runSim(seed, barriers, barriers_data_f, perm_f, colorby='inx')
+runSim(seed, barriers, barriers_data, perm, colorby='inx')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -195,3 +194,14 @@ runSim(seed, barriers, barriers_data_f, perm_f, colorby='inx')
 
 
 
+
+
+# row <- 200; col <- 200;
+# landscapeLayersList <- list(
+#   "shelter" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
+#   "forage"  = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
+#   "movement"= matrix(runif(row*col, 0, 1), nrow = row, ncol = col))
+# 
+# ELE_shelter <- landscapeLayersList$shelter
+# ELE_forage <- landscapeLayersList$forage
+# ELE_move <- landscapeLayersList$movement
