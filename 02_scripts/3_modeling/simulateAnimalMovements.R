@@ -46,14 +46,15 @@ pacman::p_load(here,
        ggridges,
        patchwork,
        raster)
-       # NLMR)
 source(here('02_scripts','utilities.R'))
 setDataPaths('elephant')
 load(procpath('ele.rdata'))
 
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
-load(procpath('landsmats.rdata'))
+shelt.rast <- terra::rast(procpath('shelterRaster.tif'))
+move.rast <- terra::rast(procpath('movementRaster.tif'))
+forage.rast <- terra::rast(procpath('forageRaster.tif'))
 
 # install abmFences
 roxygen2::roxygenize("~/R_Packages/abmFences")
@@ -101,20 +102,22 @@ ELE_s_step <- mle$step['sd',] / 60
 ELE_mu_angle <- mle$angle['mean',]
 ELE_k_angle  <- mle$angle['concentration',]
 
-
 # ******************************************************************************
 #                         Set up raster and barrier layers
 # ******************************************************************************
 
-ELE_shelter<- shelter.mat
-ELE_forage <- forage.mat
-ELE_move   <- move.mat
+ELE_shelter<- shelt.rast
+ELE_forage <- forage.rast
+ELE_move   <- move.rast
 
 # barriers -- skip roads for now
 barriers <- list(fences, rivers)#, roads)
 barriers <- sapply(barriers, function(e) st_transform(e, crs=32735))
-barriers_data <- generateBarriers(barriers, perm[1:2])
+ELE_barriers <- generateBarriers(barriers, perm[1:2])
 
+# start logging
+# logfile = file.path(outdir, 'logs', 'rlog.log')
+# sink(file=logfile)
 
 # ******************************************************************************
 #                         Remaining simulation parameters
@@ -122,9 +125,9 @@ barriers_data <- generateBarriers(barriers, perm[1:2])
 
 # shelters
 ELE_shelterLocs <- data.frame(
-  "x" = c(90, 95, 110),
-  "y" = c(90, 75, 90))
-ELE_shelterSize <- 5
+  "x" = c(-155000, -160000, -125000),
+  "y" = c(7950000, 7945000, 7945000))
+ELE_shelterSize <- 50
 
 # destination params
 ELE_destinationRange <- c(3, 120)
@@ -133,7 +136,7 @@ ELE_destinationTransformation <- 2
 ELE_destinationModifier <- 2
 
 # scale of raster resolution
-ELE_rescale <- mat.res[1] #should be around 10
+ELE_rescale <- terra::xres(shelt.rast) #should be around 10
 
 # avoiding
 # avoidTrans 0 - no transformation applied to the distance to avoidance 
@@ -141,7 +144,9 @@ ELE_rescale <- mat.res[1] #should be around 10
 #            1 - distance to avoidance points weighing is square-rooted, 
 #            2 - distance to avoidance points weighting is squared
 # avoidMod  A coefficient to be applied to the avoidance points weighting.
-ELE_avoidLocs <- data.frame( "x" = 5, "y" = 5 )
+ELE_avoidLocs <- data.frame(
+  "x" = c(-155000, -140000, -125000),
+  "y" = c(7900000, 7920000, 7900000))
 ELE_avoidTransformation <- 2
 ELE_avoidModifier <- 4
 
@@ -151,51 +156,63 @@ c0 <- c(0.075, 0, 24* (365/2), 24* 365) # seasonal
 ELE_additional_Cycles <- rbind(c0)
 
 # choose start location and options
-start <- c(26, -20)
-timesteps <- 5000 #24*60*31
+start <- c(-130000, 7940000)
+timesteps <- 100000 #24*60*31
 des_options=10; options=12;
+# des_options=2; options=5;
+
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                         SIMULATE ELEPHANT MOVEMENTS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+# # double check all is okay
+# plot(ELE_move)
+# plot(barriers[[1]], add=TRUE, col="black")
+# plot(barriers[[2]], add=TRUE, col="blue")
+# points(start[1], start[2], pch=19, col='red')
+# points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='black')
+# points(ELE_avoidLocs$x, ELE_avoidLocs$y, pch=23, col='black', lwd=2)
+
 set.seed(1001)
+roxygen2::roxygenize("~/R_Packages/abmFences")
 
 ## Run this as a chunk to generate random maps of elephant movements
 seed <- floor(runif(1, 0, 1) * 1e5)
-runSim(seed, barriers, barriers_data, perm, colorby='inx')
+
+runSim(barriers=barriers, perm=perm,
+       seed=seed, timesteps=timesteps,
+       activities = "all", colorby='inx')
+
+# simRes <- abmFences::abm_simulate(
+#   start = start, 
+#   timesteps = timesteps, 
+#   des_options = des_options,
+#   options = options,
+#   shelterLocations = ELE_shelterLocs,
+#   shelterSize = ELE_shelterSize,
+#   avoidPoints = ELE_avoidLocs,
+#   destinationRange = ELE_destinationRange,
+#   destinationDirection = ELE_destinationDirection,
+#   destinationTransformation = ELE_destinationTransformation,
+#   destinationModifier = ELE_destinationModifier, 
+#   avoidTransformation = ELE_avoidTransformation,
+#   avoidModifier = ELE_avoidModifier,
+#   k_step = ELE_k_step,
+#   s_step = ELE_s_step,
+#   mu_angle = ELE_mu_angle,
+#   k_angle = ELE_k_angle, 
+#   rescale_step2cell = ELE_rescale,
+#   behave_Tmat = ELE_behaveMatrix,
+#   rest_Cycle = ELE_rest_Cycle,
+#   additional_Cycles = ELE_additional_Cycles,
+#   shelteringMatrix = ELE_shelter,
+#   foragingMatrix = ELE_forage,
+#   movementMatrix = ELE_move,
+#   barrier=ELE_barriers,
+#   checktime=TRUE
+# )
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-
-# row <- 200; col <- 200;
-# landscapeLayersList <- list(
-#   "shelter" = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
-#   "forage"  = matrix(runif(row*col, 0, 1), nrow = row, ncol = col),
-#   "movement"= matrix(runif(row*col, 0, 1), nrow = row, ncol = col))
-# 
-# ELE_shelter <- landscapeLayersList$shelter
-# ELE_forage <- landscapeLayersList$forage
-# ELE_move <- landscapeLayersList$movement

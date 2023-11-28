@@ -35,7 +35,7 @@ save(fences, roads, rivers,
 # ******************************************************************************
 #                        Set up raster resistance layer
 # ******************************************************************************
-
+setDataPaths('geographic')
 load(procpath('landcover_rasters.rdata'))
 
 # kinda the only way I could find to mosaic rasters with different extents...
@@ -45,7 +45,6 @@ f2 <- here('03_output', 'tmp', 'test2.tif')
 r1 <- writeRaster(lands.raster.1, f1, overwrite=TRUE)
 r2 <- writeRaster(lands.raster.2, f2, overwrite=TRUE)
 lands.vrt <- terra::vrt(c(f1, f2), "03_output/tmp/test.vrt", overwrite=TRUE) 
-lands.proj <- terra::project(lands.vrt, 'EPSG:32735')
 
 # define movement ease 
 # 0 = no movement
@@ -118,12 +117,13 @@ lands.meta$shelter = c(
   1,   # water bodies permanent
   1    # water bodies seasonal
 )
-reclass <- function(type) terra::classify(lands.proj, lands.meta[,c('category', type)])
-move.mat   <- reclass('movement')
-forage.mat <- reclass('forage')
-shelter.mat<- reclass('shelter')
-mat.ext <- terra::ext(lands.proj)
-mat.res <- terra::res(lands.proj)
-save(shelter.mat, move.mat, forage.mat, mat.ext, mat.res,
-     file=procpath('landsmats.rdata'))
-
+reclassWrite <- function(type) {
+  vrt.reclass = terra::classify(lands.vrt, lands.meta[,c('category', type)])
+  vrt.reclass.proj = terra::project(vrt.reclass, 'EPSG:32735')
+  writeRaster(vrt.reclass.proj, 
+              filename=procpath(paste0(type, 'Raster.tif')),
+              overwrite=TRUE)
+}
+reclassWrite('movement')
+reclassWrite('forage')
+reclassWrite('shelter')

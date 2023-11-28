@@ -154,38 +154,29 @@ message("   ...Plotting functions loaded.")
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                            FUNCTIONS FOR SIMULATIONS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-createMoveRast <- function(locs) {
-  df <- data.frame( x = rep(1:200, each=200),
-                    y = rep(1:200, times=200),
-                    shelter=NA, forage=NA, move=NA) %>%
-    dplyr::filter(x > min(locs$x), x < max(locs$x),
-                  y > min(locs$y), y < max(locs$y))
-  
-  for(i in 1:nrow(df)) {
-    y <- df$y[i]; x <- df$x[i];
-    df$shelter[i] <- ELE_shelter[y,x]
-    df$forage[i] <- ELE_forage[y,x]
-    df$move[i] <- ELE_move[y,x]
-  }
-  df
-}
-plotBase <- function(move_rast, activity=NULL, seed=1001) {
+plotBase <- function(path, activity=NULL, seed=1001) {
   if (is.null(activity)) {
     base <- ggplot()
     title <- paste0("Simulated ele path, seed = ", seed)
   } else {
-    if (!(activity %in% names(move_rast))) {
-      message("WARNING: activity type '", activity, "' not found")
-      return()
-    }
     color.ref <- list(forage="Greens", move="Reds", shelter="Purples")
-    move_rast$selected <- move_rast[,activity]
+    if (activity == "move") {rast = ELE_move
+    } else if (activity == "shelter") {rast = ELE_shelter
+    } else if (activity == "forage") {rast = ELE_forage
+    }
+    # subset by extent
+    ext = terra::ext(c(min(path$x), max(path$x), 
+                       min(path$y), max(path$y)))
+    rast.sub <- crop(rast, ext)
+    
+    # turn into data frame and plot
+    rast.df = terra::as.data.frame(rast.sub, xy=TRUE) %>% 
+      rename(value=test)
     title = paste0(toupper(activity), ", seed = ", seed)
     base <- ggplot() +
-      geom_tile(data = move_rast,
-                mapping=aes(x=x, y=y, fill=selected),
-                alpha=0.25) + 
+      geom_raster(data = rast.df,
+                mapping=aes(x=x, y=y, fill=value),
+                alpha=0.5) + 
       scale_fill_distiller(palette=color.ref[[activity]], direction=1, name=activity)
   }
   p <- base + 
@@ -194,34 +185,32 @@ plotBase <- function(move_rast, activity=NULL, seed=1001) {
     ggtitle(title)
   return(p)
 }
-plotPaths <- function(simRes, barriers, perms,
-                      seed=1001, activity=NULL, inx=NULL, colorby=NULL) {
-  # get paths of walking
+plotPaths <- function(simRes, barriers, perm, seed=1001, 
+                      activity=NULL, inx=NULL, colorby=NULL) {
+ 
+  # get simulation locations
   path <- simRes$locations
   if (!is.null(inx)) path <- path[inx,]
   path$INX <- 1:nrow(path)
   xlim = c(min(path$x), max(path$x))
   ylim = c(min(path$y), max(path$y))
   
-  # pull raster data 
-  move_rast <- createMoveRast(path)
-  
-  # plot paths on raster base
-  for (i in 1:length(barriers)) {
-    barriers[[i]]$perm <- perms[i]
-  }
-  fd <- bind_rows(barriers) %>% 
+  # pull permeability and attach to barriers
+  for (i in 1:length(barriers)) barriers[[i]]$perm <- perm[i]
+  b.df <- bind_rows(barriers) %>% 
     as.data.frame() %>% 
     mutate(perm=factor((1-perm)*100)) %>% 
     st_as_sf()
-  p1 <- plotBase(move_rast, activity, seed) +
-    geom_sf( data=fd, 
-             mapping=aes(alpha=perm), linewidth=2) + 
+  
+  # plot barriers on raster
+  p1 <- plotBase(path, activity, seed) +
+    geom_sf(data=b.df, 
+            mapping=aes(alpha=perm), linewidth=2) + 
     guides(alpha=guide_legend("% movement \nblocked")) +
     # geom_point(data=ELE_shelterLocs,
     #   mapping=aes(x=x, y=y), color="#dbafed", alpha=0.3,
     #   size=ELE_shelterSize*19.5) +
-    geom_point(data=simRes$locations[1,], 
+    geom_point(data=path[1,], 
                mapping=aes(x=x, y=y), color="red", alpha=0.3, 
                size=20) + 
     coord_sf(xlim=xlim, ylim=ylim)
@@ -244,26 +233,27 @@ plotPaths <- function(simRes, barriers, perms,
       scale_color_brewer(palette='Dark2', direction=1)
   }
   
-  # add on starting point, foraging destination, and shelter locations
-  dests <- path %>% 
-    mutate(grp = paste(destination_x, destination_y)) %>% 
-    group_by(grp, destination_x, destination_y) %>% 
-    summarize(.groups="drop") %>% dplyr::select(-grp) %>% 
-    rename(x=destination_x, y=destination_y)
+  # add on starting point, foraging destinations, and shelter locations
+  # dests <- path %>% 
+  #   mutate(grp = paste(destination_x, destination_y)) %>% 
+  #   group_by(grp, destination_x, destination_y) %>% 
+  #   summarize(.groups="drop") %>% dplyr::select(-grp) %>% 
+  #   rename(x=destination_x, y=destination_y)
   p3 <- p2 + 
-    geom_point(data=dests, aes(x=x, y=y), color="black", size=3, shape=15) +
     geom_point(data=path[1,], aes(x=x, y=y), color='black', size=5) +
-    geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3) +
-    geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
+    geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3)
+    # geom_point(data=dests, aes(x=x, y=y), color="black", size=3, shape=15) +
+    # geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
+  p3
 }
 
-runSim <- function(seed=1001, barriers, barrier_data, perms, 
-                   show=NULL, colorby=NULL, ts=5000) {
+runSim <- function( barriers, perm, seed=1001, timesteps=5000,
+                    activities=NULL, colorby=NULL ) {
   set.seed(seed)
-  message('seed ', seed)
+  message('Starting simulation.\nseed ', seed)
   simRes <- abmFences::abm_simulate(
     start = start, 
-    timesteps = ts, 
+    timesteps = timesteps, 
     des_options = des_options,
     options = options,
     shelterLocations = ELE_shelterLocs,
@@ -286,17 +276,19 @@ runSim <- function(seed=1001, barriers, barrier_data, perms,
     shelteringMatrix = ELE_shelter,
     foragingMatrix = ELE_forage,
     movementMatrix = ELE_move,
-    barrier=barrier_data
+    barrier=ELE_barriers
   )
-  if (is.null(show)) { 
-    p <- plotPaths(simRes, barriers, perms, seed=seed, colorby=colorby)
+  message('simulation complete.')
+  if (activities == "all") activities <- c('move', 'forage', 'shelter')
+  if (is.null(activities)) { 
+    p <- plotPaths(simRes, barriers, perm, seed=seed, colorby=colorby)
   } else {
     plot_list <- list(
-      move   = plotPaths(simRes, barriers, perms, seed, activity = 'move',   colorby=colorby),
-      forage = plotPaths(simRes, barriers, perms, seed, activity = 'forage', colorby=colorby),
-      shelter= plotPaths(simRes, barriers, perms, seed, activity = 'shelter',colorby=colorby) 
+      move   = plotPaths(simRes, barriers, perm, seed, activity = 'move',   colorby=colorby),
+      forage = plotPaths(simRes, barriers, perm, seed, activity = 'forage', colorby=colorby),
+      shelter= plotPaths(simRes, barriers, perm, seed, activity = 'shelter',colorby=colorby) 
     )
-    p <- ggpubr::ggarrange(plotlist = plot_list[show])
+    p <- ggpubr::ggarrange(plotlist = plot_list[activities], nrow=1, common.legend=TRUE)
   }
   print(p)
 }

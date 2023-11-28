@@ -1,7 +1,0 @@
-TODO:
-
-NEXT STEP: Change the matrix references in cpp_get_values_rast() to terra::raster types.
-
-See https://github.com/ecohealthalliance/fasterize/blob/main/src/edge.h for inspiration :) 
-
-Percolate these changes up through the function call once you've got it!
