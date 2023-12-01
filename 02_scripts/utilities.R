@@ -212,7 +212,7 @@ plotPaths <- function(simRes, barriers, perm, seed=1001,
     #   size=ELE_shelterSize*19.5) +
     geom_point(data=path[1,], 
                mapping=aes(x=x, y=y), color="red", alpha=0.3, 
-               size=20) + 
+               size=10) + 
     coord_sf(xlim=xlim, ylim=ylim)
   
   # choose how to color paths

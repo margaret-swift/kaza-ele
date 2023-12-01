@@ -63,6 +63,7 @@ roxygen2::roxygenize("~/R_Packages/abmFences")
 
 # set flag for which sex to simulate
 sex <- "F" #"M"
+dologfile <- FALSE
 
 # sex-specific parameters
 # Real fence encounter rate data from Naidoo et al 2022, at 1km threshold
@@ -75,6 +76,12 @@ if (sex == "F") {
   load(here(outdir, 'hmmLongM.rdata')) 
   mle <- hmm.m$mle
   perm <- c(0.035, 0.145, 0.258)
+}
+
+# start logging
+if (dologfile) {
+  logfile = file.path(outdir, 'logs', 'rlog.log')
+  sink(file=logfile)
 }
 
 # ******************************************************************************
@@ -112,12 +119,9 @@ ELE_move   <- move.rast
 
 # barriers -- skip roads for now
 barriers <- list(fences, rivers)#, roads)
-barriers <- sapply(barriers, function(e) st_transform(e, crs=32735))
-ELE_barriers <- generateBarriers(barriers, perm[1:2])
+ELE_barriers <- sapply(barriers, function(e) st_transform(e, crs=32735))
+ELE_perms <- perm[1:2]
 
-# start logging
-# logfile = file.path(outdir, 'logs', 'rlog.log')
-# sink(file=logfile)
 
 # ******************************************************************************
 #                         Remaining simulation parameters
@@ -156,63 +160,83 @@ c0 <- c(0.075, 0, 24* (365/2), 24* 365) # seasonal
 ELE_additional_Cycles <- rbind(c0)
 
 # choose start location and options
-start <- c(-130000, 7940000)
-timesteps <- 100000 #24*60*31
+start <- c(-134500, 7962000)
+timesteps <- 500 #24*60*31
 des_options=10; options=12;
-# des_options=2; options=5;
+
+# debug options far from fence
+start <- c(-150000, 7960000)
+des_options=2; options=5;
+timesteps = 5000
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                         SIMULATE ELEPHANT MOVEMENTS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# # double check all is okay
-# plot(ELE_move)
-# plot(barriers[[1]], add=TRUE, col="black")
-# plot(barriers[[2]], add=TRUE, col="blue")
-# points(start[1], start[2], pch=19, col='red')
+# double check all is okay
+plot(ELE_move)
+plot(barriers[[1]], add=TRUE, col="black")
+plot(barriers[[2]], add=TRUE, col="blue")
+points(start[1], start[2], pch=19, col='red')
 # points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='black')
 # points(ELE_avoidLocs$x, ELE_avoidLocs$y, pch=23, col='black', lwd=2)
+b <- 3000
+plot(ELE_move, xlim=c(start[1]-b, start[1]+b),
+     ylim=c(start[2]-b, start[2]+b))
+plot(barriers[[1]], add=TRUE, col="black")
+plot(barriers[[2]], add=TRUE, col="blue")
+points(start[1], start[2], pch=19, col='red', lwd=5)
+
 
 set.seed(1001)
-roxygen2::roxygenize("~/R_Packages/abmFences")
+# roxygen2::roxygenize("~/R_Packages/abmFences")
 
 ## Run this as a chunk to generate random maps of elephant movements
 seed <- floor(runif(1, 0, 1) * 1e5)
 
-runSim(barriers=barriers, perm=perm,
-       seed=seed, timesteps=timesteps,
-       activities = "all", colorby='inx')
+# runSim(barriers=barriers, perm=perm,
+#        seed=seed, timesteps=timesteps,
+#        activities = "all", colorby='inx')
 
-# simRes <- abmFences::abm_simulate(
-#   start = start, 
-#   timesteps = timesteps, 
-#   des_options = des_options,
-#   options = options,
-#   shelterLocations = ELE_shelterLocs,
-#   shelterSize = ELE_shelterSize,
-#   avoidPoints = ELE_avoidLocs,
-#   destinationRange = ELE_destinationRange,
-#   destinationDirection = ELE_destinationDirection,
-#   destinationTransformation = ELE_destinationTransformation,
-#   destinationModifier = ELE_destinationModifier, 
-#   avoidTransformation = ELE_avoidTransformation,
-#   avoidModifier = ELE_avoidModifier,
-#   k_step = ELE_k_step,
-#   s_step = ELE_s_step,
-#   mu_angle = ELE_mu_angle,
-#   k_angle = ELE_k_angle, 
-#   rescale_step2cell = ELE_rescale,
-#   behave_Tmat = ELE_behaveMatrix,
-#   rest_Cycle = ELE_rest_Cycle,
-#   additional_Cycles = ELE_additional_Cycles,
-#   shelteringMatrix = ELE_shelter,
-#   foragingMatrix = ELE_forage,
-#   movementMatrix = ELE_move,
-#   barrier=ELE_barriers,
-#   checktime=TRUE
+simRes <- abmFences::abm_simulate(
+  start = start,
+  timesteps = timesteps,
+  des_options = des_options,
+  options = options,
+  shelterLocations = ELE_shelterLocs,
+  shelterSize = ELE_shelterSize,
+  avoidPoints = ELE_avoidLocs,
+  destinationRange = ELE_destinationRange,
+  destinationDirection = ELE_destinationDirection,
+  destinationTransformation = ELE_destinationTransformation,
+  destinationModifier = ELE_destinationModifier,
+  avoidTransformation = ELE_avoidTransformation,
+  avoidModifier = ELE_avoidModifier,
+  k_step = ELE_k_step,
+  s_step = ELE_s_step,
+  mu_angle = ELE_mu_angle,
+  k_angle = ELE_k_angle,
+  rescale_step2cell = ELE_rescale,
+  behave_Tmat = ELE_behaveMatrix,
+  rest_Cycle = ELE_rest_Cycle,
+  additional_Cycles = ELE_additional_Cycles,
+  shelteringMatrix = ELE_shelter,
+  foragingMatrix = ELE_forage,
+  movementMatrix = ELE_move,
+  barrier_sf=ELE_barriers,
+  perms=ELE_perm,
+  checktime=FALSE
+)
+
+# plotPaths(simRes, barriers, perm, seed, activity='move', colorby='inx')
+
+# # plotting all
+# plot_list <- list(
+#   move   = plotPaths(simRes, barriers, perm, seed, activity = 'move',   colorby='inx'),
+#   forage = plotPaths(simRes, barriers, perm, seed, activity = 'forage', colorby='inx'),
+#   shelter= plotPaths(simRes, barriers, perm, seed, activity = 'shelter',colorby='inx')
 # )
+# p <- ggpubr::ggarrange(plotlist = plot_list, nrow=1, common.legend=TRUE)
 
-
-
-
+if (dologfile) sink()
