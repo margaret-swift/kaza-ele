@@ -12,7 +12,7 @@ Agent-based model code is housed at: [abmFences](https://github.com/margaret-swi
 | [Gather Data](#1gather-data)| 100% |
 | [EDA](#2-exploratory-data-analysis) | 80% |
 | [Model landscape use](#3modeling-landscape-use) | 0% |
-| [Simulate elephant movements](#4simulating-elephant-movements) | 40% |
+| [Simulate elephant movements](#4simulating-elephant-movements) | 60% |
 | [Display](#5displaying-simulations) | 0% |
 | [Extensions](#6extending-simulations) | 0% |
 
@@ -47,11 +47,11 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 ## 4.	Simulating elephant movements 
   - [x] **Basic agent-based model** has been implemented. At first, I tried [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8), but found that its structure did not allow for flexibility in seasonal/diel cycles or attractive landmarks (waterholes). I then chose [abmAnimalMovement](https://f1000research.com/articles/11-1182) and found that this structure was flexible enough for our needs.
-  - [ ] **Augment chosen ABM** Currently, I am in the process of augmenting the abmAnimalMovement code in a new package I've termed '[abmFences](https://github.com/margaret-swift/abmFences)'. The following is a list of important features that need to be added to the code in order to move forward:
+  - [x] **Augment chosen ABM** Currently, I am in the process of augmenting the abmAnimalMovement code in a new package I've termed '[abmFences](https://github.com/margaret-swift/abmFences)'. The following is a list of important features that need to be added to the code in order to move forward:
     - [x] ~~Fence response behavior~~
     - [x] ~~Selectively permeable fences with probability changing based on sex, season, and activity state~~
     - [x] ~~Attraction to range centroids~~
-    - [ ] Interactions with landscape raster values
+    - [x] ~~Interactions with landscape raster values~~
   - [ ] **Model selection**: Calculate metrics from step (3a) and compare models. Which ones accurately replicate the critical spatial patterns? Is any homebrewing necessary?
   - [ ] **Model improvement**: Temporal and individual elements should then be added to the model to better reflect the seasonality of water supply, vegetation, temperature, and elephant movements. In addition, individual elephants likely would remember waterholes and fence gaps in particular; they shouldn’t be treated like a random molecule. In addition, bulls are known to create fence gaps; should agents be able to modify their landscape in this capacity?
 
