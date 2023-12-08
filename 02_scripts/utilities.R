@@ -154,7 +154,7 @@ message("   ...Plotting functions loaded.")
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                            FUNCTIONS FOR SIMULATIONS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-plotBase <- function(path, activity=NULL, seed=1001) {
+plotBase <- function(path, activity=NULL, seed=1001, b=5000) {
   if (is.null(activity)) {
     base <- ggplot()
     title <- paste0("Simulated ele path, seed = ", seed)
@@ -165,8 +165,8 @@ plotBase <- function(path, activity=NULL, seed=1001) {
     } else if (activity == "forage") {rast = ELE_forage
     }
     # subset by extent
-    ext = terra::ext(c(min(path$x), max(path$x), 
-                       min(path$y), max(path$y)))
+    ext = terra::ext(c(min(path$x)-b, max(path$x)+b, 
+                       min(path$y)-b, max(path$y)+b))
     rast.sub <- crop(rast, ext)
     
     # turn into data frame and plot
@@ -185,15 +185,15 @@ plotBase <- function(path, activity=NULL, seed=1001) {
     ggtitle(title)
   return(p)
 }
-plotPaths <- function(simRes, barriers, perm, seed=1001, 
+plotPaths <- function(simRes, barriers, perm, seed=1001, b=5000,
                       activity=NULL, inx=NULL, colorby=NULL) {
  
   # get simulation locations
   path <- simRes$locations
   if (!is.null(inx)) path <- path[inx,]
   path$INX <- 1:nrow(path)
-  xlim = c(min(path$x), max(path$x))
-  ylim = c(min(path$y), max(path$y))
+  xlim = c(min(path$x)-b, max(path$x)+b)
+  ylim = c(min(path$y)-b, max(path$y)+b)
   
   # pull permeability and attach to barriers
   for (i in 1:length(barriers)) barriers[[i]]$perm <- perm[i]
@@ -203,7 +203,7 @@ plotPaths <- function(simRes, barriers, perm, seed=1001,
     st_as_sf()
   
   # plot barriers on raster
-  p1 <- plotBase(path, activity, seed) +
+  p1 <- plotBase(path, activity, seed=seed, b=b) +
     geom_sf(data=b.df, 
             mapping=aes(alpha=perm), linewidth=2) + 
     guides(alpha=guide_legend("% movement \nblocked")) +
@@ -212,7 +212,7 @@ plotPaths <- function(simRes, barriers, perm, seed=1001,
     #   size=ELE_shelterSize*19.5) +
     geom_point(data=path[1,], 
                mapping=aes(x=x, y=y), color="red", alpha=0.3, 
-               size=10) + 
+               size=10)  +
     coord_sf(xlim=xlim, ylim=ylim)
   
   # choose how to color paths
@@ -248,7 +248,7 @@ plotPaths <- function(simRes, barriers, perm, seed=1001,
 }
 
 runSim <- function( barriers, perm, seed=1001, timesteps=5000,
-                    activities=NULL, colorby=NULL ) {
+                    activities=NULL, colorby=NULL, thin=0.5 ) {
   set.seed(seed)
   message('Starting simulation.\nseed ', seed)
   simRes <- abmFences::abm_simulate(
@@ -279,14 +279,19 @@ runSim <- function( barriers, perm, seed=1001, timesteps=5000,
     barrier=ELE_barriers
   )
   message('simulation complete.')
+  
+  message('thinning samples...')
+  NR = nrow(simRes$locations)
+  inx = sample(1:NR, size=thin*NR)
+  
   if (activities == "all") activities <- c('move', 'forage', 'shelter')
   if (is.null(activities)) { 
-    p <- plotPaths(simRes, barriers, perm, seed=seed, colorby=colorby)
+    p <- plotPaths(simRes, barriers, perm, seed=seed, colorby=colorby, inx=inx)
   } else {
     plot_list <- list(
-      move   = plotPaths(simRes, barriers, perm, seed, activity = 'move',   colorby=colorby),
-      forage = plotPaths(simRes, barriers, perm, seed, activity = 'forage', colorby=colorby),
-      shelter= plotPaths(simRes, barriers, perm, seed, activity = 'shelter',colorby=colorby) 
+      move   = plotPaths(simRes, barriers, perm, seed, activity = 'move',   colorby=colorby, inx=inx),
+      forage = plotPaths(simRes, barriers, perm, seed, activity = 'forage', colorby=colorby, inx=inx),
+      shelter= plotPaths(simRes, barriers, perm, seed, activity = 'shelter',colorby=colorby, inx=inx) 
     )
     p <- ggpubr::ggarrange(plotlist = plot_list[activities], nrow=1, common.legend=TRUE)
   }

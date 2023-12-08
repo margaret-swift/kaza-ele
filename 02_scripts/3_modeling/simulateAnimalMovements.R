@@ -47,10 +47,10 @@ pacman::p_load(here,
        patchwork,
        raster)
 source(here('02_scripts','utilities.R'))
-setDataPaths('elephant')
+setDataPaths('elephant', verbose=FALSE)
 load(procpath('ele.rdata'))
 
-setDataPaths('geographic')
+setDataPaths('geographic', verbose=FALSE)
 load(procpath('geographic.rdata'))
 shelt.rast <- terra::rast(procpath('shelterRaster.tif'))
 move.rast <- terra::rast(procpath('movementRaster.tif'))
@@ -160,14 +160,14 @@ c0 <- c(0.075, 0, 24* (365/2), 24* 365) # seasonal
 ELE_additional_Cycles <- rbind(c0)
 
 # choose start location and options
-start <- c(-134500, 7962000)
-timesteps <- 500 #24*60*31
+start <- c(-134900, 7964000)
+timesteps <- 1000000 #24*60*31
 des_options=10; options=12;
 
 # debug options far from fence
-start <- c(-150000, 7960000)
-des_options=2; options=5;
-timesteps = 5000
+start <- c(-125000, 7920000)
+# des_options=2; options=5;
+# timesteps = 5
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -175,22 +175,21 @@ timesteps = 5000
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # double check all is okay
-plot(ELE_move)
-plot(barriers[[1]], add=TRUE, col="black")
-plot(barriers[[2]], add=TRUE, col="blue")
-points(start[1], start[2], pch=19, col='red')
-# points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='black')
-# points(ELE_avoidLocs$x, ELE_avoidLocs$y, pch=23, col='black', lwd=2)
-b <- 3000
-plot(ELE_move, xlim=c(start[1]-b, start[1]+b),
-     ylim=c(start[2]-b, start[2]+b))
-plot(barriers[[1]], add=TRUE, col="black")
-plot(barriers[[2]], add=TRUE, col="blue")
-points(start[1], start[2], pch=19, col='red', lwd=5)
+# plot(ELE_move)
+# plot(ELE_barriers[[1]], add=TRUE, col="black")
+# plot(ELE_barriers[[2]], add=TRUE, col="blue")
+# points(start[1], start[2], pch=19, col='red')
+# # points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='black')
+# # points(ELE_avoidLocs$x, ELE_avoidLocs$y, pch=23, col='black', lwd=2)
+# b <-1000
+# plot(ELE_move, xlim=c(start[1]-b, start[1]+b),
+#      ylim=c(start[2]-b, start[2]+b))
+# plot(ELE_barriers[[1]], add=TRUE, col="black")
+# plot(ELE_barriers[[2]], add=TRUE, col="blue")
+# points(start[1], start[2], pch=19, col='red', lwd=5)
 
 
-set.seed(1001)
-# roxygen2::roxygenize("~/R_Packages/abmFences")
+set.seed(10010)
 
 ## Run this as a chunk to generate random maps of elephant movements
 seed <- floor(runif(1, 0, 1) * 1e5)
@@ -199,6 +198,7 @@ seed <- floor(runif(1, 0, 1) * 1e5)
 #        seed=seed, timesteps=timesteps,
 #        activities = "all", colorby='inx')
 
+# roxygen2::roxygenize("~/R_Packages/abmFences")
 simRes <- abmFences::abm_simulate(
   start = start,
   timesteps = timesteps,
@@ -225,12 +225,18 @@ simRes <- abmFences::abm_simulate(
   foragingMatrix = ELE_forage,
   movementMatrix = ELE_move,
   barrier_sf=ELE_barriers,
-  perms=ELE_perm,
+  perms=ELE_perms,
   checktime=FALSE
 )
 
-# plotPaths(simRes, barriers, perm, seed, activity='move', colorby='inx')
-
+p <- plotPaths(simRes, ELE_barriers, perm, seed, activity='move', colorby='inx')
+filename <- here::here(outdir, "paths", paste0("path_", seed, ".png"))
+message('saving plot to: ', filename)
+ggsave(filename=filename, plot=p)
+# filename2 <- here::here(outdir, "simulations", paste0("simulation_", seed, ".rdata"))
+# message('saving simulation to: ', filename2)
+# save(simRes, file=filename2)
+beepr::beep()
 # # plotting all
 # plot_list <- list(
 #   move   = plotPaths(simRes, barriers, perm, seed, activity = 'move',   colorby='inx'),
