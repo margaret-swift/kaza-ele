@@ -30,40 +30,37 @@
 #  all of which are defined as key components of animal movement."
 
 
-
 # ******************************************************************************
 #                             DATA & LIBRARY LOADING
 # ******************************************************************************
 
 pacman::p_load(here,
-       furrr,
        dplyr,
-       nngeo,
-       reshape2,
        ggplot2,
-       ggforce,
-       ggtext,
-       ggridges,
-       patchwork,
-       raster)
+       patchwork)
 source(here('02_scripts','utilities.R'))
 setDataPaths('elephant', verbose=FALSE)
 load(procpath('ele.rdata'))
 
+## Load and or generate raster and barrier layers
 setDataPaths('geographic', verbose=FALSE)
 load(procpath('geographic.rdata'))
 shelt.rast <- terra::rast(procpath('shelterRaster.tif'))
 move.rast <- terra::rast(procpath('movementRaster.tif'))
 forage.rast <- terra::rast(procpath('forageRaster.tif'))
+barriers <- list(fences, rivers)
+rasters <- list(shelt.rast, move.rast, forage.rast)
+# ELE_landsdata <- generateLandscapeData(rasters, barriers, perms=c(0, 0.101))
+# save(ELE_landsdata, file=procpath('simulationInputData.rdata'))
+load(procpath('simulationInputData.rdata'))
 
-# install abmFences
-roxygen2::roxygenize("~/R_Packages/abmFences")
-# devtools::install_github("margaret-swift/abmFences")
-# library(abmFences)
+# build abmAME
+# roxygen2::roxygenize("~/R_Packages/abmAME")
+# devtools::install_github("margaret-swift/abmAME")
+library(abmAME)
 
 # set flag for which sex to simulate
 sex <- "F" #"M"
-dologfile <- FALSE
 
 # sex-specific parameters
 # Real fence encounter rate data from Naidoo et al 2022, at 1km threshold
@@ -78,11 +75,6 @@ if (sex == "F") {
   perm <- c(0.035, 0.145, 0.258)
 }
 
-# start logging
-if (dologfile) {
-  logfile = file.path(outdir, 'logs', 'rlog.log')
-  sink(file=logfile)
-}
 
 # ******************************************************************************
 #                     Get transition matrix and params from HMM
@@ -110,20 +102,6 @@ ELE_mu_angle <- mle$angle['mean',]
 ELE_k_angle  <- mle$angle['concentration',]
 
 # ******************************************************************************
-#                         Set up raster and barrier layers
-# ******************************************************************************
-
-ELE_shelter<- shelt.rast
-ELE_forage <- forage.rast
-ELE_move   <- move.rast
-
-# barriers -- skip roads for now
-barriers <- list(fences, rivers)#, roads)
-ELE_barriers <- sapply(barriers, function(e) st_transform(e, crs=32735))
-ELE_perms <- perm[1:2]
-
-
-# ******************************************************************************
 #                         Remaining simulation parameters
 # ******************************************************************************
 
@@ -140,7 +118,7 @@ ELE_destinationTransformation <- 2
 ELE_destinationModifier <- 2
 
 # scale of raster resolution
-ELE_rescale <- terra::xres(shelt.rast) #should be around 10
+ELE_rescale <- ELE_landsdata$landscape_meta[5] #should be around 10
 
 # avoiding
 # avoidTrans 0 - no transformation applied to the distance to avoidance 
@@ -171,35 +149,37 @@ start <- c(-125000, 7920000)
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                         SIMULATE ELEPHANT MOVEMENTS
+#                         PLOT SIMULATION PARAMETERS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# double check all is okay
-# plot(ELE_move)
-# plot(ELE_barriers[[1]], add=TRUE, col="black")
-# plot(ELE_barriers[[2]], add=TRUE, col="blue")
-# points(start[1], start[2], pch=19, col='red')
-# # points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='black')
-# # points(ELE_avoidLocs$x, ELE_avoidLocs$y, pch=23, col='black', lwd=2)
+# # params for plots
+# move.rast <- terra::rast(procpath('movementRaster.tif'))
+# f <- projectMe(fences, 32735)
 # b <-1000
-# plot(ELE_move, xlim=c(start[1]-b, start[1]+b),
+# 
+# # zoomed out
+# plot(move.rast, main="zoomed out")
+# plot(f, add=TRUE, col="black")
+# points(start[1], start[2], pch=19, col='red')
+# 
+# # zoomed in
+# plot(move.rast, main="zoomed in",
+#      xlim=c(start[1]-b, start[1]+b),
 #      ylim=c(start[2]-b, start[2]+b))
-# plot(ELE_barriers[[1]], add=TRUE, col="black")
-# plot(ELE_barriers[[2]], add=TRUE, col="blue")
+# plot(f, add=TRUE, col="black")
 # points(start[1], start[2], pch=19, col='red', lwd=5)
 
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                         SIMULATE ELEPHANT MOVEMENTS
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# roxygen2::roxygenize("~/R_Packages/abmAME")
 
-set.seed(10010)
-
-## Run this as a chunk to generate random maps of elephant movements
-seed <- floor(runif(1, 0, 1) * 1e5)
-
+seed = 10010
+set.seed(seed)
 # runSim(barriers=barriers, perm=perm,
 #        seed=seed, timesteps=timesteps,
 #        activities = "all", colorby='inx')
-
-# roxygen2::roxygenize("~/R_Packages/abmFences")
-simRes <- abmFences::abm_simulate(
+simRes <- abmAME::abm_simulate(
   start = start,
   timesteps = timesteps,
   des_options = des_options,
@@ -221,22 +201,22 @@ simRes <- abmFences::abm_simulate(
   behave_Tmat = ELE_behaveMatrix,
   rest_Cycle = ELE_rest_Cycle,
   additional_Cycles = ELE_additional_Cycles,
-  shelteringMatrix = ELE_shelter,
-  foragingMatrix = ELE_forage,
-  movementMatrix = ELE_move,
-  barrier_sf=ELE_barriers,
-  perms=ELE_perms,
-  checktime=FALSE
+  landscape_data = ELE_landsdata
 )
 
-p <- plotPaths(simRes, ELE_barriers, perm, seed, activity='move', colorby='inx')
+## SAVING PLOTS
+f <- list(projectMe(fences, 32735), projectMe(rivers, 32735))
+p <- plotPaths(simRes, f, perm, seed, activity='move', colorby='inx')
 filename <- here::here(outdir, "paths", paste0("path_", seed, ".png"))
 message('saving plot to: ', filename)
 ggsave(filename=filename, plot=p)
+
+## SAVING SIMULATIONS
 # filename2 <- here::here(outdir, "simulations", paste0("simulation_", seed, ".rdata"))
 # message('saving simulation to: ', filename2)
 # save(simRes, file=filename2)
 beepr::beep()
+
 # # plotting all
 # plot_list <- list(
 #   move   = plotPaths(simRes, barriers, perm, seed, activity = 'move',   colorby='inx'),
@@ -244,5 +224,3 @@ beepr::beep()
 #   shelter= plotPaths(simRes, barriers, perm, seed, activity = 'shelter',colorby='inx')
 # )
 # p <- ggpubr::ggarrange(plotlist = plot_list, nrow=1, common.legend=TRUE)
-
-if (dologfile) sink()

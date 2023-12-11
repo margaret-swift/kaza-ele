@@ -160,14 +160,14 @@ plotBase <- function(path, activity=NULL, seed=1001, b=5000) {
     title <- paste0("Simulated ele path, seed = ", seed)
   } else {
     color.ref <- list(forage="Greens", move="Reds", shelter="Purples")
-    if (activity == "move") {rast = ELE_move
-    } else if (activity == "shelter") {rast = ELE_shelter
-    } else if (activity == "forage") {rast = ELE_forage
+    if (activity == "move") {rast = move.rast
+    } else if (activity == "shelter") {rast = shelt.rast
+    } else if (activity == "forage") {rast = forage.rast
     }
     # subset by extent
     ext = terra::ext(c(min(path$x)-b, max(path$x)+b, 
                        min(path$y)-b, max(path$y)+b))
-    rast.sub <- crop(rast, ext)
+    rast.sub <- terra::crop(rast, ext)
     
     # turn into data frame and plot
     rast.df = terra::as.data.frame(rast.sub, xy=TRUE) %>% 
@@ -187,7 +187,13 @@ plotBase <- function(path, activity=NULL, seed=1001, b=5000) {
 }
 plotPaths <- function(simRes, barriers, perm, seed=1001, b=5000,
                       activity=NULL, inx=NULL, colorby=NULL) {
- 
+  ## debugging
+  # seed=1001
+  # b=5000
+  # activity='move'
+  # inx=NULL
+  # colorby="inx"
+  
   # get simulation locations
   path <- simRes$locations
   if (!is.null(inx)) path <- path[inx,]
@@ -304,7 +310,15 @@ message("   ...Simulation functions loaded.")
 # ******************************************************************************
 #                          OTHER CUSTOM FUNCTIONS
 # ******************************************************************************
-# message("   ...Custom functions loaded.")
+projectMe <- function(obj, crs) {
+  mycrs = terra::crs(obj, describe=T)$code
+  if (mycrs != crs) {
+    if (class(obj)[1] == "SpatRaster") obj = terra::project(obj, paste0("EPSG:", crs)) 
+    if (class(obj)[1] == "sf") obj = sf::st_transform(obj, crs) 
+  }
+  return(obj)
+}
+message("   ...Custom functions loaded.")
 
 
 
