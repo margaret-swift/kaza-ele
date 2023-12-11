@@ -7,6 +7,8 @@ Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Anna Songhurst
 
 Agent-based model code is housed at: [abmAME](https://github.com/margaret-swift/abmAME) 
 
+_Note: Reach out to creators of abmAnimalMovement for possible collaboration with my extensions?_
+
 | Step | Progress |
 | -----| -------- |
 | [Gather Data](#1gather-data)| 100% |
