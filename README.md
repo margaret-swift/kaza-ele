@@ -11,9 +11,9 @@ Agent-based model code is housed at: [abmAME](https://github.com/margaret-swift/
 | -----| -------- |
 | [Gather Data](#1gather-data)| 100% |
 | [EDA](#2-exploratory-data-analysis) | 100% |
-| [Simulate basic movements](#3simulating-elephant-movements) | 100% |
+| [Simulate basic movements](#3simulating-basic-elephant-movements) | 100% |
 | [Model landscape use](#4modeling-landscape-use) | 0% |
-| [Validation and improvement](#5validation) | 0% |
+| [Validation and improvement](#5-validation) | 0% |
 | [Display](#6displaying-simulations) | 0% |
 | [Extensions](#7extending-simulations) | 0% |
 
