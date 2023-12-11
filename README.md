@@ -11,7 +11,7 @@ Agent-based model code is housed at: [abmAME](https://github.com/margaret-swift/
 | -----| -------- |
 | [Gather Data](#1gather-data)| 100% |
 | [EDA](#2-exploratory-data-analysis) | 100% |
-| [Simulate basic movements](#3simulating-basic-elephant-movements) | 100% |
+| [Simulate basic movements](#3modifying-abm-code) | 90% |
 | [Model landscape use](#4modeling-landscape-use) | 0% |
 | [Validation and improvement](#5-validation) | 0% |
 | [Display](#6displaying-simulations) | 0% |
@@ -39,13 +39,13 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
-## 3.	Simulating basic elephant movements 
+## 3.	Modifying ABM code
   - [x] **Basic agent-based model** has been implemented. At first, I tried [SimRiv](https://movementecologyjournal.biomedcentral.com/articles/10.1186/s40462-019-0154-8), but found that its structure did not allow for flexibility in seasonal/diel cycles or attractive landmarks (waterholes). I then chose [abmAnimalMovement](https://f1000research.com/articles/11-1182) and found that this structure was flexible enough for our needs.
   - [x] **Augment chosen ABM** Currently, I am in the process of augmenting the abmAnimalMovement code in a new package I've termed '[abmFences](https://github.com/margaret-swift/abmFences)'. The following is a list of important features that need to be added to the code in order to move forward:
-    - [x] ~~Fence response behavior~~
-    - [x] ~~Selectively permeable fences with probability changing based on sex, season, and activity state~~
-    - [x] ~~Attraction to range centroids~~
-    - [x] ~~Interactions with landscape raster values~~
+    - [x] Barrier response behavior
+    - [x] Selectively permeable barriers with probability given by user input
+    - [x] Interactions with landscape raster values
+    - [ ] Attraction to range centroids - double check home range capabilities
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
