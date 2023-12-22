@@ -34,25 +34,10 @@
 #                             DATA & LIBRARY LOADING
 # ******************************************************************************
 
-pacman::p_load(here,
-       dplyr,
-       ggplot2,
-       patchwork)
+pacman::p_load(here)
 source(here('02_scripts','utilities.R'))
 setDataPaths('elephant', verbose=FALSE)
 load(procpath('ele.rdata'))
-
-## Load and or generate raster and barrier layers
-setDataPaths('geographic', verbose=FALSE)
-load(procpath('geographic.rdata'))
-shelt.rast <- terra::rast(procpath('shelterRaster.tif'))
-move.rast <- terra::rast(procpath('movementRaster.tif'))
-forage.rast <- terra::rast(procpath('forageRaster.tif'))
-barriers <- list(fences, rivers)
-rasters <- list(shelt.rast, move.rast, forage.rast)
-# ELE_landsdata <- generateLandscapeData(rasters, barriers, perms=c(0, 0.101))
-# save(ELE_landsdata, file=procpath('simulationInputData.rdata'))
-load(procpath('simulationInputData.rdata'))
 
 # build abmAME
 # roxygen2::roxygenize("~/R_Packages/abmAME")
@@ -68,13 +53,24 @@ sex <- "F" #"M"
 if (sex == "F") {
   load(here(outdir, 'hmmLongF.rdata'))
   mle <- hmm.f$mle
-  perm <- c(0, 0.101, 0.153)
+  perms <- c(0, 0.101, 0.153)
 } else { 
   load(here(outdir, 'hmmLongM.rdata')) 
   mle <- hmm.m$mle
-  perm <- c(0.035, 0.145, 0.258)
+  perms <- c(0.035, 0.145, 0.258)
 }
 
+## Load and/or generate raster and barrier layers
+setDataPaths('geographic', verbose=FALSE)
+load(procpath('geographic.rdata'))
+shelt.rast <- terra::rast(procpath('shelterRaster.tif'))
+move.rast <- terra::rast(procpath('movementRaster.tif'))
+forage.rast <- terra::rast(procpath('forageRaster.tif'))
+barriers <- list(fences, rivers)
+rasters <- list(shelt.rast, move.rast, forage.rast)
+# ELE_landsdata <- generateLandscapeData(rasters, barriers, perms)
+# save(ELE_landsdata, file=procpath('simulationInputData.rdata'))
+load(procpath('simulationInputData.rdata'))
 
 # ******************************************************************************
 #                     Get transition matrix and params from HMM
@@ -147,80 +143,7 @@ start <- c(-125000, 7920000)
 # des_options=2; options=5;
 # timesteps = 5
 
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                         PLOT SIMULATION PARAMETERS
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-# # params for plots
-# move.rast <- terra::rast(procpath('movementRaster.tif'))
-# f <- projectMe(fences, 32735)
-# b <-1000
-# 
-# # zoomed out
-# plot(move.rast, main="zoomed out")
-# plot(f, add=TRUE, col="black")
-# points(start[1], start[2], pch=19, col='red')
-# 
-# # zoomed in
-# plot(move.rast, main="zoomed in",
-#      xlim=c(start[1]-b, start[1]+b),
-#      ylim=c(start[2]-b, start[2]+b))
-# plot(f, add=TRUE, col="black")
-# points(start[1], start[2], pch=19, col='red', lwd=5)
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                         SIMULATE ELEPHANT MOVEMENTS
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# roxygen2::roxygenize("~/R_Packages/abmAME")
-
-seed = 10010
-set.seed(seed)
-# runSim(barriers=barriers, perm=perm,
-#        seed=seed, timesteps=timesteps,
-#        activities = "all", colorby='inx')
-simRes <- abmAME::abm_simulate(
-  start = start,
-  timesteps = timesteps,
-  des_options = des_options,
-  options = options,
-  shelterLocations = ELE_shelterLocs,
-  shelterSize = ELE_shelterSize,
-  avoidPoints = ELE_avoidLocs,
-  destinationRange = ELE_destinationRange,
-  destinationDirection = ELE_destinationDirection,
-  destinationTransformation = ELE_destinationTransformation,
-  destinationModifier = ELE_destinationModifier,
-  avoidTransformation = ELE_avoidTransformation,
-  avoidModifier = ELE_avoidModifier,
-  k_step = ELE_k_step,
-  s_step = ELE_s_step,
-  mu_angle = ELE_mu_angle,
-  k_angle = ELE_k_angle,
-  rescale_step2cell = ELE_rescale,
-  behave_Tmat = ELE_behaveMatrix,
-  rest_Cycle = ELE_rest_Cycle,
-  additional_Cycles = ELE_additional_Cycles,
-  landscape_data = ELE_landsdata
-)
-
-## SAVING PLOTS
-f <- list(projectMe(fences, 32735), projectMe(rivers, 32735))
-p <- plotPaths(simRes, f, perm, seed, activity='move', colorby='inx')
-filename <- here::here(outdir, "paths", paste0("path_", seed, ".png"))
-message('saving plot to: ', filename)
-ggsave(filename=filename, plot=p)
-
-## SAVING SIMULATIONS
-# filename2 <- here::here(outdir, "simulations", paste0("simulation_", seed, ".rdata"))
-# message('saving simulation to: ', filename2)
-# save(simRes, file=filename2)
-beepr::beep()
-
-# # plotting all
-# plot_list <- list(
-#   move   = plotPaths(simRes, barriers, perm, seed, activity = 'move',   colorby='inx'),
-#   forage = plotPaths(simRes, barriers, perm, seed, activity = 'forage', colorby='inx'),
-#   shelter= plotPaths(simRes, barriers, perm, seed, activity = 'shelter',colorby='inx')
-# )
-# p <- ggpubr::ggarrange(plotlist = plot_list, nrow=1, common.legend=TRUE)
+## SAVING DATA
+filename <- here::here(outdir, "simulations", "simluation_parameters.rdata")
+message('saving simulation data to: ', filename2)
+save(simRes, file=filename)

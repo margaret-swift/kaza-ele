@@ -8,15 +8,15 @@ message("\nLoading all utility functions and parameters from utilities.R\n")
 
 message('Loading base packages for all projects...')
 pacman::p_load(tidyverse, patchwork, 
-               sf, rgdal, tictoc,
-               lubridate, here, pacman)
+               sf, lubridate,rgdal,
+               tictoc, here)
 sf_use_s2(FALSE) #fix errors for spherical geometry
 message('   ...Packages loaded.')
 
 message("Setting base objects...")
-datadir <- here::here("01_data")
-scriptdir <- here::here("02_scripts")
-outdir <- here::here("03_output")
+datadir <- here("01_data")
+scriptdir <- here("02_scripts")
+outdir <- here("03_output")
 crs <- CRS("+proj=longlat +zone=34S +datum=WGS84")
 message("   ...Base objects loaded.")
 
@@ -47,8 +47,8 @@ message("Loading functions...")
 as.c <- as.character
 as.n <- as.numeric
 as.v <- as.vector
-nog <- st_drop_geometry
-len <- length
+nog  <- st_drop_geometry
+len  <- length
 
 removePunct <- function(v) gsub('\\)|\\(|\\/|\\.|\\?', '', v)
 replaceSpace <- function(v, r="_") gsub(' ', r, v)
@@ -59,7 +59,7 @@ fixNames <- function(d) {
 
 # functions to set user-friendly datapath options
 metapath <- function(...) .metapath(...)
-rawpath  <- function(...) .rawpath(...)
+rawpath  <- function(...)  .rawpath(...)
 procpath <- function(...) .procpath(...)
 setDataPaths <- function(dataname, verbose=TRUE, print.length=5) {
   datapath <- file.path(datadir, dataname)
@@ -103,7 +103,7 @@ message("   ...Basic functions loaded.")
 
 # load protected areas maps
 # setDataPaths('khaudum_geography', verbose=FALSE)
-# load(here::here(procpath, "geographicData.RData"))
+# load(here(procpath, "geographicData.RData"))
 # khauPlot <- function(fill="transparent", lwd=1, ...) {
 #   ggplot(data=khau) + 
 #     geom_sf(fill=fill, linewidth=lwd, ...) + 
@@ -145,15 +145,6 @@ plotParams <- function(par1, par2, type="step") {
          col=pal, lty=1, cex=0.8, bty="n")
 }
 
-message("   ...Plotting functions loaded.")
-
-
-
-
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                            FUNCTIONS FOR SIMULATIONS
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 plotBase <- function(path, activity=NULL, seed=1001, b=5000) {
   if (is.null(activity)) {
     base <- ggplot()
@@ -175,8 +166,8 @@ plotBase <- function(path, activity=NULL, seed=1001, b=5000) {
     title = paste0(toupper(activity), ", seed = ", seed)
     base <- ggplot() +
       geom_raster(data = rast.df,
-                mapping=aes(x=x, y=y, fill=value),
-                alpha=0.5) + 
+                  mapping=aes(x=x, y=y, fill=value),
+                  alpha=0.5) + 
       scale_fill_distiller(palette=color.ref[[activity]], direction=1, name=activity)
   }
   p <- base + 
@@ -185,11 +176,11 @@ plotBase <- function(path, activity=NULL, seed=1001, b=5000) {
     ggtitle(title)
   return(p)
 }
-plotPaths <- function(simRes, barriers, perm, seed=1001, b=5000,
+plotPaths <- function(simRes, barriers, perm=NULL, seed=1001, b=5000, ping="1 hour",
                       activity=NULL, inx=NULL, colorby=NULL) {
   ## debugging
   # seed=1001
-  # b=5000
+  # b=2000
   # activity='move'
   # inx=NULL
   # colorby="inx"
@@ -201,57 +192,75 @@ plotPaths <- function(simRes, barriers, perm, seed=1001, b=5000,
   xlim = c(min(path$x)-b, max(path$x)+b)
   ylim = c(min(path$y)-b, max(path$y)+b)
   
-  # pull permeability and attach to barriers
-  for (i in 1:length(barriers)) barriers[[i]]$perm <- perm[i]
-  b.df <- bind_rows(barriers) %>% 
-    as.data.frame() %>% 
-    mutate(perm=factor((1-perm)*100)) %>% 
-    st_as_sf()
+  # subset path to match GPS data collection methods
+  # working under the assumption that i == minute
+  if (ping == "1 hour") pings <- seq(1, nrow(path), by=60)
+  else if (ping == "5 hours") pings <- seq(1, nrow(path), by=300)
+  else if (is.null(ping)) pings = 1:nrow(path)
+  path <- path[pings,]
   
-  # plot barriers on raster
-  p1 <- plotBase(path, activity, seed=seed, b=b) +
-    geom_sf(data=b.df, 
-            mapping=aes(alpha=perm), linewidth=2) + 
-    guides(alpha=guide_legend("% movement \nblocked")) +
-    # geom_point(data=ELE_shelterLocs,
-    #   mapping=aes(x=x, y=y), color="#dbafed", alpha=0.3,
-    #   size=ELE_shelterSize*19.5) +
-    geom_point(data=path[1,], 
-               mapping=aes(x=x, y=y), color="red", alpha=0.3, 
-               size=10)  +
-    coord_sf(xlim=xlim, ylim=ylim)
+  # get home range data
+  inputs <- simRes$inputs
+  homerange <- data.frame(x=inputs$in_home_x,
+                          y=inputs$in_home_y)
+  home_xy = st_as_sf(homerange, coords=c('x', 'y'), crs=32735)
+  home_circ <- st_buffer(home_xy, dist=inputs$in_home_r)
   
-  # choose how to color paths
+  
+  # Set up barrier data, adding permeability if applicable
+  b.df <- bind_rows(barriers) %>% as.data.frame()
+  if (!is.null(perm)) {
+    for (i in 1:length(barriers)) barriers[[i]]$perm <- perm[i]
+    b.df <- b.df %>% mutate(perm=factor((1-perm)*100))
+  }
+  b.df <- st_as_sf(b.df)
+  
+  ###### PLOTTING! ######
+  # STEP 1: plot barriers, homerange, and starting point on raster
+  pb <- plotBase(path, activity, seed=seed, b=b) + 
+    # geom_point(data=path[1,], mapping=aes(x=x, y=y), color="red", alpha=0.3, size=10) +
+    geom_sf(data=home_circ, alpha=0.2, color='gray', linewidth=2)
+  if (!is.null(perm)) {
+    p1 <- pb +
+      geom_sf(data=b.df, linewidth=2, mapping=aes(alpha=perm)) + 
+      guides(alpha=guide_legend("% movement \nblocked"))
+  } else {p1 <- pb + geom_sf(data=b.df, linewidth=2)}
+  p1 <- p1 + coord_sf(xlim=xlim, ylim=ylim)
+  
+  # STEP 2: plot paths based on attributes (index, activity, none)
   if (is.null(colorby)) {
-    p2 <- p1 + geom_path(data=path, mapping=aes(x=x, y=y), color='orange', linewidth=1)
+    p2 <- p1 + geom_path(data=path, mapping=aes(x=x, y=y), color='black', linewidth=1)
   } else if (colorby == "inx") {
     p2 <- p1 + 
-      geom_path(data=path,
-                mapping=aes(x=x, y=y, color=INX),
-                linewidth=1, alpha=0.5) +
+      geom_path(data=path, mapping=aes(x=x, y=y, color=INX), linewidth=1, alpha=0.5) +
       scale_color_distiller(palette='Spectral', direction=1)
   } else if (colorby == "activity") {
     path$behave <- factor(path$behave)
     p2 <- p1 + 
-      geom_path(data=path,
-                mapping=aes(x=x, y=y, color=behave),
-                linewidth=1, alpha=0.5) +
+      geom_path(data=path, mapping=aes(x=x, y=y, color=behave), linewidth=1, alpha=0.5) +
       scale_color_brewer(palette='Dark2', direction=1)
   }
   
-  # add on starting point, foraging destinations, and shelter locations
-  # dests <- path %>% 
-  #   mutate(grp = paste(destination_x, destination_y)) %>% 
-  #   group_by(grp, destination_x, destination_y) %>% 
-  #   summarize(.groups="drop") %>% dplyr::select(-grp) %>% 
-  #   rename(x=destination_x, y=destination_y)
+  # STEP 3: add on starting point, foraging destinations, and shelter locations
+  dests <- path %>%
+    mutate(grp = paste(destination_x, destination_y)) %>%
+    group_by(grp, destination_x, destination_y) %>%
+    summarize(.groups="drop") %>% dplyr::select(-grp) %>%
+    rename(x=destination_x, y=destination_y)
   p3 <- p2 + 
     geom_point(data=path[1,], aes(x=x, y=y), color='black', size=5) +
-    geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3)
-    # geom_point(data=dests, aes(x=x, y=y), color="black", size=3, shape=15) +
-    # geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
+    geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3) +
+    # geom_point(data=dests, aes(x=x, y=y), color="black", size=0.5, shape=15) +
+    geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
   p3
 }
+
+message("   ...Plotting functions loaded.")
+
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                            FUNCTIONS FOR SIMULATIONS
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 runSim <- function( barriers, perm, seed=1001, timesteps=5000,
                     activities=NULL, colorby=NULL, thin=0.5 ) {
@@ -310,6 +319,7 @@ message("   ...Simulation functions loaded.")
 # ******************************************************************************
 #                          OTHER CUSTOM FUNCTIONS
 # ******************************************************************************
+
 projectMe <- function(obj, crs) {
   mycrs = terra::crs(obj, describe=T)$code
   if (mycrs != crs) {
@@ -321,77 +331,7 @@ projectMe <- function(obj, crs) {
 message("   ...Custom functions loaded.")
 
 
-
-# ******************************************************************************
-#                          ADVANCED HOUSEKEEPING
-# ******************************************************************************
-
-# Set of functions to list all custom functions and variables
-listFuns <- function() {
-  df <- my.funs
-  types <- levels(df$ftype)
-  for (type in types) {
-    cat(type, "\n", df$fname[df$ftype == type], "\n\n")
-  }
-}
-listVars <- function() {
-  df <- my.vars
-  types <- levels(df$vtype)
-  for (type in types) {
-    cat(type, "\n", df$vname[df$vtype == type], "\n\n")
-  }
-}
-.listVars <- function() {
-  lst <- ls(envir = .GlobalEnv)
-  inx <- sapply(lst,function(var) any(class(get(var))!='function'))
-  vs <- lst[inx]
-  
-  getType <- function(val) {
-    val <- tolower(val)
-    type <- "OTHER"
-    if (grepl("path", val)) { type = "PATH"
-    } else if (grepl("theme|scale|crs", val)) { type = "THEME"
-    } else if (grepl("khau|kaza|waters", val)) { type = "MAPDATA"
-    } 
-    type = factor(type, levels=c("PATH", "THEME", "MAPDATA", "OTHER"))
-  }
-  vtypes <- unlist(lapply(vs, getType))
-  df <- data.frame(vtype=vtypes, vname=vs) %>% arrange(vtype)
-  df
-}
-.listFuns <- function() {
-  lst <- ls(envir = .GlobalEnv)
-  inx <- sapply(lst,function(var) any(class(get(var))=='function'))
-  fs <- lst[inx]
-  
-  getType <- function(val) {
-    val <- tolower(val)
-    type <- "OTHER"
-    if (grepl("as.", val)) { type = "LAZY"
-    } else if (grepl("plot", val)) { type = "PLOTTING"
-    } else if (grepl("list", val)) { type = "LISTING"
-    } else if (grepl("fix|^re", val)) { type = "FIXING"
-    } else if (grepl("set", val)) { type = "HOUSEKEEPING"
-    } 
-    type = factor(type, levels=c("HOUSEKEEPING", "FIXING", "LISTING", 
-                                 "PLOTTING", "LAZY", "OTHER"))
-  }
-  ftypes <- unlist(lapply(fs, getType))
-  df <- data.frame(ftype=ftypes, fname=fs) %>% arrange(ftype)
-  df
-}
-
-# only create list of custom vars and funs once, via housekeeping switch
-if ( !exists('housekeeping_switch') ) {
-  my.vars <- .listVars()
-  my.funs <- .listFuns()
-  housekeeping_switch = TRUE
-} 
-
-message("   ...Advanced housekeeping functions loaded.\n")
-
 # ******************************************************************************
 message("All utility functions and parameters loaded.")
-message("Use listFuns() to list all available utility functions, 
-        and listVars() to list all base parameters.")
+message("Use setDataPaths() to set paths to a specific data directory")
 # ******************************************************************************
