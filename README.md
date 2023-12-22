@@ -45,7 +45,8 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
     - [x] Barrier response behavior
     - [x] Selectively permeable barriers with probability given by user input
     - [x] Interactions with landscape raster values
-    - [ ] Attraction to range centroids - double check home range capabilities
+    - [x] Attraction to range centroids - double check home range capabilities
+    - [ ] Implement basin-hopping behavior in Butts et al 2022?
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
