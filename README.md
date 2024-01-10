@@ -51,8 +51,16 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 ## 4.	Modeling Landscape Use 
+  - [ ] **Temporal Scale Selection**: Breaking up the data into dry versus wet season is very basic; I need to determine what the appropriate temporal scale should be. I will do this by slicing the data two ways (dry/wet), four ways (beginning/end of dry/wet) and six ways (beginning, middle, end of dry/wet) and testing the differences in means (for bulls and female groups separately) using a linear mixed-effects model with season as a fixed effect and individual ID as a random effect:
+    - distance from water
+    - distance traveled
   - [ ] **Integrated Step Selection**: In order to more accurately simulate elephant movements, we have to understand how they use the landscape currently and then transfer this knowledge onto the spatial data to calculate accurate resistance rasters. To do this, we will run an Integrated Step Selection Function ([iSSF](https://www.biorxiv.org/content/10.1101/2023.08.10.552754v1)) to estimate elephant responses to various landscape features, then apply the results of this model in the next step.
-  - [ ] **Create resistance rasters**: Spatial data should be transformed into rasters that represent an agent's willingness to travel through each cell, depending on **sex, season,** and **activity state.** These rasters should hold values from 0 to 1, where higher values are more likely to be chosen (see [Marshall and Duthie 2022](https://f1000research.com/articles/11-1182), Fig. 3).
+  - [ ] **Create habitat preferability rasters**: Spatial data should be transformed into rasters that represent an agent's willingness to travel through each cell, depending on **sex, season,** and **activity state.** These rasters should hold values from 0 to 1, where higher values are more likely to be chosen (see [Marshall and Duthie 2022](https://f1000research.com/articles/11-1182), Fig. 3).
+    - distance from water source (closer is better)
+    - distance from human settlements (further is better)
+    - landcover type
+    - slope (higher slope = less willing to travel there)
+    - recently burned area (intermediate effect, as current burn should repel, recent burn should attract, old burn should have no effect)
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
