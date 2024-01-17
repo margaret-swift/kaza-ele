@@ -20,7 +20,6 @@ load(procpath('precipitation.rdata'))
 #                                HMM PREP DATA
 # ******************************************************************************
 
-
 # choose only certain IDs for a smaller run
 ids <- unique(ele.df$ANIMAL_ID)
 data <- ele.df %>% nog() %>% 

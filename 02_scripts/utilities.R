@@ -34,6 +34,14 @@ blank.theme <- theme(axis.title.x=element_blank(),
                      panel.grid.major = element_blank(), 
                      panel.grid.minor = element_blank(),
                      panel.background = element_blank())
+transp.theme <- theme(
+  panel.background = element_rect(fill='transparent'),
+  plot.background = element_rect(fill='transparent', color=NA),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  legend.background = element_rect(fill='transparent'),
+  legend.box.background = element_rect(fill='transparent')
+)
 scalebar <- ggspatial::annotation_scale( pad_x = unit(0.05, "in"), 
                                          pad_y = unit(0.05, "in"),
                                          text_face="bold") 
@@ -100,6 +108,16 @@ message("   ...Basic functions loaded.")
 # ******************************************************************************
 #                             PLOTTING FUNCTIONS
 # ******************************************************************************
+
+
+
+zoomTo <- function(shape, buffer=2) {
+  bb <- st_bbox(shape)
+  bb[c('xmin', 'ymin')] <- bb[c('xmin', 'ymin')] - buffer
+  bb[c('xmax', 'ymax')] <- bb[c('xmax', 'ymax')] + buffer
+  coord_sf(xlim=bb[c('xmin', 'xmax')],
+           ylim=bb[c('ymin', 'ymax')])
+}
 
 # load protected areas maps
 # setDataPaths('khaudum_geography', verbose=FALSE)

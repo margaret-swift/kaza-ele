@@ -90,23 +90,23 @@ ELE_shelterSize <- 5000
 #                         PLOT SIMULATION PARAMETERS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# # params for plots
-# b <-2000
-# 
-# # zoomed out
-# plot(move.rast, main="zoomed out")
-# plot(f, add=TRUE, col="black")
-# points(start[1], start[2], pch=19, col='red')
-# points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='blue')
-# 
-# 
-# # zoomed in
-# plot(move.rast, main="zoomed in",
-#      xlim=c(start[1]-b, start[1]+b),
-#      ylim=c(start[2]-b, start[2]+b))
-# plot(f, add=TRUE, col="black")
-# points(start[1], start[2], pch=19, col='red', lwd=5)
-# points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='blue')
+# params for plots
+b <-2000
+
+# zoomed out
+plot(move.rast, main="zoomed out")
+plot(f, add=TRUE, col="black")
+points(start[1], start[2], pch=19, col='red')
+points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='blue')
+
+
+# zoomed in
+plot(move.rast, main="zoomed in",
+     xlim=c(start[1]-b, start[1]+b),
+     ylim=c(start[2]-b, start[2]+b))
+plot(f, add=TRUE, col="black")
+points(start[1], start[2], pch=19, col='red', lwd=5)
+points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='blue')
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

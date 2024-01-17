@@ -1,4 +1,4 @@
-# eleEDA.R
+# elePlots.R
 # Created 26 Sept 2023
 # Margaret Swift <margaret.swift@cornell.edu>
 
@@ -6,7 +6,7 @@
 #                             DATA & LIBRARY LOADING
 # ******************************************************************************
 
-here::i_am('02_scripts/2_eda/eleEDA.R')
+here::i_am('02_scripts/2_eda/elePlots.R')
 source(here::here('02_scripts','utilities.R'))
 pacman::p_load(sp, adehabitatHR, reshape2)
 setDataPaths('geographic')
