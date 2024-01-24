@@ -144,9 +144,24 @@ plot(hmm, plotCI=TRUE)
 # plot stationary data
 plotStationary(hmm, plotCI=TRUE)
 
+colors <- c('#408F67', '#61AAE1', '#D99B35')
 pdata %>%
   ggplot() +
-  geom_histogram(aes(x=angle)) +
-  facet_wrap(~STATE)
+  geom_histogram(aes(x=angle, fill=STATE), bins=30) +
+  facet_wrap(~STATE) + 
+  scale_fill_manual(values=colors) + plot.theme + 
+  xlab("angle (radians)") + ylab('number of points')
+
+pdata %>%
+  ggplot() +
+  geom_histogram(aes(x=step, fill=STATE), bins=100) +
+  facet_wrap(~STATE) + 
+  scale_fill_manual(values=colors) +
+  plot.theme + 
+  xlab("step size (m)") + ylab('number of points')
+
+pdata %>%
+
+pangle / pstep + plot_layout(guides="collect")
 
 

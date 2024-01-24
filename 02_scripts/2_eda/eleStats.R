@@ -23,6 +23,8 @@ load(procpath('ele.rdata'))
 # load(here(outdir, 'hmmLongF.rdata'))
 # load(here(outdir, 'hmmLongM.rdata'))
 
+setDataPaths('geographic')
+load("pdatatmp.rdata")
 
 # ******************************************************************************
 #                           General path statistics
@@ -45,7 +47,6 @@ ele.df %>% nog() %>%
   print(n=120)
 
 # average speeds and distances by sex and season
-# 
 speeds <- ele.df %>% 
   nog() %>% 
   left_join(pdata.f %>% dplyr::select(INX, STATE), by='INX') %>% 

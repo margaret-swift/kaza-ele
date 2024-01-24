@@ -17,7 +17,8 @@
 
 # devtools::install_github("wx-ecology/BaBA", force=TRUE)
 # rpath <- "C:/Users/mes473/OneDrive - Cornell University/Documents/R_Packages/BaBA/R"
-# source(file.path(rpath, "BaBA_fix.R"))pacman::p_load(sp, BaBA, here)
+# source(file.path(rpath, "BaBA_fix.R"))
+pacman::p_load(sp, BaBA, here)
 source(here("02_scripts", "utilities.R"))
 setDataPaths('elephant')
 load(procpath('ele.rdata'))
@@ -27,20 +28,23 @@ load(procpath('ele.rdata'))
 # ******************************************************************************
 
 # Data points mutation
-ele.df %>% nog() %>% 
+points_1h <- ele.df %>% 
   filter(FIXRATE == "1 hour") %>% 
   mutate(Animal.ID = BURST, 
-         date=as.POSIXct(DATE.TIME),
-         difftime = date - lag(date),
+         date=as.POSIXct(DATE.TIME))
+
+points_5h <- ele.df %>% 
+  mutate(Animal.ID = BURST, date=as.POSIXct(DATE.TIME)) %>% 
+  filter(FIXRATE == '5 hours')
+
+# freq
+points_1h %>% nog() %>% 
+  mutate(difftime = date - lag(date),
          difftime = ifelse(BURST != lag(BURST), NA, difftime),
          flag = between( as.n(difftime), 0, 200)) %>% 
   group_by(BURST) %>% 
   summarize(n=sum(flag, na.rm=TRUE)) %>% 
   arrange(n)
-
-points_5h <- ele.df %>% 
-  mutate(Animal.ID = BURST, date=as.POSIXct(DATE.TIME)) %>% 
-  filter(FIXRATE == '5 hours')
 
 # getting m/f data and #indivs
 mf <- ele.df %>% nog() %>% 
@@ -65,7 +69,8 @@ d <- 800 #distance considered "fence encounter"
 #                             BARRIER ANALYSIS RUN
 # ******************************************************************************
 baba_1h <- BaBA(
-  animal = points_1h, barrier = fences, 
+  animal = points_1h %>% filter(ID==4), 
+  barrier = fences, 
   d = d, b_time = b_time, p_time = p_time, w = w, max_cross = max_cross,
   interval = 2, units = "hours", tolerance = 10
 )

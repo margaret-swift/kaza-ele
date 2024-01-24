@@ -13,6 +13,7 @@ load(procpath('ele.rdata'))
 setDataPaths('precipitation')
 precip <- read.csv(rawpath('precipitation_kaza_2010_2022.csv'))
 load(here(outdir, 'hmmLongF.rdata'))
+load(here(outdir, 'hmmLongM.rdata'))
 
 
 # ******************************************************************************
@@ -134,13 +135,21 @@ fixSzn <- function(data) {
   fac <- as.factor(as.character(fac))
 }
 
-# add seasons to activity state data
+# add seasons to activity state datasets
 pdata.f$SZN_2 <- sapply(pdata.f$DATE.TIME, function(d) assignSzn(d, szn_2)) %>% fixSzn()
 pdata.f$SZN_4 <- sapply(pdata.f$DATE.TIME, function(d) assignSzn(d, szn_4)) %>% fixSzn()
 pdata.f$SZN_6 <- sapply(pdata.f$DATE.TIME, function(d) assignSzn(d, szn_6)) %>% fixSzn()
-
+pdata.m$SZN_6 <- sapply(pdata.m$DATE.TIME, function(d) assignSzn(d, szn_6)) %>% fixSzn()
 save(hmm.f, pdata.f, data.f, file=here(outdir, 'hmmLongF.rdata'))
+save(hmm.m, pdata.m, data.m, file=here(outdir, 'hmmLongM.rdata'))
 
+# add season to elephant data
+ele <- nog(ele.df)
+ele.df$SZN_6 <- sapply(ele$DATE.TIME, function(d) assignSzn(d, szn_6)) %>% fixSzn()
+setDataPaths('elephant')
+load(procpath('ele.rdata'))
+
+# now just a version for us to use (without NAs)
 inx.rm <- which( ( (pdata.f$SZN_2=="NA") + 
                      (pdata.f$SZN_4=="NA") + 
                      (pdata.f$SZN_6 == "NA") ) > 0 )
@@ -154,16 +163,23 @@ pdata$SZN_6 <- as.factor(as.character(pdata$SZN_6))
 #                                 add river distance
 # ******************************************************************************
 
-# setDataPaths('geographic')
-# load(procpath('geographic.rdata'))
-# x = st_distance(pdata.f, rivers)
-# pdata.f$RIV_DIST_MIN = apply(x, 1, min)
+setDataPaths('geographic')
+load(procpath('geographic.rdata'))
+crs <- CRS("+proj=longlat +zone=34S +datum=WGS84")
+pdata.sf <- pdata %>% 
+  filter(!is.na(x), !is.na(y)) %>% 
+  st_as_sf(coords=c('x', 'y'), crs=crs) %>% 
+  st_transform(crs=st_crs(rivers))
+x = st_distance(pdata.sf$geometry, rivers)
+pdata.sf$RIV_DIST_MIN = apply(x, 1, min)
+pdata <- nog(pdata.sf)
+save(pdata, file="pdatatmp.rdata")
 
 # ******************************************************************************
 #                                     modeling
 # ******************************************************************************
 
-pacman::p_load(lme4, lmerTest, emmeans)
+pacman::p_load(lme4, lmerTest, emmeans, dampack)
 
 mod2 <- lmer(step ~ SZN_2 + STATE + (1 | ID), data=pdata)
 mod4 <- lmer(step ~ SZN_4 + STATE + (1 | ID), data=pdata)
@@ -192,6 +208,39 @@ t6 <- lmerTest::difflsmeans(mod6, conf.level=.95)
 plot(t2)
 plot(t4)
 plot(t6)
+
+
+# mean and sd
+stats <- pdata %>% 
+  group_by(SZN_6) %>% 
+  summarize(mu=mean(step, na.rm=TRUE),
+            sd=sd(step, na.rm=TRUE)) %>% 
+  rename(SEASON = SZN_6) %>% 
+  mutate(shape=NA, scale=NA)
+
+for (i in 1:nrow(stats)) {
+  pars <- gamma_params(stats$mu[i], stats$sd[i])
+  stats$shape[i] = pars$shape
+  stats$scale[i] = pars$scale
+}
+
+
+n=1000
+dat <- data.frame(SEASON=rep(stats$SEASON, each=n),
+                  MU=rep(stats$mu, each=n),
+                  SD=rep(stats$sd, each=n),
+                  SHAPE=rep(stats$shape, each=n),
+                  SCALE=rep(stats$scale, each=n),
+                  X=0)
+for (i in 1:nrow(dat)) {
+  dat$X[i] <- rgamma(1, shape=dat$SHAPE[i], scale=dat$SCALE[i])
+}
+
+ggplot(dat, aes(x=X, color=SEASON)) +
+  geom_density() +
+  geom_function(fun = dgamma, args=list(shape=SHAPE, scale=SCALE)) + 
+  facet_wrap(~SEASON, ncol=1) + 
+  xlim(c(0, 2000))
 
 plotSeasonalModels <- function(s) {
   data <- pdata
@@ -237,13 +286,6 @@ plotSeasonalModels(6, ys)
 ggsave(filename=here(outdir, "seasontests", "tukeyhsd.png"))
 
 
-
-
-
-
-
-
-
 # ******************************************************************************
 #                                     plotting
 # ******************************************************************************
@@ -270,7 +312,6 @@ ggplot(mapping=aes(group=RAINYEAR, color=RAINYEAR)) +
   xlab('days since START of dry season') +
   ylab('cumulative rainfall (mm)')
 
-
 ggplot(precip.df, aes(x=RAINDOY, y=MM_RAIN_C10, group=RAINYEAR, color=RAINYEAR)) +
   geom_bar( stat="identity") +
   geom_vline(data=slice.wide, aes(xintercept=START), color='blue') +
@@ -296,45 +337,6 @@ ggplot() +
   # ylim(c(0, 15)) +
   plot.theme +
   scale_x_date(date_breaks="year", date_labels='%Y')
-
-plotSzn <- function(s,ys) {
-  colors <- c('#fae2a2', '#f5cb5d', '#f0b005',
-              '#a8e3da', '#60d6c4', '#02d9b8')
-  if (s == 2) {
-    data = szn_2
-    colors = colors[c(2,5)]
-  }else if (s == 4) {
-    data = szn_4
-    colors = colors[c(1,3,4,6)]
-  }else if (s == 6) {
-    data = szn_6
-  }
-  data = data %>% filter(RAINYEAR%in% ys)
-  slices <- slice.wide %>% filter(RAINYEAR %in% ys)
-  prec = precip.df %>% filter(RAINYEAR%in% ys)
-  p=ggplot() +
-    geom_rect(data=data,
-              mapping=aes(xmin=START.DATE, xmax=END.DATE, ymin=0, ymax=Inf,
-                          fill=SEASON)) +
-    geom_bar( data=prec,
-              mapping=aes(x=DATE, y=MM_RAIN_C10),
-              stat="identity") +
-    geom_vline(data=slices, aes(xintercept=START.DATE), color='black') +
-    geom_vline(data=slices, aes(xintercept=END.DATE), color='black') +
-    xlab('date') +
-    ylab('10-day rainfall (mm)') +
-    plot.theme +
-    scale_x_date(date_breaks="year", date_labels='%Y') +
-    scale_fill_manual(values = colors)
-  return(p)
-}
-
-ys <- 2016:2018
-p2 <- plotSzn(2, ys) + ylab('') + xlab(element_blank())
-p4 <- plotSzn(4, ys) + xlab(element_blank())
-p6 <- plotSzn(6, ys) + ylab('')
-p2 / p4 / p6
-
 
 plotSeasonalModels <- function(s) {
   data <- pdata
@@ -367,33 +369,86 @@ plotSeasonalModels <- function(s) {
                mapping=aes(x=SEASON, y=step, color=STATE),
                position='jitter', alpha=0.4) + 
     geom_line(data=newdata,
-               mapping=aes(x=SEASON, y=step, group=STATE), size=1) +
+              mapping=aes(x=SEASON, y=step, group=STATE), size=1) +
     geom_point(data=newdata,
                mapping=aes(x=SEASON, y=step, color=STATE)) + 
     facet_wrap ( ~ STATE, ncol=1, scales="free_y")
 }
 
+plotSzn <- function(s,ys) {
+  colors <- c('#fae2a2', '#f5cb5d', '#f0b005',
+              '#a8e3da', '#60d6c4', '#02d9b8')
+  if (s == 2) {
+    data = szn_2
+    colors = colors[c(2,5)]
+  }else if (s == 4) {
+    data = szn_4
+    colors = colors[c(1,3,4,6)]
+  }else if (s == 6) {
+    data = szn_6
+  }
+  data = data %>% filter(RAINYEAR%in% ys)
+  slices <- slice.wide %>% filter(RAINYEAR %in% ys)
+  prec = precip.df %>% filter(RAINYEAR%in% ys)
+  p=ggplot() +
+    geom_rect(data=data,
+              mapping=aes(xmin=START.DATE, xmax=END.DATE, ymin=0, ymax=Inf,
+                          fill=SEASON)) +
+    geom_bar( data=prec,
+              mapping=aes(x=DATE, y=MM_RAIN_C10),
+              stat="identity") +
+    geom_vline(data=slices, aes(xintercept=START.DATE), color='black') +
+    geom_vline(data=slices, aes(xintercept=END.DATE), color='black') +
+    xlab('date') +
+    ylab('10-day rainfall (mm)') +
+    theme(text=element_text(size=18))+
+    scale_x_date(date_breaks="year", date_labels='%Y') +
+    scale_fill_manual(values = colors)
+  return(p)
+}
 
-ggsave(filename=here(outdir, "seasontests", "seasonbreakdown.png"))
 
 
 
-
+ys <- 2017:2020
 colors <- c('#fae2a2', '#f5cb5d', '#f0b005',
             '#a8e3da', '#60d6c4', '#02d9b8')
-
-start.date <- as.Date("2016-04-17")
-end.date <- as.Date("2019-05-04")
+inx.start <- slice.wide$RAINYEAR == (ys[1]-1)
+inx.end <- slice.wide$RAINYEAR == ys[length(ys)]
+start.date <- slice.wide$END.DATE[inx.start]
+end.date <- slice.wide$END.DATE[inx.end]
+slices <- slice.wide %>% filter(RAINYEAR %in% ys)
 data <- pdata %>% 
   filter(DATE.TIME > start.date,
          DATE.TIME < end.date) %>%
   mutate(DATE = date(DATE.TIME)) %>% 
   group_by(DATE, SZN_6) %>% 
-  summarize(step=mean(step, na.rm=TRUE))
-ggplot(data) + 
+  summarize(step=mean(step, na.rm=TRUE)) %>% 
+  filter(step < 1500)
+p1 <- ggplot(data) + 
   geom_bar(mapping=aes(x=DATE, y=step, fill=SZN_6),
              position="stack", stat="identity") + 
   plot.theme + 
+  geom_vline(data=slices, aes(xintercept=START.DATE), color='black') +
+  geom_vline(data=slices, aes(xintercept=END.DATE), color='black') +
   ylab('average step size (m)') +
-  scale_fill_manual(values=colors)
-           
+  scale_fill_manual(values=colors) + 
+  xlab(element_blank()) + 
+  theme(axis.text.x = element_blank()) +
+  guides(fill="none") +
+  xlim(c(start.date, end.date)) 
+p2 <- plotSzn(2, ys) + ylab('') +
+  xlab(element_blank())+ 
+  theme(axis.text.x = element_blank()) +
+  xlim(c(start.date, end.date))
+p4 <- plotSzn(4, ys) + xlab(element_blank())+ 
+  theme(axis.text.x = element_blank()) +
+  guides(fill="none") +
+  xlim(c(start.date, end.date))
+p6 <- plotSzn(6, ys) + ylab('') + 
+  guides(fill="none") +
+  xlim(c(start.date, end.date)) + 
+  xlab("")
+
+p2 / p4 / p6 / p1 
+
