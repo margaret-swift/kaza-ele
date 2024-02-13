@@ -70,7 +70,6 @@ slice.narrow <- precip.df %>%
             END=max(RAINDOY)) %>% 
   matchMe()
 
-
 # ******************************************************************************
 #                                Assigning seasons
 # ******************************************************************************
@@ -142,6 +141,11 @@ pdata.f$SZN_6 <- sapply(pdata.f$DATE.TIME, function(d) assignSzn(d, szn_6)) %>% 
 pdata.m$SZN_6 <- sapply(pdata.m$DATE.TIME, function(d) assignSzn(d, szn_6)) %>% fixSzn()
 save(hmm.f, pdata.f, data.f, file=here(outdir, 'hmmLongF.rdata'))
 save(hmm.m, pdata.m, data.m, file=here(outdir, 'hmmLongM.rdata'))
+
+setDataPaths('precipitation')
+save(precip.df, slice, szn_2, szn_4, szn_6, 
+     assignSzn, fixSzn, file=procpath('season_slices.rdata'))
+
 
 # add season to elephant data
 ele <- nog(ele.df)

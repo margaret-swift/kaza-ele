@@ -10,6 +10,10 @@
 here::i_am('02_scripts/2_eda/mapPlots.R')
 # source(here::here('02_scripts','utilities.R')) #this is for other custom funcs
 
+
+st_write(ele.df, dsn=rawpath('elephants.shp'))
+
+
 # load the "world" dataset from spData
 library(spData)
 
@@ -123,4 +127,13 @@ ggplot() +
   geom_sf(data=africa, fill='darkgray', color=NA) + 
   transparentBg()
 ggsave(filename=file.path(outdir, 'africa_dark.png'),
+       width=10, height=10, bg='transparent')
+
+## KHAUDUM WITH RIVERS
+ggplot() + 
+  geom_sf(data=khau) + 
+  geom_sf(data=rivers %>% filter(BB_DIS_ORD<=6), color='blue', linewidth=2) +
+  transparentBg() + 
+  zoomTo(khau, buffer=0)
+ggsave(filename=file.path(outdir, 'khau.png'),
        width=10, height=10, bg='transparent')

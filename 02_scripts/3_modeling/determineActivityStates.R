@@ -20,41 +20,36 @@ load(procpath('precipitation.rdata'))
 #                                HMM PREP DATA
 # ******************************************************************************
 
-# choose only certain IDs for a smaller run
-ids <- unique(ele.df$ANIMAL_ID)
+# choose only females and 1-hour fix rates
 data <- ele.df %>% nog() %>% 
   dplyr::filter(SEX == "F", 
-                ANIMAL_ID %in% ids[1:12],
                 FIXRATE == "1 hour") %>%
-  mutate(SEASON = factor(SEASON),
+  mutate(SEASON=factor(SZN_4),
          ID=BURST) %>% 
   dplyr::select(INX, ID, X, Y, 
                 SEASON, SEX, DIST, DATE.TIME)
 
 # Crawl Wrap: Fill in missing data steps
+tic()
 crwOut <-crawlWrap(obsData = data,
                    timeStep = "hour",
                    Time.name = "DATE.TIME",
                    coord=c('X', 'Y'),
                    ncore=3
                    )
-crwData <- crwOut$crwPredict 
-crwData$date <- as.POSIXct(crwData$DATE.TIME)
-
-# set SEASON based on first rainfall from precipitation.rdata
-crwData$ISWET <- TRUE
-crwData$YEAR <- year(crwData$date)
-dt <- 121
-inx <- which( yday(crwData$date) > dt )
-inx.rain <- match(crwData$YEAR+1, wet.start$RAINYEAR)
-iswet <- crwData$date > wet.start$DATE[inx.rain]
-crwData$ISWET[inx] <- iswet[inx]
-crwData$SEASON = ifelse(crwData$ISWET, "WET", "DRY")
-crwData <- crwData[,c('ID', 'X', 'Y', 'SEASON', 'date')]
+crwOut$crwPredict$date <- as.POSIXct(crwOut$crwPredict $DATE.TIME)
+toc()
 
 # Prep Data: add step lengths and turning angles again
 tic()
-pdata <- prepData( crwOut,
+# use top ten eles with most data
+crw <- crwOut
+idlist <- names(sort(table(crw$crwPredict$ID))[23:33]) %>% as.numeric()
+crw$crwPredict <- crw$crwPredict[crw$crwPredict$ID %in% idlist,]
+crw$crwFits <- crw$crwFits[names(crw$crwFits) %in% idlist]
+
+# run pdata
+pdata <- prepData( crw,
                    type="UTM",
                    coordNames=c("X", "Y"),
                    covNames=c('SEASON')
@@ -74,13 +69,13 @@ dist = list(step = "gamma", angle = "wrpcauchy")
 
 # STEP LENGTH
 mu0.s <- c(10, 400, 2000)
-sd0.s <- c(20, 300, 1000)
-zm0.s <- c(0.05, 0.001, 0.0005)
+sd0.s <- c(10, 300, 1500)
+zm0.s <- c(0.5, 0.01, 0.005)
 plotParams(mu0.s, sd0.s, "gamma")
 
 # TURNING ANGLE
-mu0.a <- c(pi, pi, 0) # initial means (one for each state)
-kappa0.a <- c(0.1, 0.5, 2) # initial concentrations (one for each state)
+mu0.a <- c(0, pi, 0) # initial means (one for each state)
+kappa0.a <- c(0.001, 1, 1) # initial concentrations (one for each state)
 plotParams(mu0.a, kappa0.a, "wrpcauchy")
 
 #put it all together

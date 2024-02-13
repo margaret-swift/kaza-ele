@@ -16,6 +16,7 @@ load(procpath('landcover_rasters.rdata'))
 
 setDataPaths('precipitation')
 load(procpath('precipitation.rdata'))
+load(procpath('season_slices.rdata'))
 
 setDataPaths('elephant')
 load(procpath('ele.rdata'))
@@ -77,10 +78,18 @@ load(procpath('ele.rdata'))
 # TOD <- time.names[sums]
 # ele.df$TOD <- TOD
 
+
 # ******************************************************************************
 #                             Adding distance from water
 # ******************************************************************************
+ele.df$SZN_2 <- sapply(ele.df$DATE.TIME, function(d) assignSzn(d, szn_2)) %>% fixSzn()
+ele.df$SZN_4 <- sapply(ele.df$DATE.TIME, function(d) assignSzn(d, szn_4)) %>% fixSzn()
+ele.df$SZN_6 <- sapply(ele.df$DATE.TIME, function(d) assignSzn(d, szn_6)) %>% fixSzn()
 
+
+# ******************************************************************************
+#                             Adding distance from water
+# ******************************************************************************
 x = st_distance(ele.df, rivers)
 ele.df$RIV_DIST_MIN = apply(x, 1, min)
 
@@ -88,7 +97,7 @@ ele.df$RIV_DIST_MIN = apply(x, 1, min)
 #                                       STS
 # ******************************************************************************
 ele.df <- ele.df %>% 
-  relocate(LAT, LON, .after=SEASON) %>% 
+  relocate(SZN_2, SZN_4, SZN_6, LAT, LON, .after=SEASON) %>% 
   relocate(TOD, .after=DATE.TIME) %>% 
   relocate(MM.RAIN, MM.RAIN_C, MM.RAIN_7, 
            LC_CLASS, LC_CATEG, RIV_DIST_MIN, .before=geometry)

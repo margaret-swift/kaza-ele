@@ -11,9 +11,10 @@ source(here::here('02_scripts', 'utilities.R'))
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
 my_crs <- 4326
+write.csv(raindates, file=here(outdir, "seasontests", "raindates.csv"))
 
 loadData <- function(path) {
-  file <- list.files(here(rawpath, path), pattern='.shp$', full.names=TRUE)
+  file <- list.files(rawpath(path), pattern='.shp$', full.names=TRUE)
   data <- st_read(file) %>% st_transform(crs=my_crs)
   data
 }
@@ -32,6 +33,21 @@ save(fences, roads, rivers,
      file=procpath('geographic.rdata'))
 
 
+
+# ******************************************************************************
+#                         Arthur's fence status data
+# ******************************************************************************
+
+pacman::p_load('readxl')
+pth <- "fence_damage_mortalities"
+files <- list.files(rawpath('fence_damage_mortalities'))
+
+ZF_locs <- read_excel(rawpath(pth, "Zambezi.Notes.fencecondition.Dec2020.xlsx"), col_names=TRUE)
+WBF_locs <- read_excel(rawpath(pth, "WBF.5km.coords.xlsx"), col_names =FALSE)
+names(WBF_locs)
+
+# 
+# 
 # ******************************************************************************
 #                        Set up raster resistance layer
 # ******************************************************************************
@@ -117,6 +133,51 @@ lands.meta$shelter = c(
   1,   # water bodies permanent
   1    # water bodies seasonal
 )
+
+# define generic landcover type bins
+lands.meta$cover = c(
+  0, # bare area
+  0, # bare floodplain area
+  1, # built-up
+  2, # closed bushland
+  2, # closed forest
+  2, # closed herbaceous wetland
+  2, # closed woodland
+  1, # cropland
+  3, # open bushland/shrubs
+  3, # open herbaceous vegetation
+  3, # open herbaceous wetland
+  3, # open herbaceous floodplain
+  3, # open woodland/bushland
+  4, # sparse forest/woodland
+  4, # sparse herbaceous wetland
+  4, # sparse/open bushland/shrubs
+  5,   # water bodies permanent
+  5    # water bodies seasonal
+)
+
+
+# define generic vegetation type bins
+lands.meta$veg = c(
+  0, # bare area
+  0, # bare floodplain area
+  1, # built-up
+  2, # closed bushland
+  2, # closed forest
+  3, # closed herbaceous wetland
+  2, # closed woodland
+  1, # cropland
+  2, # open bushland/shrubs
+  3, # open herbaceous vegetation
+  3, # open herbaceous wetland
+  3, # open herbaceous floodplain
+  2, # open woodland/bushland
+  2, # sparse forest/woodland
+  3, # sparse herbaceous wetland
+  2, # sparse/open bushland/shrubs
+  4,   # water bodies permanent
+  4    # water bodies seasonal
+)
 reclassWrite <- function(type) {
   vrt.reclass = terra::classify(lands.vrt, lands.meta[,c('category', type)])
   vrt.reclass.proj = terra::project(vrt.reclass, 'EPSG:32735')
@@ -127,3 +188,5 @@ reclassWrite <- function(type) {
 reclassWrite('movement')
 reclassWrite('forage')
 reclassWrite('shelter')
+
+write.csv(lands.meta, file=rawpath('kaza_landcover', 'landcover_metadata.csv'))
