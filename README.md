@@ -11,8 +11,8 @@ Agent-based model code is housed at: [abmAME](https://github.com/margaret-swift/
 | -----| -------- |
 | [Gather Data](#1gather-data)| 100% |
 | [EDA](#2-exploratory-data-analysis) | 100% |
-| [Simulate basic movements](#3simulating-basic-movements) | 90% |
-| [Model landscape use](#4modeling-landscape-use) | 0% |
+| [Simulate basic movements](#3simulating-basic-movements) | 100% |
+| [Model landscape use](#4modeling-landscape-use) | 20% |
 | [Validation and improvement](#5-validation) | 0% |
 | [Display](#6displaying-simulations) | 0% |
 | [Extensions](#7extending-simulations) | 0% |
@@ -46,7 +46,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
     - [x] Selectively permeable barriers with probability given by user input
     - [x] Interactions with landscape raster values
     - [x] Attraction to range centroids - double check home range capabilities
-    - [ ] Implement basin-hopping behavior in Butts et al 2022?
+    - [ ] ~~Implement basin-hopping behavior in Butts et al 2022?~~
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
