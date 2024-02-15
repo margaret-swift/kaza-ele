@@ -200,6 +200,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 |forest/woodland  |  98.40212537  |  97.00431529  |  
 |herbaceous/wet  |  0.96642538  |  2.09669043  |  
 |nonveg  |  0.59166282  |  0.32286268  |  
+<img width="689" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/bf1c0089-3637-49d9-9145-31ec210ebe81">
 
 #### Canopy cover type
 | Class | % of available points | % of used points | 
@@ -210,6 +211,8 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 |    open   | 43.82411828 | 45.83633209  |
 | sparse    | 53.18804867 | 50.93802703  |
 |  water    | 0.59166282  | 0.32286268   |
+
+<img width="689" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/f2641997-067a-42f4-aa1b-bb52e9eccdb6">
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
