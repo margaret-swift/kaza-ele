@@ -9,7 +9,7 @@ Agent-based model code is housed at: [abmAME](https://github.com/margaret-swift/
 
 | Step | Progress |
 | -----| -------- |
-| [Gather Data](#1gather-data)| 100% |
+| [Gather Data](#1gather-data)| 80% |
 | [Exploratory data analysis](#2-exploratory-data-analysis) | 100% |
 | [Simulate basic movements](#3simulating-basic-movements) | 100% |
 | [Model landscape use](#4modeling-landscape-use) | 20% |
@@ -24,7 +24,8 @@ Agent-based model code is housed at: [abmAME](https://github.com/margaret-swift/
 
 # Project steps
 ## 1.	Gather data
-  - [x] **Data for elephants** collared in Namibia have been provided by **Robin Naidoo**; I have reached out to **Anna Songhurst** (11/6/23) about a possible collaboration to bring her expertise and data for elephants collared in Botswana.
+  - [x] **Data for Namibian elephants** Provided by **Robin Naidoo**
+  - [ ] **Data for Botswanan elephants** Provided by **Anna Songhurst** via MOU between Cornell and Ecoexist Trust (1/31/24); **Robin Naidoo** to provide cleaned data files after he returns from his southern Africa trip.
   - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
