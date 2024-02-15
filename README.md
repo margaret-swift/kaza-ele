@@ -192,40 +192,76 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 ### Habitat selection data
 
-#### Vegetation class
-| Class | % of available points | % of used points | 
-|-------| --------------------- | ---------------- |
-|  bushland |  0.9840212537 |  0.9700431529|  
-|   cropland |  0.0003978644 |  0.0055327822|  
-|  forest/woodland |  0.0096642538 |  0.0209669043|  
-|  herbaceous/wet |  0.0059166282 |  0.0032286268|  
-|  nonveg |  0.0000000000 |  0.0002285339|  
-<img width="689" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/bf1c0089-3637-49d9-9145-31ec210ebe81">
-
 #### Canopy cover type
-| Class | % of available points | % of used points | 
+
+##### Dry season
+| Class | prop. of available points | prop. of used points | 
 |-------| --------------------- | ---------------- |
-|     bare  | 0.00000000  | 0.02285339   |
-| built/ag  | 0.03978644  | 0.55327822   |
-|   closed  | 2.35638380  | 2.32664660   |
-|    open   | 43.82411828 | 45.83633209  |
-| sparse    | 53.18804867 | 50.93802703  |
-|  water    | 0.59166282  | 0.32286268   |
+|bare     |0.00 | 0.00  | 
+|built/ag |0.01 |  0.00 | 
+| closed  |0.03 |  0.03 | 
+|   open  |0.45 |  0.41 | 
+| sparse  |0.52 |  0.55 | 
+|  water  |0.00 |  0.01 | 
 
-<img width="689" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/f2641997-067a-42f4-aa1b-bb52e9eccdb6">
+##### Wet season
+| Class | prop. of available points | prop. of used points | 
+|-------| --------------------- | ---------------- |
+|   bare|  0.00| 0.00|
+|built/ag| 0.00| 0.00|
+| closed|  0.02| 0.02|
+|   open|  0.47| 0.47|
+| sparse|  0.50| 0.51|
+|water|    0.00| 0.01|
 
+<img width="873" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/dbda8332-c734-41f7-af21-0e0c5dc0597e">
+
+#### Vegetation class
+
+| Class | prop. of available points | prop. of used points | 
+|-------| --------------------- | ---------------- |
+|bushland|0.97| 0.98|
+|cropland|0.01| 0.00|
+|forest/woodland|0.02| 0.01|
+|herbaceous/wet|0.00| 0.01|
+|nonveg|0.00| 0.00|
+
+##### Wet season
+| Class | prop. of available points | prop. of used points | 
+|-------| --------------------- | ---------------- |
+|bushland    |0.97| 0.99|
+|cropland    |0.00| 0.00|
+|forest/woodland|0.02| 0.01|
+|herbaceous/wet|0.00| 0.01|
+|nonveg      |0.00| 0.00|
+
+<img width="873" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/3dc644a9-c793-4c5f-9215-584a9f7360da">
 
 #### Distance from water
-| Class | % of available points | % of used points | 
-|-------| --------------------- | ---------------- |
-|  >10,000m   |  0.11571051 |  0.23161026|  
-|  0-500m     |  0.06585568 |  0.03061186|  
-|  1500-2500m |  0.16842921 |  0.13030622|  
-|  2500-5000m |  0.34009012 |  0.31195559|  
-|  500-1500m  |  0.12921533 |  0.10037030|  
-|  5000-7500m |  0.18069915 |  0.19514577|  
 
-<img width="832" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/6d916faa-00f2-48bb-928a-382038f85e1b">
+##### Dry season
+| Class | prop. of available points | prop. of used points | 
+|-------| --------------------- | ---------------- |
+|  0-500m|      0.03|  0.06|  
+|  500-1500m|   0.09|   0.11|  
+|  1500-2500m|  0.12|   0.16|  
+|  2500-5000m|  0.30|   0.35|  
+|  5000-7500m|  0.18|   0.19|  
+|  7500-10,000m|0.04|   0.02|  
+|  >10,000m|    0.23|   0.12|  
+
+##### Wet season
+| Class | prop. of available points | prop. of used points | 
+|-------| --------------------- | ---------------- |
+|  0-500m        |0.03|  0.07|  
+|  500-1500m     |0.10|  0.14|  
+|  1500-2500m    |0.13|  0.18|  
+|  2500-5000m    |0.30|  0.32|  
+|  5000-7500m    |0.19|  0.17|  
+|  7500-10,000m  |0.05|  0.03|  
+|  >10,000m      |0.21|  0.11|  
+
+<img width="876" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/48b2f494-a9a4-40ed-8e53-dd7f8ee3e00a">
 
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
