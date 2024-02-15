@@ -195,11 +195,11 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 #### Vegetation class
 | Class | % of available points | % of used points | 
 |-------| --------------------- | ---------------- |
-|bushland  |  0.00000000  |  0.02285339  |  
-|cropland  |  0.03978644  |  0.55327822  |  
-|forest/woodland  |  98.40212537  |  97.00431529  |  
-|herbaceous/wet  |  0.96642538  |  2.09669043  |  
-|nonveg  |  0.59166282  |  0.32286268  |  
+|  bushland |  0.9840212537 |  0.9700431529|  
+|   cropland |  0.0003978644 |  0.0055327822|  
+|  forest/woodland |  0.0096642538 |  0.0209669043|  
+|  herbaceous/wet |  0.0059166282 |  0.0032286268|  
+|  nonveg |  0.0000000000 |  0.0002285339|  
 <img width="689" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/bf1c0089-3637-49d9-9145-31ec210ebe81">
 
 #### Canopy cover type
@@ -213,6 +213,20 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 |  water    | 0.59166282  | 0.32286268   |
 
 <img width="689" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/f2641997-067a-42f4-aa1b-bb52e9eccdb6">
+
+
+#### Distance from water
+| Class | % of available points | % of used points | 
+|-------| --------------------- | ---------------- |
+|  >10,000m   |  0.11571051 |  0.23161026|  
+|  0-500m     |  0.06585568 |  0.03061186|  
+|  1500-2500m |  0.16842921 |  0.13030622|  
+|  2500-5000m |  0.34009012 |  0.31195559|  
+|  500-1500m  |  0.12921533 |  0.10037030|  
+|  5000-7500m |  0.18069915 |  0.19514577|  
+
+<img width="832" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/6d916faa-00f2-48bb-928a-382038f85e1b">
+
 
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
