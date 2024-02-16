@@ -215,6 +215,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 |water|    0.00| 0.01|
 
 <img width="873" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/dbda8332-c734-41f7-af21-0e0c5dc0597e">
+<img width="862" alt="image" src="https://github.com/margaret-swift/kaza-ele/assets/22435790/0cb4c66b-9323-4671-b6d8-50ac7a261c9c">
 
 #### Vegetation class
 
