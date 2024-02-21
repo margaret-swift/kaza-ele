@@ -138,7 +138,7 @@ lands.meta$shelter = c(
 lands.meta$cover = c(
   0, # bare area
   0, # bare floodplain area
-  1, # built-up
+  0, # built-up
   2, # closed bushland
   2, # closed forest
   2, # closed herbaceous wetland
@@ -152,32 +152,40 @@ lands.meta$cover = c(
   4, # sparse forest/woodland
   4, # sparse herbaceous wetland
   4, # sparse/open bushland/shrubs
-  5,   # water bodies permanent
-  5    # water bodies seasonal
+  0,   # water bodies permanent
+  0    # water bodies seasonal
 )
-
+cover_class = data.frame(cover=0:4, 
+                         cover_class=c('bare/water', 'cropland', 'closed', 
+                                       'open', 'sparse'))
+lands.meta = left_join(lands.meta, cover_class, by="cover")
 
 # define generic vegetation type bins
 lands.meta$veg = c(
   0, # bare area
   0, # bare floodplain area
-  1, # built-up
+  0, # built-up
   2, # closed bushland
-  2, # closed forest
-  3, # closed herbaceous wetland
-  2, # closed woodland
+  3, # closed forest
+  4, # closed herbaceous wetland
+  3, # closed woodland
   1, # cropland
   2, # open bushland/shrubs
-  3, # open herbaceous vegetation
-  3, # open herbaceous wetland
-  3, # open herbaceous floodplain
-  2, # open woodland/bushland
-  2, # sparse forest/woodland
-  3, # sparse herbaceous wetland
+  4, # open herbaceous vegetation
+  4, # open herbaceous wetland
+  4, # open herbaceous floodplain
+  3, # open woodland/bushland
+  3, # sparse forest/woodland
+  4, # sparse herbaceous wetland
   2, # sparse/open bushland/shrubs
-  4,   # water bodies permanent
-  4    # water bodies seasonal
+  0,   # water bodies permanent
+  0    # water bodies seasonal
 )
+veg_class = data.frame(veg=0:4, 
+                       veg_class=c('nonveg', 'cropland', 'bushland', 
+                                   'forest/woodland', 'herbaceous/wet'))
+lands.meta = left_join(lands.meta, veg_class, by="veg")
+
 reclassWrite <- function(type) {
   vrt.reclass = terra::classify(lands.vrt, lands.meta[,c('category', type)])
   vrt.reclass.proj = terra::project(vrt.reclass, 'EPSG:32735')
