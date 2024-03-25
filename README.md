@@ -1,7 +1,7 @@
 # KAZA Elephant Behavior Modeling Project
-AHEAD x WWF collaboration with funding from Atkinson Center for Sustainability
+[AHEAD](https://wildlife.cornell.edu/our-work/ahead-animal-human-health-environment-and-development) x WWF collaboration with funding from the Cornell Atkinson Center for Sustainability
 
-Margaret Swift, Robin Naidoo, Steve Osofsky, Shirley Atkinson, Anna Songhurst
+Margaret Swift, Robin Naidoo, Piet Beytell, Steve Osofsky, Shirley Atkinson, Anna Songhurst
 
 **WARNING: This repository is public, but raw data files (especially elephant GPS data) are sensitive and never stored or tracked through GitHub.**
 
