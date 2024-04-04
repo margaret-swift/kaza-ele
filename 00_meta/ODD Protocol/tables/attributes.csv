@@ -1,0 +1,13 @@
+﻿Entity,Attribute,Description,ValuesAndType,SpatialScale,TemporalScale
+Elephant,Sex,"Sex of elephant, which also indirectly indicates group status (solitary male or female in herd)","categorical [“male”, “female”]",,Static
+Elephant,Activity State,Current activity state of the elephant. This state is randomly selected and defined using a Hidden Markov Model.,"categorical [""resting"", ""foraging"", ""exploring""]",,Hourly
+Grid cell,Enhanced Vegetation Index,The Landsat EVI is an indicator of vegetative productivity on the landscape,"numeric (-1.0, 1.0)",30m,Monthly
+Grid cell,Fire incidence,[MODIS Burned Area Product](https://modis.gsfc.nasa.gov/data/dataprod/mod45.php) - whether pixel is burned in the past month.,binary TRUE/FALSE,250m ,Monthly
+Grid cell,Elevation,Elevation above sea level ([USGS SRTM DEM](https://www.usgs.gov/centers/eros/science/usgs-eros-archive-digital-elevation-shuttle-radar-topography-mission-srtm)),"numeric (0 – 3,000) meters",30m,Static
+Grid cell,Landcover,[KAZA Landcover 2021 (WWF based on Sentinel data)](https://storymaps.arcgis.com/stories/db69e30bc8434330ab9445a200b19709),"categorical [""closed"", ""open"", ""sparse""]",10m,Static
+Grid cell,Distance from human settlements,Distance from nearest pixel on [World Settlement Footprint 2019](https://www.esa.int/Applications/Observing_the_Earth/Mapping_our_human_footprint_from_space) (based on Sentinel data),"numeric (0 – 7,500) meters",10m,Static
+Grid cell,Distance from water,Distance from nearest water source (waterhole or river),"numeric (0 – 7,500) meters",10m,Static
+Barrier,Type,Several types of linear barriers influence elephant movement. ,"categorical [""fence"", ""river"", ""road""]",,Static
+Barrier,Permeability,The permeability of a barrier is determined by the barrier type and the sex of the agent encountering the barrier. A barrier with a permeability of 1 does not affect agent movement at all; a barrier of permeability 0 allows no movement.,numeric [0-1]  (probability) ,,Static
+Time,Season,"African savanna processes are highly dependent on season -- during the wet season, rains flush the landscape and allow elephant to travel far from permanent water sources; during the dry season, elephant movements are restricted","categorical [""wet"", ""dry""]",,Seasonal
+Time,Hour of day,"GPS data points for elephant movement are given on the hourly scale, so our simulation models agent steps on an hourly scale",ordinal [1-24],,Hourly

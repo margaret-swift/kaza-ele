@@ -13,38 +13,61 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-library(knitr)
+pacman::p_load(knitr, tidyverse, grid, gridExtra, reshape2, patchwork)
 opts_chunk$set(echo = TRUE)
 ```
 
-The model description follows the ODD (Overview, Design concepts, Details) protocol for describing individual- and agent-based models (Grimm et al. 2006), as updated by Grimm et al. (2020).
+The model description follows the ODD (Overview, Design concepts, Details) protocol for describing individual- and agent-based models ([Grimm et al. 2006](https://www.sciencedirect.com/science/article/pii/S0304380006002043?casa_token=9nqjSgQXAoIAAAAA:4haL1kOsD2J0kLIgXOO4KvNbKnxiZfiQmpl6JF3hCKVzXTvvnTALv6u2JsssaiBweUhDQ3GH4w)), as updated by [Grimm et al. (2020)](https://ui.adsabs.harvard.edu/abs/2020EcMod.42809105G/abstract).
 
-The code for the agent-based model is available on GitHub as the package `abmAME`:  https://github.com/margaret-swift/abmAME.  
-
-The code for the savanna elephant implementation of `abmAME` is available on GitHub at:  https://github.com/margaret-swift/kaza-ele  
+- [GitHub page for the agent-based modeling package `abmAME`](https://github.com/margaret-swift/abmAME).
+- [GitHub page for the savanna elephant implementation `kaza-ele`](https://github.com/margaret-swift/kaza-ele).
 
 # Purpose and Patterns
 ## Purpose
 The **proximate purpose** of this model is to accurately predict changes in African savanna elephant (*Loxodonta africana*) movement patterns after the decommissioning (i.e., partial or full removal) of veterinary fences. Veterinary fences, built to mitigate livestock disease risk, heavily restrict wildlife movements in southern Africa; the **ultimate purpose** of this work is to facilitate policymakers’ decisions to decommission fences by providing insight on savanna elephant movement changes pre- and post-decommissioning. 
 
 ## Patterns
-We aim to replicate four **patterns** seen in location data from savanna elephants fitted with GPS-enabled collars, 42 in Namibia and XX in Botswana. These patterns can be divided into two **spatial patterns** and two **temporal patterns**. These patterns are represented in Figure Xa and b, respectively.
+We aim to replicate four **patterns** seen in location data from savanna elephants fitted with GPS-enabled collars, 42 in Namibia and XX in Botswana. These patterns can be divided into two **spatial patterns** and two **temporal patterns**. These patterns are represented in Figure Xa and b, respectively. **TBD: These figures have yet to be made!**
 
 ### Spatial Patterns
 
 <ol>
 <li> **Channeling along linear features.** There are several linear features included on the southern African savanna landscape. Savanna elephant often channel their movement along veterinary fences and along dry riverbeds, likely due to searching for crossing points in the former and an increased ease of movement for the latter. 
 </li>
-<li> **Differential permeability of linear features.** Linear boundaries may be crossed, but those crossing rates depend on (i) the type of linear feature, and (ii) the sex of the elephant (bull vs. cow). In general, elephant are most likely to cross rivers and least likely to cross veterinary fences. In addition, while bull elephants (males) often break through fences to continue in their direction of travel, cows (females) heavily avoid crossing fences. This is likely because even downed fences often still have steel cables stretched across the opening, and the juveniles and calves traveling with the GPS-collared cows cannot cross these cables. Crossing rates for linear features by feature type and elephant sex are given in Table 1.
+<li> **Differential permeability of linear features.** Linear boundaries may be crossed, but those crossing rates depend on (i) the type of linear feature, and (ii) the sex of the elephant (bull vs. cow). In general, elephant are most likely to cross rivers and least likely to cross veterinary fences. In addition, while bull elephants (males) often break through fences to continue in their direction of travel, cows (females) heavily avoid crossing fences. This is likely because even downed fences often still have steel cables stretched across the opening, and the juveniles and calves traveling with the GPS-collared cows cannot cross these cables. Crossing rates for linear features by feature type and elephant sex are given in Figure 1.
 </li>
 </ol>
-```{r echo=FALSE, results="asis"}
+
+
+
+
+```{r, fig.cap='**Figure 1. Linear feature crossing rates figure and table.** (left) A chart of crossing rates for three barrier types for males and females. (right) Table elements are the proportion (%) of time that a barrier was crossed when an elephant came within 1km of that barrier. Rates are given by feature type and elephant sex, with values adapted from [Naidoo et al 2022](https://www.frontiersin.org/articles/10.3389/fcosc.2022.788133/full).', echo = F, fig.height = 3, fig.align='center'}
 crossing.rates <- data.frame(	River=c(10.1, 14.5),	
                               Road=c(15.3, 25.8),
-                              Fence=c(0, 3.5))
+                              Fence=c(0, 3.5)) * 0.01
 rownames(crossing.rates) <- c('female', 'male')
-kable(crossing.rates, caption="**Table 1. Linear feature crossing rates.** Table elements are the proportion (%) of time that a barrier was crossed when an elephant came within 1km of that barrier. Rates are given by feature type and elephant sex, with values adapted from Naidoo et al 2022.")
+
+# Bar chart
+colors<- c('black', 'gray')
+myfig <- crossing.rates %>% 
+  rownames_to_column(var="sex") %>% 
+  melt(id='sex') %>% 
+  ggplot(mapping=aes(y=value, x=variable, fill=sex)) + 
+    geom_bar(stat="identity", position="dodge") + 
+    theme(text=element_text(size=14)) + 
+    scale_fill_manual(values=colors) + 
+    xlab('barrier type') + ylab('probability \nof crossing')
+
+# table
+tt3 <- ttheme_minimal(
+  core=list(bg_params = list(fill=colors),
+            fg_params=list(col=c('white', 'black'))))
+mytab <- gridExtra::tableGrob(crossing.rates, theme=tt3)
+
+# put it together
+( myfig + mytab ) + plot_layout(widths=c(1, 2))
 ```
+
 ### Temporal Patterns
 
 <ol start="C">
@@ -60,13 +83,19 @@ kable(crossing.rates, caption="**Table 1. Linear feature crossing rates.** Table
 **Model entities** are _individual agents_ (African savanna elephant *L. africana*); _linear features_ (rivers, roads, fences); _point features_ (natural waterholes and artificial waterholes); and _raster features_ (burn time, distance from human settlement, habitat type, vegetation index, distance from water). Physical characteristics of the agents, linear and point features are static in time, but raster features may change temporally.
 
 ``` {r echo=FALSE, results="asis"}
-entities <- read.csv('entities.csv')
+entities <- read.csv('tables/entities.csv')
 kable(entities, caption="**Table 2. Model entities.** Description")
 ```
 
 ## State variables
 
-## Scales
+``` {r echo=FALSE, results="asis"}
+entities <- read.csv('tables/attributes.csv')
+kable(entities, caption="**Table 3. Entity attributes** Characteristics of individual entities in the model.")
+```
+
+## Scales and extents
+Spatial and temporal scales are given in Table 3. The spatial extent of our model is the Kavango-Zambezi Transfrontier Conservation Area in central southern Africa. The temporal extent of our model is five years.
 
 # Process Overview and Scheduling
 The project is broken into three **processes**, defined below from broad to narrow scope. An (1) outer **temporal assignment wrapper** (TAW) defines environmental raster data for each month m of the simulation and inputs these data into an (2) **agent-based simulation** (ABS) to simulate each hour n of elephant movement given static spatial and agent parameters. Within this ABS, a (3) **step drawing and barrier handling** (SDBH) process is used to determine barrier crossing of potential agent movements and accept/reject based on barrier permeability.
@@ -85,4 +114,23 @@ The SDBH is a sub-process used in the ABS to properly sample barrier crossings b
 
 For each line $j$ between the current location $x_i$ and a potential new location $x'_{i+1}$, the program checks whether line $j$ will cross any linear barrier. If there is a potential crossing, for each barrier $b$ (of those potentially crossed), a random number $P_j$ is drawn and compared to the barrier’s inherent probability of crossing. If $P_j > p_b$, the new location $x'_{i+1}$ is rejected and a new one selected. This process continues until $q$ viable pairs are selected, or until 5000 attempts are made. 
 
-![Figure 1. Process Map. A map of the three main processes within this project ](ProcessMap.png)
+![Figure 1. Process Map. A map of the three main processes within this project ](figures/ProcessMap.png)
+
+
+# Basic principles 
+**The next few sections are under construction!**
+
+## Emergence
+## Adaptation
+## Objectives
+## Learning
+## Prediction
+## Sensing
+## Interaction
+## Stochasticity
+## Collectives
+## Observation
+
+# Initialization
+# Input data
+# Submodels

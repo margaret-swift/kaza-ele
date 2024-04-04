@@ -1,0 +1,7 @@
+﻿Entity,Type,Description
+Elephant,Agent,African savanna elephant are the focus of our model.
+Grid Cell,Raster Cell,The physical landscape perceived by the agent.
+Barrier,Linear Feature,Elephant often encounter linear features on the landscape which must be treated separately from environmental grid cells.
+Waterhole,Point Feature,"Elephant drink daily, and so often rely on artificial waterholes across the landscape in Khaudum National Park."
+Time,Temporal,"Time is present on several scales in the model, but seasonality (wet/dry) is the most important for elephant movements"
+Step Parameters,Hyperparameters,"Step selection is determined by four hyperparameters (two for step length, two for turning angle), which are selected based on the time of year and agent activity state and sex."
