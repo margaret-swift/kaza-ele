@@ -11,7 +11,10 @@ source(here::here('02_scripts', 'utilities.R'))
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
 my_crs <- 4326
-write.csv(raindates, file=here(outdir, "seasontests", "raindates.csv"))
+# write.csv(raindates, file=here(outdir, "seasontests", "raindates.csv"))
+setDataPaths('geographic')
+lands.meta = read.csv(rawpath('kaza_landcover', 'landcover_metadata.csv'))
+lr <- terra::rast(rawpath('kaza_landcover', 'eoss4wwf_kaza_tfca_landcover_2020.tif'))
 
 loadData <- function(path) {
   file <- list.files(rawpath(path), pattern='.shp$', full.names=TRUE)
@@ -20,17 +23,17 @@ loadData <- function(path) {
 }
 
 # Pulling all data
-fences <- loadData('merged_fences')
-roads <- loadData('primary_trunk_rds_5countries')
-rivers <- loadData('rivers_main_kaza_dig')
-kaza <- loadData('kaza_boundary')
-khau <- loadData('khaudum_boundary')
-waters_art <- loadData('khaudum_artificial_waters')
-waters_nat <- loadData('khaudum_natural_waters')
-
-save(fences, roads, rivers,
-     kaza, khau, waters_art, waters_nat, 
-     file=procpath('geographic.rdata'))
+# fences <- loadData('merged_fences')
+# roads <- loadData('primary_trunk_rds_5countries')
+# rivers <- loadData('rivers_main_kaza_dig')
+# kaza <- loadData('kaza_boundary')
+# khau <- loadData('khaudum_boundary')
+# waters_art <- loadData('khaudum_artificial_waters')
+# waters_nat <- loadData('khaudum_natural_waters')
+# 
+# save(fences, roads, rivers,
+#      kaza, khau, waters_art, waters_nat, 
+#      file=procpath('geographic.rdata'))
 
 
 
@@ -38,29 +41,27 @@ save(fences, roads, rivers,
 #                         Arthur's fence status data
 # ******************************************************************************
 
-pacman::p_load('readxl')
-pth <- "fence_damage_mortalities"
-files <- list.files(rawpath('fence_damage_mortalities'))
-
-ZF_locs <- read_excel(rawpath(pth, "Zambezi.Notes.fencecondition.Dec2020.xlsx"), col_names=TRUE)
-WBF_locs <- read_excel(rawpath(pth, "WBF.5km.coords.xlsx"), col_names =FALSE)
-names(WBF_locs)
+# pacman::p_load('readxl')
+# pth <- "fence_damage_mortalities"
+# files <- list.files(rawpath('fence_damage_mortalities'))
+# 
+# ZF_locs <- read_excel(rawpath(pth, "Zambezi.Notes.fencecondition.Dec2020.xlsx"), col_names=TRUE)
+# WBF_locs <- read_excel(rawpath(pth, "WBF.5km.coords.xlsx"), col_names =FALSE)
+# names(WBF_locs)
 
 # 
 # 
 # ******************************************************************************
 #                        Set up raster resistance layer
 # ******************************************************************************
-setDataPaths('geographic')
-load(procpath('landcover_rasters.rdata'))
 
 # kinda the only way I could find to mosaic rasters with different extents...
 # https://stackoverflow.com/questions/67169266/error-in-mosaic-of-rasters-from-different-extent-using-terra-package-in-r
-f1 <- here('03_output', 'tmp', 'test1.tif')
-f2 <- here('03_output', 'tmp', 'test2.tif')
-r1 <- writeRaster(lands.raster.1, f1, overwrite=TRUE)
-r2 <- writeRaster(lands.raster.2, f2, overwrite=TRUE)
-lands.vrt <- terra::vrt(c(f1, f2), "03_output/tmp/test.vrt", overwrite=TRUE) 
+# f1 <- here('03_output', 'tmp', 'test1.tif')
+# f2 <- here('03_output', 'tmp', 'test2.tif')
+# r1 <- writeRaster(lands.raster.1, f1, overwrite=TRUE)
+# r2 <- writeRaster(lands.raster.2, f2, overwrite=TRUE)
+# lands.vrt <- terra::vrt(c(f1, f2), "03_output/tmp/test.vrt", overwrite=TRUE) 
 
 # define movement ease 
 # 0 = no movement
@@ -186,10 +187,15 @@ veg_class = data.frame(veg=0:4,
                                    'forest/woodland', 'herbaceous/wet'))
 lands.meta = left_join(lands.meta, veg_class, by="veg")
 
+## RECLASSIFY RASTERS FOR ACTIVITY STATES
+st_transform(khau, crs="EPSG:32734")
+bb <- terra::ext(c(400000, 600000, 7200000, 8300000))
+lr.crop <- terra::crop(lr, bb)
+plot(lr.crop)
 reclassWrite <- function(type) {
-  vrt.reclass = terra::classify(lands.vrt, lands.meta[,c('category', type)])
-  vrt.reclass.proj = terra::project(vrt.reclass, 'EPSG:32735')
-  writeRaster(vrt.reclass.proj, 
+  reclass = terra::classify(lr.crop, lands.meta[,c('category', type)])
+  reproj = terra::project(reclass, 'EPSG:32735')
+  terra::writeRaster(reproj,
               filename=procpath(paste0(type, 'Raster.tif')),
               overwrite=TRUE)
 }

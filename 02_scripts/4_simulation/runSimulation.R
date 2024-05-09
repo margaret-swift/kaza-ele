@@ -58,26 +58,24 @@ if (sex == "F") {
 }
 
 # choose start location and options
-start <- c(-134900, 7964000)
+start <- c(-131000, 7930000)
 des_options=10; options=12;
-ELE_shelterLocs <- data.frame(
-  "x" = c(-134700, -134000, -133000, 
-          -135500, -135000),
-  "y" = c(7963800, 7963600, 7963400,
-          7963800, 7964500))
+# ELE_shelterLocs <- data.frame(
+  # "x" = c(-129000), #-131000, -130000, -129000, 
+  # "y" = c(7930500)) #7920000, 7920000, 7920000, 
 
-# setting up home range area
-hr_area = 5000 %>% units::set_units('ha')
+# # setting up home range area
+hr_area = 50000 %>% units::set_units('ha')
 units(hr_area) <- 'm2' # transform units to meters2
 home_r = sqrt(as.numeric(hr_area) / pi)
 homerange <- data.frame(x=start[1], y=start[2])
 home_xy = st_as_sf(homerange, coords=c('x', 'y'), crs=32735)
 home_circ <- st_buffer(home_xy, dist=home_r)
-s <- spatSample(shelter.rast,
-                size = 40,
+shelter.crop <- terra::crop(shelter.rast, home_circ)
+s <- spatSample(shelter.crop,
+                size = 60,
                 method = "weights",
-                as.points=TRUE,
-                ext=ext(home_circ))
+                as.points=TRUE)
 ELE_shelterLocs <- geom(s)[,c('x', 'y')] %>% as.data.frame()
 ELE_shelterSize <- 5000
 
@@ -91,31 +89,31 @@ ELE_shelterSize <- 5000
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # params for plots
-b <-2000
+# b <-2000
+# start <- c(-131000, 7930000)
 
 # zoomed out
-plot(move.rast, main="zoomed out")
-plot(f, add=TRUE, col="black")
-points(start[1], start[2], pch=19, col='red')
-points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='blue')
-
-
-# zoomed in
-plot(move.rast, main="zoomed in",
-     xlim=c(start[1]-b, start[1]+b),
-     ylim=c(start[2]-b, start[2]+b))
-plot(f, add=TRUE, col="black")
-points(start[1], start[2], pch=19, col='red', lwd=5)
-points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='blue')
+# plot(move.rast, main="zoomed out")
+# plot(f, add=TRUE, col="black")
+# points(ELE_shelterLocs, add=TRUE, col='purple')
+# points(start[1], start[2], pch=19, col='red')
+# 
+# 
+# # zoomed in
+# plot(move.rast, main="zoomed in",
+#      xlim=c(start[1]-b, start[1]+b),
+#      ylim=c(start[2]-b, start[2]+b))
+# plot(f, add=TRUE, col="black")
+# points(start[1], start[2], pch=19, col='red', lwd=5)
+# points(ELE_shelterLocs$x, ELE_shelterLocs$y, pch=19, col='blue')
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #                         SIMULATE ELEPHANT MOVEMENTS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-seed = 888902
-
-timesteps <- 5000000 #24*60*31
+seed = 100007
+timesteps <- 2000 #24*60*31
 set.seed(seed)
 message('seed: ', seed)
 # roxygen2::roxygenize("~/R_Packages/abmAME")
@@ -130,7 +128,7 @@ simRes <- abmAME::abm_simulate(
   options = options,
   shelterLocations = ELE_shelterLocs,
   shelterSize = ELE_shelterSize,
-  home_range_area = hr_area,
+  home_range_area = 5000,#hr_area,
   home_range_units = "ha",
   avoidPoints = ELE_avoidLocs,
   destinationRange = ELE_destinationRange,
@@ -149,7 +147,7 @@ simRes <- abmAME::abm_simulate(
   additional_Cycles = ELE_additional_Cycles,
   landscape_data = ELE_landsdata
 )
-
+message("FINISHED SIMRES")
 
 ## SAVING PLOTS
 p <- plotPaths(simRes=simRes, barriers=f, 
@@ -159,7 +157,7 @@ message('saving plot to: ', filename)
 ggsave(filename=filename, plot=p, width=10, height=10)
 
 ## SAVING SIMULATIONS
-# filename <- here::here(outdir, "simulations", paste0("simulation_", seed, ".rdata"))
+# filename <- here::here(outdir, "simulations", paste0("simulation_NEW_", seed, ".rdata"))
 # message('saving simulation to: ', filename)
 # save(simRes, file=filename)
 # beepr::beep()

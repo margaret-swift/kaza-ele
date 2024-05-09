@@ -12,7 +12,7 @@ pacman::p_load(suncalc, zoo, lwgeom)
 
 setDataPaths('geographic')
 load(procpath('geographic.rdata'))
-load(procpath('landcover_rasters.rdata'))
+# load(procpath('landcover_rasters.rdata'))
 
 setDataPaths('precipitation')
 load(procpath('precipitation.rdata'))

@@ -391,7 +391,7 @@ plotSzn <- function(s,ys) {
   }else if (s == 6) {
     data = szn_6
   }
-  data = data %>% filter(RAINYEAR%in% ys)
+  data = data %>% filter(RAINYEAR %in% ys)
   slices <- slice.wide %>% filter(RAINYEAR %in% ys)
   prec = precip.df %>% filter(RAINYEAR%in% ys)
   p=ggplot() +
@@ -454,5 +454,41 @@ p6 <- plotSzn(6, ys) + ylab('') +
   xlim(c(start.date, end.date)) + 
   xlab("")
 
-p2 / p4 / p6 / p1 
+p2 / p1 
+
+start.date <- as.Date("2016-09-01")
+end.date <- as.Date("2019-05-31")
+col <- '#02d9b8'
+p.step <- pdata %>% 
+  filter(DATE.TIME > start.date,
+         DATE.TIME < end.date) %>%
+  mutate(DATE = date(DATE.TIME)) %>% 
+  group_by(DATE, SZN_2) %>% 
+  summarize(step=mean(step, na.rm=TRUE)) %>% 
+  filter(step < 1500) %>% 
+  ggplot() + 
+    geom_bar(mapping=aes(x=DATE, y=step, fill=SZN_2),
+             position="stack", stat="identity") + 
+    ylab('mean step \nsize (m)') + xlab(element_blank()) + 
+    guides(fill="none") + theme(text=element_text(size=18))+
+    scale_x_date(date_breaks="year", date_labels='%Y', 
+                 limits=c(start.date, end.date)) + 
+    scale_fill_manual(values=c('gray', col)) + 
+  scale_y_reverse()
+
+#rainfall plot simple
+p.rain = precip.df %>% 
+  filter(RAINYEAR%in% ys) %>% 
+  ggplot() +
+    geom_bar( data=prec,
+              mapping=aes(x=DATE, y=MM_RAIN_C10),
+              stat="identity", fill=col) +
+    ylab('10-day mean \nrainfall (mm)') +
+    xlim(c(start.date, end.date)) +
+    theme(text=element_text(size=18),
+          axis.text.x = element_blank(),
+          axis.ticks.x=element_blank(),
+          axis.title.x = element_blank()) + 
+    scale_x_date(limits=c(start.date, end.date))
+p.rain/p.step
 

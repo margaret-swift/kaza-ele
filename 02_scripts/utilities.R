@@ -8,7 +8,7 @@ message("\nLoading all utility functions and parameters from utilities.R\n")
 
 message('Loading base packages for all projects...')
 pacman::p_load(tidyverse, patchwork, 
-               sf, lubridate,rgdal,
+               sf, lubridate,#rgdal,
                tictoc, here)
 sf_use_s2(FALSE) #fix errors for spherical geometry
 message('   ...Packages loaded.')
@@ -17,7 +17,7 @@ message("Setting base objects...")
 datadir <- here("01_data")
 scriptdir <- here("02_scripts")
 outdir <- here("03_output")
-crs <- CRS("+proj=longlat +zone=34S +datum=WGS84")
+# crs <- CRS("+proj=longlat +zone=34S +datum=WGS84")
 message("   ...Base objects loaded.")
 
 # Plot Params
@@ -179,8 +179,8 @@ plotBase <- function(path, activity=NULL, seed=1001, b=5000) {
     rast.sub <- terra::crop(rast, ext)
     
     # turn into data frame and plot
-    rast.df = terra::as.data.frame(rast.sub, xy=TRUE) %>% 
-      rename(value=test)
+    rast.df = terra::as.data.frame(rast.sub, xy=TRUE)
+    names(rast.df) <- c('x', 'y', 'value')
     title = paste0(toupper(activity), ", seed = ", seed)
     base <- ggplot() +
       geom_raster(data = rast.df,
@@ -219,10 +219,10 @@ plotPaths <- function(simRes, barriers, perm=NULL, seed=1001, b=5000, ping="1 ho
   
   # get home range data
   inputs <- simRes$inputs
-  homerange <- data.frame(x=inputs$in_home_x,
-                          y=inputs$in_home_y)
-  home_xy = st_as_sf(homerange, coords=c('x', 'y'), crs=32735)
-  home_circ <- st_buffer(home_xy, dist=inputs$in_home_r)
+  # homerange <- data.frame(x=inputs$in_home_x,
+  #                         y=inputs$in_home_y)
+  # home_xy = st_as_sf(homerange, coords=c('x', 'y'), crs=32735)
+  # home_circ <- st_buffer(home_xy, dist=inputs$in_home_r)
   
   
   # Set up barrier data, adding permeability if applicable
@@ -235,9 +235,9 @@ plotPaths <- function(simRes, barriers, perm=NULL, seed=1001, b=5000, ping="1 ho
   
   ###### PLOTTING! ######
   # STEP 1: plot barriers, homerange, and starting point on raster
-  pb <- plotBase(path, activity, seed=seed, b=b) + 
+  pb <- plotBase(path, activity, seed=seed, b=b)
     # geom_point(data=path[1,], mapping=aes(x=x, y=y), color="red", alpha=0.3, size=10) +
-    geom_sf(data=home_circ, alpha=0.2, color='gray', linewidth=2)
+    # geom_sf(data=home_circ, alpha=0.2, color='gray', linewidth=2)
   if (!is.null(perm)) {
     p1 <- pb +
       geom_sf(data=b.df, linewidth=2, mapping=aes(alpha=perm)) + 
@@ -250,12 +250,12 @@ plotPaths <- function(simRes, barriers, perm=NULL, seed=1001, b=5000, ping="1 ho
     p2 <- p1 + geom_path(data=path, mapping=aes(x=x, y=y), color='black', linewidth=1)
   } else if (colorby == "inx") {
     p2 <- p1 + 
-      geom_path(data=path, mapping=aes(x=x, y=y, color=INX), linewidth=1, alpha=0.5) +
+      geom_path(data=path, mapping=aes(x=x, y=y, color=INX), linewidth=1, alpha=0.75) +
       scale_color_distiller(palette='Spectral', direction=1)
   } else if (colorby == "activity") {
     path$behave <- factor(path$behave)
     p2 <- p1 + 
-      geom_path(data=path, mapping=aes(x=x, y=y, color=behave), linewidth=1, alpha=0.5) +
+      geom_path(data=path, mapping=aes(x=x, y=y, color=behave), linewidth=1, alpha=0.75) +
       scale_color_brewer(palette='Dark2', direction=1)
   }
   
@@ -267,9 +267,9 @@ plotPaths <- function(simRes, barriers, perm=NULL, seed=1001, b=5000, ping="1 ho
     rename(x=destination_x, y=destination_y)
   p3 <- p2 + 
     geom_point(data=path[1,], aes(x=x, y=y), color='black', size=5) +
-    geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3) +
+    geom_point(data=path[1,], aes(x=x, y=y), color='white', size=3)
     # geom_point(data=dests, aes(x=x, y=y), color="black", size=0.5, shape=15) +
-    geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
+    # geom_point(data=ELE_shelterLocs, aes(x=x, y=y), color="purple", size=4)
   p3
 }
 

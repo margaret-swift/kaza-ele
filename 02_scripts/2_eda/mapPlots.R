@@ -9,8 +9,6 @@
 # tell R where you are & load utilities
 here::i_am('02_scripts/2_eda/mapPlots.R')
 # source(here::here('02_scripts','utilities.R')) #this is for other custom funcs
-
-
 st_write(ele.df, dsn=rawpath('elephants.shp'))
 
 
@@ -76,14 +74,29 @@ bots <- africa %>% filter(name_long=="Botswana")
 #                                    PLOTTING
 # ******************************************************************************
 
-## ROADS AND FENCES IN REGION
+## ROADS
 ggplot() +
-  geom_sf(data=fences,color='black', linewidth=1) +
   geom_sf(data=roads, color='black', linewidth=2) +
   geom_sf(data=roads, color='white', linewidth=1) +
   transparentBg() +
   zoomTo(kaza, buffer=1)
-ggsave(filename=file.path(outdir, 'linear_features.png'),
+ggsave(filename=file.path(outdir, 'roads.png'),
+       width=10, height=10, bg='transparent')
+
+## RIVERS
+ggplot() +
+  geom_sf(data=rivers,color='blue', linewidth=1) +
+  transparentBg() +
+  zoomTo(kaza, buffer=1)
+ggsave(filename=file.path(outdir, 'rivers.png'),
+       width=10, height=10, bg='transparent')
+
+## FENCES
+ggplot() +
+  geom_sf(data=fences,color='black', linewidth=1) +
+  transparentBg() +
+  zoomTo(kaza, buffer=1)
+ggsave(filename=file.path(outdir, 'fences.png'),
        width=10, height=10, bg='transparent')
 
 ## ROADS AND FENCES ON TOP OF KAZA MAP

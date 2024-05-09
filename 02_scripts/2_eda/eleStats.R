@@ -17,7 +17,7 @@
 
 here::i_am('02_scripts/2_eda/eleStats.R')
 source(here::here('02_scripts','utilities.R'))
-pacman::p_load(sp, adehabitatHR, reshape2)
+pacman::p_load(sp, adehabitatHR, reshape2, lmer)
 setDataPaths('elephant')
 load(procpath('ele.rdata'))
 load(procpath('eleKhau.rdata'))
@@ -139,129 +139,6 @@ ref.table %>%
   group_by(SEX, SEASON) %>% 
   summarize(AREA_M = mean(area, na.rm=TRUE),
             AREA_SD = sd(area, na.rm=TRUE))
-
-
-# ******************************************************************************
-#                                Covariate modeling
-# ******************************************************************************
-
-
-stats <- nog(ele.khau) %>% group_by(STATE, SZN_4) %>% 
-  summarize(evi=median(EVI, na.rm=TRUE),
-            evi_sd = sd(EVI, na.rm=TRUE),
-            water=mean(waterDist, na.rm=TRUE),
-            water_sd = sd(waterDist, na.rm=TRUE)
-  )
-
-ggplot( ele.khau ) + 
-  geom_histogram(aes(x=RIV_DIST_MIN, fill=STATE), color='gray') + 
-  facet_wrap(~SZN_4+STATE, ncol=3, scales="free_y" ) + 
-  plot.theme + scale_fill_brewer(palette="Dark2")
-
-
-boxMe <- function(var, df, varname=var) {
-  df$YVAR <- df[,var]
-  p=ggplot(df) + 
-    geom_boxplot(aes(x=SZN_4, y=YVAR, fill=SZN_4), color='black') + 
-    plot.theme + 
-    # scale_fill_manual(values=c('#D5A684', '#9CADFF')) +
-    # scale_fill_brewer(palette="Dark2") + 
-    facet_wrap(~STATE) +
-    ylab(varname)
-  return(p)
-}
-
-boxMe("EVI", ele.khau)
-p1 <- boxMe('waterDist', ele.khau %>% filter(STATE != "correlated walk"),
-            'distance from \nnatural water (m)') + 
-  theme(axis.text.x=element_blank(),
-        axis.title.x=element_blank())
-p2 <- boxMe('RIV_DIST_MIN', ele.khau %>% filter(STATE != "correlated walk"),
-            'distance from \nrivers (m)')
-p1 / p2 + plot_layout(guides="collect")
-
-
-scatterMe <- function(var, df, varname=var) {
-  df$YVAR <- df[,var]
-  year(df$DATE) <- 2010 
-  s <- df %>% 
-    filter(!is.na(SZN_6)) %>% 
-    group_by(DATE) %>% 
-    summarize(dist = mean(YVAR), sd=sd(YVAR))
-  p=ggplot(s) + 
-    geom_point(aes(x=DATE, y=dist), color='black', size=2) + 
-    geom_segment(aes(x=DATE, xend=DATE,
-                     y=dist-sd, yend=dist+sd), color='gray') +
-    scale_x_date(date_breaks="1 month", date_labels="%m") +
-    ylab(varname) + xlab('date (months)') +
-    plot.theme
-  p
-}
-
-scatterMe("EVI", ele.khau)
-p1 <-scatterMe('waterDist', ele.khau,'distance from natural water (m)') 
-p2 <-scatterMe('RIV_DIST_MIN', ele.khau,'distance from rivers (m)')
-p1 / p2 + plot_layout(guides="collect")
-
-sdMe <- function(var, df, varname=var) {
-  df$YVAR <- df[,var]
-  year(df$DATE) <- 2010 
-  s <- df %>% 
-    filter(!is.na(SZN_6)) %>% 
-    group_by(DATE) %>% 
-    summarize(dist = mean(YVAR), sd=sd(YVAR))
-  p=ggplot(s) + 
-    geom_line(aes(x=DATE, y=sd), color='black', linewidth=1) + 
-    scale_x_date(date_breaks="1 month", date_labels="%m") +
-    ylab(varname) + xlab('date (months)') +
-    plot.theme
-  p
-}
-
-p0 <- sdMe('DIST', ele.khau, 's.d. in step size')
-p1 <-sdMe('waterDist', ele.khau,'s.d. in dist from \nnatural water (m)') 
-p2 <-sdMe('RIV_DIST_MIN', ele.khau,'s.d. in dist from \nrivers (m)')
-p0 / p1 / p2 + plot_layout(guides="collect")
-
-# running models
-mySummary <- function(mod) {
-  summary(mod)
-}
-modMe <- function(var, df) {
-  df$YVAR <- df[,var]
-  d = psych::cohen.d(YVAR~SEASON*STATE, data=df)
-  
-  modEach <- function(type="all") {
-    message("SUMMARY FOR ", toupper(type))
-    if (type != "all") {
-      data = df %>% filter(STATE==type)
-      mod <- lme(YVAR~SEASON, random=~1|ID, data=data)
-      c <- round(mod$coefficients$fixed[['SEASONWET']], 2)
-      message('coefficient: ', c)
-    } else {
-      data = df
-      mod <- lme(YVAR~SEASON*STATE, random=~1|ID, data=data)
-      print(mod$coefficients$fixed)
-    }
-    print( anova(mod) )
-  }
-  
-  modEach()
-  modEach("correlated walk")
-  print(d[[1]]$cohen.d)
-  modEach("foraging")
-  print(d[[2]]$cohen.d)
-  modEach("resting")
-  print(d[[3]]$cohen.d)
-}
-
-modMe("waterDist", ele.khau)
-modMe("RIV_DIST_MIN", ele.khau)
-modMe("EVI", ele.khau)
-
-
-## Habitat choice model
-mod <- lme(YVAR~SEASON*STATE, random=~1|ID, data=data)
 
 
 # ******************************************************************************
