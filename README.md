@@ -27,7 +27,7 @@ ODD Documentation: https://rpubs.com/margaret-swift/odd-kaza-ele
 # Project steps
 ## 1.	Gather data
   - [x] **Data for Namibian elephants** Provided by **Robin Naidoo**
-  - [ ] **Data for Botswanan elephants** Provided by **Anna Songhurst** via MOU between Cornell and Ecoexist Trust (1/31/24); **Robin Naidoo** to provide cleaned data files after he returns from his southern Africa trip.
+  - [ ] **Data for Botswanan elephants** Provided by **Anna Songhurst** via MOU between Cornell and Ecoexist Trust (1/31/24); **Robin Naidoo** to provide cleaned data files.
   - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
