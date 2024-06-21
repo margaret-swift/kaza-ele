@@ -25,6 +25,7 @@ message("Setting plot params...")
 plot.theme <- theme( text = element_text(size=18), 
                      title = element_text(size=20),
                      axis.text.x = element_text(angle=45, vjust=0.5))
+big.theme = theme(text=element_text(size=16), title = element_text(size=20))
 blank.theme <- theme(axis.title.x=element_blank(),
                      axis.text.x=element_blank(),
                      axis.ticks.x=element_blank(),

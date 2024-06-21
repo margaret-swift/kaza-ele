@@ -53,13 +53,36 @@ tolag <- c("DIST", "DX", "DY", "DT", "DTS", "DTM", "R2N",
 # ele[ele$START.COUNT,tolag] <- NA
 ele$MPS <- ele$DIST / ele$DTS
 
-# Set fixrates
-r1 <- 3000:4000
-r5 <- 16000:20000
-ele$FIXRATE <- NA
-ele$FIXRATE[ele$DTS %in% r5] <- "5 hours"
-ele$FIXRATE[ele$DTS %in% r1] <- "1 hour"
-ele$FIXRATE[ele$START.COUNT] <- ele$FIXRATE[which(ele$START.COUNT)+1]
+# set fixrate for collars manually -- I can't figure a way to do this nicely
+fillHours <- function(ids, before, fill="5 hours") {
+  before <- as.POSIXlt(before)
+  inx <- ele.df %>% nog() %>% filter(ID %in% ids, DATE.TIME < before)
+  ele.df$FIXRATE[ele.df$INX %in% inx$INX] <<- fill
+}
+
+# i=i+1
+# df <- nog(ele) %>% filter(ID == i) %>% 
+#   dplyr::select(INX, ID, BURST, DATE.TIME, DTM) %>% 
+#   mutate(DATE.TIME = as.POSIXct(DATE.TIME))
+# ggplot(df %>% filter(DTM < 500)) +
+#   geom_bar(aes(x=INX, y=DTM), stat='identity') + 
+#   ggtitle(i)
+# View(df)
+
+ele$FIXRATE = "1 hour"
+fillHours(1:4,  '2015-08-13 13:00:00', '5 hours')
+fillHours(5:6,  '2016-09-09 07:00:00', '5 hours')
+fillHours(7:12, '2016-03-22 08:00:00', '5 hours')
+fillHours(13:17,'2017-10-11 17:00:00', '5 hours')
+fillHours(c(18:19, 22), '2024-01-101 00:00:00', '4 hours')
+fillHours(38:43, "2013-11-01 11:00:00", "4 hours")
+
+# TODO: set some rows to THROW AWAY when running 1hour analyses (data is too frequent)
+ele.df$THROW <- NA
+# ID 20 has many of these
+# ID 18 and 22 have many of these (4 hours)
+
+
 
 # set SEASON based on first rainfall from precipitation.rdata
 ele$ISWET <- TRUE
@@ -127,8 +150,7 @@ ele.df <- ele
 #                                     CLEANUP BY STATS
 # ******************************************************************************
 
-# some data needs to be ignored (collar obviously fell off or 
-# the elephant died). Use plots above.
+# some data needs to be ignored (collar obviously fell off or died). Use plots above.
 findRM <- function(i, start, end=NULL) {
   data <- ele.df %>% filter(ID == i)
   if (is.null(end)) end = data$INX[nrow(data)]

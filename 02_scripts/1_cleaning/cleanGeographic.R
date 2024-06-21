@@ -28,11 +28,12 @@ loadData <- function(path) {
 # rivers <- loadData('rivers_main_kaza_dig')
 # kaza <- loadData('kaza_boundary')
 # khau <- loadData('khaudum_boundary')
+# khau_tall <- loadData('khau_tall_aoi')
 # waters_art <- loadData('khaudum_artificial_waters')
 # waters_nat <- loadData('khaudum_natural_waters')
-# 
+
 # save(fences, roads, rivers,
-#      kaza, khau, waters_art, waters_nat, 
+#      kaza, khau, khau_tall, waters_art, waters_nat,
 #      file=procpath('geographic.rdata'))
 
 

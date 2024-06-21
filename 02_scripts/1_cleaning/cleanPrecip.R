@@ -57,10 +57,14 @@ precip.df$MM_RAIN_C <- ave(precip.df$MM_RAIN,
 wt = 5
 wet.end <- precip.df %>% 
   group_by(RAINYEAR) %>% 
-  filter(MM_RAIN_C >= wt) %>% 
+  filter(MM_RAIN_C <= wt) %>% 
   summarize(RAINDOY = first(RAINDOY)) %>% 
-  left_join(precip.df, by=c("RAINYEAR", "RAINDOY"))
-
+  left_join(precip.df, by=c("RAINYEAR", "RAINDOY")) %>% 
+  mutate(RAINYEAR=as.n( as.c( RAINYEAR ) )-1, 
+         RAINDOY = RAINDOY + 300)
+NY = nrow(wet.end)
+wet.end <- rbind(wet.end[2:NY,], wet.end[NY,])
+wet.end$RAINYEAR[NY] = 2023
 
 # ******************************************************************************
 #                             plotting
@@ -72,6 +76,8 @@ ggplot(mapping=aes(group=RAINYEAR, color=RAINYEAR)) +
             mapping=aes(x=RAINDOY, y=MM_RAIN),
             stat="identity") + 
   geom_vline(data=wet.start, aes(xintercept=RAINDOY)) + 
+  geom_vline(data=wet.end,
+             aes(xintercept=RAINDOY)) + 
   plot.theme + 
   facet_wrap(~RAINYEAR) + 
   xlab('days since start of dry season') + 
@@ -91,6 +97,6 @@ ggplot(mapping=aes(group=RAINYEAR, color=RAINYEAR)) +
   ylab('cumulative rainfall (mm)') 
 
 save(wet.start, precip.df,
-     file=here(procpath, 'precipitation.rdata'))
+     file=procpath('precipitation.rdata'))
 
 
