@@ -11,7 +11,7 @@ ODD Documentation: https://rpubs.com/margaret-swift/odd-kaza-ele
 
 | Step | Progress |
 | -----| -------- |
-| [Gather Data](#1gather-data)| 80% |
+| [Gather Data](#1gather-data)| 90% |
 | [Exploratory data analysis](#2-exploratory-data-analysis) | 100% |
 | [Simulate basic movements](#3simulating-basic-movements) | 100% |
 | [Model landscape use](#4modeling-landscape-use) | 20% |
@@ -27,7 +27,7 @@ ODD Documentation: https://rpubs.com/margaret-swift/odd-kaza-ele
 # Project steps
 ## 1.	Gather data
   - [x] **Data for Namibian elephants** Provided by **Robin Naidoo**
-  - [ ] **Data for Botswanan elephants** Provided by **Anna Songhurst** via MOU between Cornell and Ecoexist Trust (1/31/24); **Robin Naidoo** to provide cleaned data files after he returns from his southern Africa trip.
+  - [ ] **Data for Botswanan elephants** Provided by **Anna Songhurst** via MOU between Cornell and Ecoexist Trust (1/31/24); **Robin Naidoo** to provide cleaned data files.
   - [x] **Landscape-level spatial data** have been collected and are provided [below](#spatial-data).
         
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
@@ -67,7 +67,7 @@ _[^Top^](#kaza-elephant-behavior-modeling-project)_
 _[^Top^](#kaza-elephant-behavior-modeling-project)_
 
 ## 5. Validation
-  - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
+  - [ ] **Define metrics**: Define and link specific quantitative metrics (see [Butts et al 2022](https://www.sciencedirect.com/science/article/pii/S0304380022001132) and [Fieberg et al 2017](https://nsojournals.onlinelibrary.wiley.com/doi/10.1111/ecog.03123)) to the qualitative patterns we think are necessary to replicate (table below), using EDA to explicitly define these characteristics. Here we might also define different movement or activity states, depending on the modeling method. It might also be a good idea to run a Barrier Behavior Analysis (BaBA, Xu et al 2021) on the elephant data we choose to use, so we can then run the same analysis on the simulated data & see if the encounter behavior is similar.
   - [ ] **Model selection**: Calculate metrics from step 1 and compare models. Which ones accurately replicate the critical spatial patterns? Is any homebrewing necessary?
   - [ ] **Model improvement**: Temporal and individual elements should then be added to the model to better reflect the seasonality of water supply, vegetation, temperature, and elephant movements. In addition, individual elephants likely would remember waterholes and fence gaps in particular; they shouldn’t be treated like a random molecule. In addition, bulls are known to create fence gaps; should agents be able to modify their landscape in this capacity?
 
