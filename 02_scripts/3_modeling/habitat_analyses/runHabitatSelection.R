@@ -2,18 +2,21 @@
 # Created 13 Feb 2024
 # Margaret Swift <margaret.swift@cornell.edu>
 
+# This file runs through conditional habitat selection model selection to find the
+#   most parsimonious resource selection function for elephant habitat use.
+# 
 # amt vignette: 
 #   https://cran.r-project.org/web/packages/amt/vignettes/p4_SSF.html
-# interpreting SSF results: 
+# A ‘How to’ guide for interpreting parameters in habitat-selection analyses (Fieberg et al 2021): 
 #   https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/1365-2656.13441
-
-
-
-
-## NOTES
-## -- State foraging, exploring, resting values = baseline use vs. available, 
-##    I think this just has to do with the prevalance of those states in the 
-##    dataset. 
+# appendix a - hsf examples (from Fieberg et al 2021):
+#   In this appendix, we will walk the user through the process of fitting and 
+#   interpreting habitat-selection functions.
+#   https://conservancy.umn.edu/server/api/core/bitstreams/db16ca0b-ff6a-4710-8a09-2f1aa32d82cd/content
+# appendix b - ssf examples (from Fieberg et al 2021):
+#   In this appendix, we will walk the user through the process of fitting and 
+#   interpreting parameters and output when conducting an iSSF.
+#   https://conservancy.umn.edu/server/api/core/bitstreams/63727072-87b1-4b35-b81c-8fd31b8f1e57/content
 
 # ******************************************************************************
 #                             DATA & LIBRARY LOADING
@@ -21,29 +24,80 @@
 
 here::i_am('02_scripts/3_modeling/habitat_analyses/runHabitatSelection.R')
 source(here::here('02_scripts','utilities.R'))
-pacman::p_load(survival)
-setDataPaths('geographic')
-load(procpath('geographic.rdata'))
-load(procpath('stepSelectionParamsHSF.rdata'))
+library(tidyverse)
+library(survival) # conditional logistic modeling with clogit()
+quickload() #loads common spatial features
 
-# join landscape metadata class names to ssf data frame
-lands.meta <- read.csv(rawpath('kaza_landcover', 'landcover_metadata.csv')) %>% 
-  mutate(category = as.factor(category))
-lands.meta$newcat <- c('bare', 'bare', 'built',
-                       'closed', 'closed', 'closed', 'closed',
-                       'cropland', 'open bush', 'open herb', 
-                       'open wetland', 'open wetland', 
-                       'open bush', 
-                       'sparse bush', 'sparse bush', 'sparse bush', 
-                       'water', 'water'
-                       )
+# load step selection dat
+setOutPath('habitat_selection')
+load(outpath('stepSelectionParamsHSF_DF.rdata'))
 
+# landcover metadata
+setDataPaths('landcover')
+lands.meta <- read.csv(metapath('landcover_meta_2005.csv'))
+
+## HSF selection
+data <-
+rm(ssf.df)
+
+# ******************************************************************************
+#                             BRIEF EDA - space use
+# ******************************************************************************
 data <- ssf %>% 
-  left_join(lands.meta[,c('category', 'class', 'newcat')], by="category")
-  # mutate(id = as.factor(id)) 
-  
+  filter(!is.na(evi), !is.na(structure)) %>% 
+  mutate(tod=factor(TOD),
+         newstruc = fct_collapse(structure,
+             other = c('cropland', 'wetland', 'closed bush')))
+plotByFactor <- function(fac, dat) {
+  dat$CATEGORY <- dat[,fac]
+  ntot <- dat %>%
+    group_by(case_, CATEGORY) %>%
+    dplyr::summarize(tot=n())
+  use_vs_avail <- dat %>%
+    group_by(case_, CATEGORY, newstruc) %>%
+    dplyr::summarize(n=n()) %>%
+    left_join(ntot, by=c('case_', 'CATEGORY')) %>%
+    mutate(prop = n / tot,
+           label = paste0(round(prop * 100, 1), "%"))
 
+  use_vs_avail %>%
+    ggplot(aes(x=CATEGORY, y=prop, label=label,
+               fill = case_, group = case_)) +
+    geom_col(position = position_dodge2()) +
+    facet_wrap(~newstruc, nrow=2)+
+    geom_text(size = 4, vjust = -0.25, position = position_dodge(width = 1)) +
+    labs(x = fac, y = "Proportion")+
+    scale_fill_brewer(palette = "Paired",
+                      breaks=c("FALSE", "TRUE"),
+                      labels=c("Available", "Used")) +
+    theme_light() +
+    guides(fill='none') +
+    # coord_flip()+
+    big.theme
+}
 
+plotByFactor('season', data)
+plotByFactor('tod', data)
+
+ntot <- data %>%
+  group_by(case_) %>%
+  dplyr::summarize(tot=n())
+data %>%
+  group_by(case_, structure) %>%
+  dplyr::summarize(n=n()) %>%
+  left_join(ntot, by=c('case_')) %>%
+  mutate(prop = n / tot,
+         label = paste0(round(prop * 100, 1), "%")) %>% 
+  ggplot(aes(x=structure, y=prop, label=label,
+             fill = case_, group = case_)) +
+  geom_col(position = position_dodge2()) +
+  geom_text(size = 4, vjust = -0.25, position = position_dodge(width = 1)) +
+  labs(x = 'veg structure', y = "Proportion")+
+  scale_fill_manual(values=c('darkgray', 'black'),
+                    breaks=c("FALSE", "TRUE"),
+                    labels=c("Available", "Used")) +
+  theme_light() +
+  big.theme
 
 # ******************************************************************************
 #                             RUN CONDITIONAL HSF GLM
@@ -53,13 +107,61 @@ data <- ssf %>%
 # is the step actually taken and case 0 is steps not taken. 
 
 # CONDITIONAL HSF
-hsfFunc <- function(f, data, type) {
-  data$type <- data[,type][[1]]
-  clogit(f, 
-         data=data, 
-         weights=w, 
-         method="approximate")
+hsfFunc <- function(f) {
+  f <- paste0("case_ ~ ", f, " + strata(inx)")
+  message('model == ', f)
+  f <- formula(f)
+  fit <- clogit(f,
+         data=data,
+         weights=w,
+         method="approximate",
+         model=TRUE)
+  fit <- cleanUpModel(fit)
+  gc()
+  fit
 }
+
+names(data) <- tolower(names(data))
+# regular SSF
+m1 <- hsfFunc('evi')
+gc()
+m2 <- hsfFunc('evi*season')
+gc()
+m3 <- hsfFunc('evi*season + structure')
+gc()
+m4 <- hsfFunc('evi*tod + evi*season + structure')
+gc()
+m5 <- hsfFunc('evi*season + season*structure')
+gc()
+mlist.ssf <- list(m1, m2, m3, m4, m5)
+
+# # integrated SSF (using ta and sl)
+# m5 <- hsfFunc('evi + structure + sl_ + log_sl + cos_ta')
+# gc()
+# m6 <- hsfFunc('evi + tod*structure + sl_ + log_sl*structure + cos_ta*structure')
+# gc()
+# mlist.issf <- list(m5, m6)
+
+# ******************************************************************************
+#                            COMPARE MODELS WITH AIC
+# ******************************************************************************
+
+# GET AIC AND ARRANGE NICELY
+compareModels <- function(mlist) {
+  calls <- sapply(mlist, function(e) as.character(e$formula[3]))
+  df <- data.frame(model=paste(calls, sep=" : "),
+                   AIC=sapply(mlist,  AIC), 
+                   LRT=sapply(mlist,  function(e) summary(e)$logtest['test']),
+                   LRTp=sapply(mlist, function(e) summary(e)$logtest['pvalue']),
+                   rsq= sapply(mlist, function(e) summary(e)$rsq[[1]]))
+  df <- arrange(df, AIC)
+  df$dAIC <- round(df$AIC - min(df$AIC))
+  df
+}
+aic.df <- compareModels(mlist.ssf)
+print(aic.df)
+
+## comparing coefficients for different models
 # GETTING MODEL COEFFICIENTS
 getCoefs <- function(hsf) {
   tab <- summary(hsf)$coefficients
@@ -74,192 +176,17 @@ getCoefs <- function(hsf) {
   df <- data.frame(value=vals, se=se, sig=star)
   df
 }
-# MODEL SELECTION
-modelSelection <- function(d, type) {
-  f0 <- formula(case_ ~ evi + water_dist + was_burned + strata(inx))
-  f1 <- formula(case_ ~ evi*state + water_dist*season + strata(inx))
-  f2 <- formula(case_ ~ evi*state + was_burned + water_dist+ strata(inx))
-  f3 <- formula(case_ ~ evi*state + water_dist + was_burned + type + strata(inx))
-  hsf_ls <- list( hsfFunc(f0, d, type),
-                  hsfFunc(f1, d, type),
-                  hsfFunc(f2, d, type),
-                  hsfFunc(f3, d, type))
-  return(hsf_ls)
-}
-
-## HSF selection
-hsf.cov <- modelSelection(data, 'newcat')
-# hsf.veg <- modelSelection(data, 'veg_class')
-hsf.class<-modelSelection(data, 'class')
-
-# GET AIC AND ARRANGE NICELY
-compareModels <- function(mlist, name) {
-  calls <- sapply(mlist, function(e) as.character(e$formula[3]))
-  df <- data.frame(model=paste(name, calls, sep=" : "),
-                   AIC=sapply(mlist, AIC), 
-                   LRT=sapply(mlist, function(e) summary(e)$logtest['test']),
-                   LRTp=sapply(mlist, function(e) summary(e)$logtest['pvalue']),
-                   rsq= sapply(mlist, function(e) summary(e)$rsq[[1]]))
-  return(df)
-}
-# LISTING AIC
-aic.df <- rbind(compareModels(hsf.cov, "cover_class"), 
-                compareModels(hsf.class, "class")) %>% 
-  arrange(AIC)
-aic.ref <- aic.df$AIC[1]
-aic.df$dAIC <- round(aic.df$AIC - aic.ref)
-aic.df
-
-## comparing coefficients for different models
-for (i in 1:length(hsf.cov)) {
-  spacer<-"\n============\n"
-  message(spacer, i, spacer)
-  x1 <- hsf.cov[[i]]
-  c1 <- getCoefs(x1)
-  daic1 <- round(AIC(x1)-aic.ref)
-  x2 <- hsf.class[[i]]
-  c2 <- getCoefs(x2)
-  daic2 <- round(AIC(x2)-aic.ref)
-  if (nrow(c1) != nrow(c2)) {
-    message('cover type - dAIC = ', daic1)
-    print(c1)
-    message('\nfull landcover class - dAIC = ', daic2)
-  } else { message('dAIC = ', daic1)}
-  print(c2)
-}
-
-
-
-
-# ******************************************************************************
-#                     RUN MODELS SEPARATELY FOR EACH STATE
-# ******************************************************************************
-
-# answers for the error "loglik converged before variable N"
-# https://stat.ethz.ch/pipermail/r-help/2008-September/174201.html
-
-hsfSznState <- function(f, d, st, type='newcat') {
-  szns <- c('dry', 'wet')
-  mylist <- list('dry'=NULL, 'wet'=NULL)
-  d_st <- d[d$state == st,]
-  
-  for (szn in szns) {
-    # run dry data
-    d_sz <- d_st[d_st$season == szn,]
-    NR <- nrow(d_sz)
-    run <- paste(szn, st)
-    mod <- NULL
-    message('modeling ', run)
-    message("  # rows = ", NR)
-    if (NR > 10000) {
-      mod =  hsfFunc(f, data=d_sz, type=type)
-      mylist[[szn]] <- mod
-    } else { message('WARNING: not enough data to run ', run) }
-  }
-  return(mylist)
-}
-collateMe <- function(mod, st, szn) {
-  ncol <- 3
-  if (!is.null(mod)) {
-    types <- paste0('newcat', unique(data$newcat))
-    df <- getCoefs(mod)
-    inx.add <- which(!(types %in% rownames(df)))
-    df[types[inx.add],] <- rep(NA, ncol)
-    df <- df[order(rownames(df)),]
-    df <- rownames_to_column(df)
-  } else { df = data.frame(matrix(NA, nrow=10, ncol=ncol))}
-  names(df) <- c('covar', 'value', 'se', 'signf')
-  df <- cbind(state=st, season=szn, df)
-  df
-}
-
-# set formula and list to hold results
-f <- formula(case_ ~ evi + water_dist + newcat + strata(inx))
-ids <- 1:4 #unique(data$id)
-NL <- length(ids)
-summ.mega.ls <- vector(mode='list', length=NL)
-names(summ.mega.ls) <- ids
-
-# run model for all together
-d <- data[id %in% ids,]
-hsf.r <- hsfSznState(f, data, st='resting')
-hsf.f <- hsfSznState(f, data, st='foraging')
-hsf.e <- hsfSznState(f, data, st='exploring')
-
-
-summ.all <- rbind(collateMe(hsf.r$dry, 'rest', 'dry'), 
-                 collateMe(hsf.f$dry, 'forage', 'dry'), 
-                 collateMe(hsf.e$dry, 'explore', 'dry'), 
-                 collateMe(hsf.r$wet, 'rest', 'wet'), 
-                 collateMe(hsf.f$wet, 'forage', 'wet'), 
-                 collateMe(hsf.e$wet, 'explore', 'wet'))
-
-# loop over ids and run model for each state and season.
-for (i in 1:NL) {
-  id = ids[i];
-  d_i <- data[data$id == id,]
-  message('RUNNING MODELS FOR ID: ', id)
-  hsf.r <- hsfSznState(f, d_i, st='resting')
-  hsf.f <- hsfSznState(f, d_i, st='foraging')
-  hsf.e <- hsfSznState(f, d_i, st='exploring')
-  
-  summ.ls <- rbind(collateMe(hsf.r$dry, 'rest', 'dry'), 
-                  collateMe(hsf.f$dry, 'forage', 'dry'), 
-                  collateMe(hsf.e$dry, 'explore', 'dry'), 
-                  collateMe(hsf.r$wet, 'rest', 'wet'), 
-                  collateMe(hsf.f$wet, 'forage', 'wet'), 
-                  collateMe(hsf.e$wet, 'explore', 'wet'))
-  summ.mega.ls[[i]] <- summ.ls
-}
-
-# plot cover usage
-plotCover <- function(dat) {
-  dat$min <- dat$value - dat$se
-  dat$max <- dat$value + dat$se
-  dat <- dat[grepl('newcat', dat$covar),] %>% 
-    mutate(covar = gsub('newcat', '', covar)) %>% 
-    filter(max < 5)
-  ggplot(dat, aes(color=season, group=season, x=covar)) + 
-    geom_linerange(aes(ymin=min, ymax=max),
-                   linewidth=2, alpha=0.4,
-                   position = position_dodge2(width = 0.5)) +
-    geom_point(aes(y=value), size=4, 
-               position = position_dodge2(width = 0.5))+
-    geom_hline(yintercept=1.0, linetype='dashed', 
-               color='darkgray') + 
-    facet_wrap(~state, scales='free_y') + 
-    scale_color_brewer(palette="Dark2", direction=-1)
-}
-
-# for total model
-plotCover(summ.all)
-
-
-i=1
-id <- ids[i]
-s_i <- summ.mega.ls[[id]]
-plotCover(s_i)
-
-
-
-
-plotEstimates <- function(hsf, name) {
-  
-}
 
 # ******************************************************************************
 #                               ANALYZE RESULTS
 # ******************************************************************************
 
 # we are going with state x evi and water distance
-f <- formula(case_ ~ evi*state + waterdist + strata(id))
-hsf <-  clogit(f, 
-               data=data, 
-               weights=w, 
-               method="approximate")
-
-hsf <- hsf.cov[[1]]
+hsf <- m5#hsfFunc("evi*tod + structure*cos_ta + structure*log_sl")
 summary(hsf)
+coefs <- getCoefs(hsf)
+print(coefs)
+save(hsf, file=outpath('fitmodel.rdata'))
 
 ..glm.ratio <- function(GLM.RESULT, DIGITS = 2, P.DIGITS = 3, CONF.LEVEL = 0.95) {
   ## Extract coefficients and confidence interval
@@ -272,8 +199,37 @@ summary(hsf)
   return(cbind(TABLE.EXP, 
                "P" = round(summary(GLM.RESULT)$coef[,4], P.DIGITS))) 
 }
-..glm.ratio(hsf)
+ratios <- ..glm.ratio(hsf) %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var='covariate') %>% 
+  filter(grepl('structure', covariate)) %>% 
+  mutate(structure=gsub('.*:|structure','', covariate),
+         season=gsub('season|:.*', '', covariate),
+         season=ifelse(grepl('structure', season), 'dry_1', season),
+         is_base=season=='dry_1') %>% 
+  dplyr::select(-covariate)
+names(ratios)[1:4] <- c('or', 'lower', 'upper', 'p')
+bases <- ratios[ratios$is_base,] %>% 
+  dplyr::select(structure,or) %>% 
+  rename(base=or)
+rat.df = left_join(ratios, bases, by="structure") %>% 
+  mutate(or_adj = ifelse(is_base, base, or*base),
+         low_adj = ifelse(is_base, lower, lower*base),
+         up_adj = ifelse(is_base, upper, upper*base))
 
+rat.df %>% 
+  ggplot(aes(x=season, group=season)) + 
+  geom_linerange(aes(ymin=low_adj, ymax=up_adj, 
+                     color=is_base),
+                 linewidth=1,
+                 position=position_dodge2(width=0.5)) +
+  geom_point(aes(y=or_adj), size=2, 
+             position=position_dodge2(width=0.5)) +
+  geom_hline(yintercept=1, linetype='dashed', color='darkgray') +
+  facet_wrap(~structure, nrow=1) +
+  plot.theme + guides(color='none') + 
+  scale_color_manual(values=c('gray', 'red')) +
+  xlab('structure by season') + ylab('odds ratio')
 
 # set up dataframe to fill with predictions
 predictData <- function(id, hsf) {

@@ -29,7 +29,7 @@
 #                             DATA & LIBRARY LOADING
 # ******************************************************************************
 
-# packages and HERE
+# packages and location
 pacman::p_load(here, hmmSSF)
 i_am('02_scripts/3_modeling/hmm_ssf/runHMM_SSF.R')
 
@@ -37,13 +37,14 @@ i_am('02_scripts/3_modeling/hmm_ssf/runHMM_SSF.R')
 source(here('02_scripts', 'utilities.R'))
 
 # loading data
-setDataPaths('geographic')
-load(procpath('geographic.rdata'))
+quickload()
 load(here(outdir, 'hmm', 'hmm_ssf.rdata'))
 data <- hmm.ssf.dat %>% 
   mutate(
     ID = id, # ugh lol
     step = step / 1000) #tutorial is in km not m
+rm(hmm.ssf.dat)
+
 
 # ******************************************************************************
 #                       ==== STARTING PARAMETER VALUES ====
@@ -120,11 +121,14 @@ ssf_par0 <- matrix(c(betaLParams,
 # Getting an ERROR: function cannot be evaluated at initial parameters
 # # removed EVI for the moment but this might help? 
 # # https://stackoverflow.com/questions/69850540/error-in-optim-r-cannot-be-evaluated-at-initial-parameters
-# 
 
-data1 <- data %>% filter(!is.na(evi))
+emean <- mean(data$evi)
+data1 <- data %>% 
+  mutate(evi = ifelse(is.na(evi), emean, evi))
+
 # Finally, we can pass the above to fit the model.
 mod <- hmmSSF(ssf_formula = ssf_formula,
               n_states = n_states,
               data = data1,
               ssf_par0 = ssf_par0)
+save(mod, here(outdir, 'hmm', 'hmm_ssf_mod.rdata'))

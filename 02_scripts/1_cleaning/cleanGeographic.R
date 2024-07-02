@@ -8,33 +8,52 @@
 
 here::i_am('02_scripts/1_cleaning/cleanGeographic.R')
 source(here::here('02_scripts', 'utilities.R'))
-setDataPaths('geographic')
-load(procpath('geographic.rdata'))
-my_crs <- 4326
-# write.csv(raindates, file=here(outdir, "seasontests", "raindates.csv"))
-setDataPaths('geographic')
-lands.meta = read.csv(rawpath('kaza_landcover', 'landcover_metadata.csv'))
-lr <- terra::rast(rawpath('kaza_landcover', 'eoss4wwf_kaza_tfca_landcover_2020.tif'))
 
-loadData <- function(path) {
-  file <- list.files(rawpath(path), pattern='.shp$', full.names=TRUE)
-  data <- st_read(file) %>% st_transform(crs=my_crs)
-  data
-}
+# ******************************************************************************
+# load boundaries, linear, and water features and save in group files
+# these can then be loaded anywhere using 'quickload()':
+# quickload()
 
-# Pulling all data
-# fences <- loadData('merged_fences')
-# roads <- loadData('primary_trunk_rds_5countries')
-# rivers <- loadData('rivers_main_kaza_dig')
-# kaza <- loadData('kaza_boundary')
-# khau <- loadData('khaudum_boundary')
-# khau_tall <- loadData('khau_tall_aoi')
-# waters_art <- loadData('khaudum_artificial_waters')
-# waters_nat <- loadData('khaudum_natural_waters')
+setDataPaths('boundaries')
+kaza = st_read(rawpath('kaza_boundary'))
+kaza_aoi = st_read(rawpath('kaza_aoi'))
+khau = st_read(rawpath('khaudum_boundary'))
+khau_tall_aoi = st_read(rawpath('khau_tall_aoi'))
+namib_ele_aoi = st_read(rawpath('namib_ele_aoi'))
 
-# save(fences, roads, rivers,
-#      kaza, khau, khau_tall, waters_art, waters_nat,
-#      file=procpath('geographic.rdata'))
+ggplot() + 
+  geom_sf(data = kaza, color='green', fill=NA) +
+  geom_sf(data = khau, color='purple', fill=NA) +
+  geom_sf(data = kaza_aoi, color='orange', fill=NA) +
+  geom_sf(data = khau_tall_aoi, color='blue', fill=NA) +
+  geom_sf(data = namib_ele_aoi, color='black', fill=NA)
+
+save(kaza, kaza_aoi, khau, khau_tall_aoi, namib_ele_aoi, 
+     file=procpath('boundaries.rdata'))
+
+
+# ******************************************************************************
+# load linear features and save to one rdata file.
+setDataPaths('linear_features')
+fences = st_read(rawpath('merged_fences_old'))
+rivers = st_read(rawpath('rivers_main_KAZA'))
+roads = st_read(rawpath('primary_trunk_rds'))
+
+ggplot() + 
+  geom_sf(data = fences, color='green', fill=NA) +
+  geom_sf(data = rivers, color='purple', fill=NA) +
+  geom_sf(data = roads, color='orange', fill=NA)
+
+save(fences, rivers, roads, file=procpath('linear_features.rdata'))
+
+# ******************************************************************************
+# load waters and save to one rdata file.
+setDataPaths('waters')
+waters_art = st_read(rawpath('khaudum_artificial_waters'))
+waters_nat = st_read(rawpath('waterhole_stats'))
+save(waters_art, waters_nat, file=procpath('waters.rdata'))
+
+
 
 
 
@@ -42,19 +61,23 @@ loadData <- function(path) {
 #                         Arthur's fence status data
 # ******************************************************************************
 
-# pacman::p_load('readxl')
-# pth <- "fence_damage_mortalities"
-# files <- list.files(rawpath('fence_damage_mortalities'))
+# setDataPaths('linear_features')
+# library('readxl')
+# pth <- "fence_damage_arthur"
+# files <- list.files(rawpath(pth))
 # 
 # ZF_locs <- read_excel(rawpath(pth, "Zambezi.Notes.fencecondition.Dec2020.xlsx"), col_names=TRUE)
 # WBF_locs <- read_excel(rawpath(pth, "WBF.5km.coords.xlsx"), col_names =FALSE)
 # names(WBF_locs)
 
-# 
-# 
 # ******************************************************************************
 #                        Set up raster resistance layer
 # ******************************************************************************
+
+
+setDataPaths('landcover')
+lands.meta = read.csv(rawpath('landcover_metadata.csv'))
+lr <- terra::rast(rawpath('eoss4wwf_kaza_tfca_landcover_2020.tif'))
 
 # kinda the only way I could find to mosaic rasters with different extents...
 # https://stackoverflow.com/questions/67169266/error-in-mosaic-of-rasters-from-different-extent-using-terra-package-in-r
@@ -63,78 +86,6 @@ loadData <- function(path) {
 # r1 <- writeRaster(lands.raster.1, f1, overwrite=TRUE)
 # r2 <- writeRaster(lands.raster.2, f2, overwrite=TRUE)
 # lands.vrt <- terra::vrt(c(f1, f2), "03_output/tmp/test.vrt", overwrite=TRUE) 
-
-# define movement ease 
-# 0 = no movement
-# 1 = free movement
-lands.meta$movement = c(
-  1,   # bare area
-  1,   # bare floodplain area
-  0.1, # built-up
-  0.3, # closed bushland
-  0.1, # closed forest
-  0.3, # closed herbaceous wetland
-  0.1, # closed woodland
-  0.8, # cropland
-  0.7, # open bushland/shrubs
-  0.9, # open herbaceous vegetation
-  0.9, # open herbaceous wetland
-  0.9, # open herbaceous floodplain
-  0.8, # open woodland/bushland
-  0.8, # sparse forest/woodland
-  0.9, # sparse herbaceous wetland
-  0.8, # sparse/open bushland/shrubs
-  0,   # water bodies permanent
-  0.7  # water bodies seasonal
-)
-
-# define forage preferences
-# 0 = no forage value
-# 1 = high forage value
-lands.meta$forage = c(
-  0, # bare area
-  0, # bare floodplain area
-  0, # built-up
-  0.7, # closed bushland
-  0.9, # closed forest
-  0.7, # closed herbaceous wetland
-  0.9, # closed woodland
-  0.9, # cropland
-  0.9, # open bushland/shrubs
-  0.9, # open herbaceous vegetation
-  0.5, # open herbaceous wetland
-  0.5, # open herbaceous floodplain
-  0.9, # open woodland/bushland
-  0.9, # sparse forest/woodland
-  0.9, # sparse herbaceous wetland
-  0.9, # sparse/open bushland/shrubs
-  0,   # water bodies permanent
-  0    # water bodies seasonal
-)
-
-# define shelter preferences
-# 0 = no shelter value
-# 1 = high shelter value
-lands.meta$shelter = c(
-  0, # bare area
-  0, # bare floodplain area
-  0, # built-up
-  0.7, # closed bushland
-  0.9, # closed forest
-  0.7, # closed herbaceous wetland
-  0.9, # closed woodland
-  0.9, # cropland
-  0.9, # open bushland/shrubs
-  0.9, # open herbaceous vegetation
-  0.5, # open herbaceous wetland
-  0.5, # open herbaceous floodplain
-  0.9, # open woodland/bushland
-  0.9, # sparse forest/woodland
-  0.9, # sparse herbaceous wetland
-  0.9, # sparse/open bushland/shrubs
-  1,   # water bodies permanent
-  1    # water bodies seasonal
-)
 
 # define generic landcover type bins
 lands.meta$cover = c(
@@ -188,20 +139,17 @@ veg_class = data.frame(veg=0:4,
                                    'forest/woodland', 'herbaceous/wet'))
 lands.meta = left_join(lands.meta, veg_class, by="veg")
 
-## RECLASSIFY RASTERS FOR ACTIVITY STATES
-st_transform(khau, crs="EPSG:32734")
-bb <- terra::ext(c(400000, 600000, 7200000, 8300000))
-lr.crop <- terra::crop(lr, bb)
-plot(lr.crop)
-reclassWrite <- function(type) {
-  reclass = terra::classify(lr.crop, lands.meta[,c('category', type)])
-  reproj = terra::project(reclass, 'EPSG:32735')
-  terra::writeRaster(reproj,
-              filename=procpath(paste0(type, 'Raster.tif')),
-              overwrite=TRUE)
-}
-reclassWrite('movement')
-reclassWrite('forage')
-reclassWrite('shelter')
+# ## RECLASSIFY RASTERS FOR ACTIVITY STATES
+# st_transform(khau, crs="EPSG:32734")
+# bb <- terra::ext(c(400000, 600000, 7200000, 8300000))
+# lr.crop <- terra::crop(lr, bb)
+# plot(lr.crop)
+# reclassWrite <- function(type) {
+#   reclass = terra::classify(lr.crop, lands.meta[,c('category', type)])
+#   reproj = terra::project(reclass, 'EPSG:32735')
+#   terra::writeRaster(reproj,
+#               filename=procpath(paste0(type, 'Raster.tif')),
+#               overwrite=TRUE)
+# }
 
 write.csv(lands.meta, file=rawpath('kaza_landcover', 'landcover_metadata.csv'))

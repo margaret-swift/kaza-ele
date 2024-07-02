@@ -14,10 +14,11 @@ sf_use_s2(FALSE) #fix errors for spherical geometry
 message('   ...Packages loaded.')
 
 message("Setting base objects...")
-datadir <- here("01_data")
-scriptdir <- here("02_scripts")
-outdir <- here("03_output")
-# crs <- CRS("+proj=longlat +zone=34S +datum=WGS84")
+datadir <- here::here("01_data")
+scriptdir <- here::here("02_scripts")
+outdir <- here::here("03_output")
+crs_LL <- 'EPSG:4326'
+crs_UTM<- 'EPSG:32734'
 message("   ...Base objects loaded.")
 
 # Plot Params
@@ -68,30 +69,51 @@ fixNames <- function(d) {
 
 # functions to set user-friendly datapath options
 metapath <- function(...) .metapath(...)
-rawpath  <- function(...)  .rawpath(...)
+rawpath  <- function(...) .rawpath(...)
 procpath <- function(...) .procpath(...)
-setDataPaths <- function(dataname, verbose=TRUE, print.length=5) {
-  datapath <- file.path(datadir, dataname)
-  if (!dir.exists(datapath)) {
-    warning('\n  Data directory "', dataname, 
+outpath  <- function(...) .outpath(...)
+setOutPath <- makeOutPath <- function(name, create=FALSE, verbose=TRUE) {
+  path <- here::here(outdir, name)
+  if (!dir.exists(path)) {
+    if (create) {
+      message('\nOutput directory "', name, '" created. ')
+      dir.create(path , showWarnings = FALSE)
+    } else {
+      message('\nOutput directory "', name, '" not found.\n', 
+        'To create new directory, use "create=TRUE".\n',
+        'Or, check spelling against existing paths: ')
+      cat(paste(' -', list.files(outdir), collapse="\n"))
+    }
+  } 
+  if (dir.exists(path)){
+    cat('rebasing outpath() paths to ./03_output/', name, '\n', 
+        'Existing files in directory:\n', sep='')
+    .outpath <<- function(...) here::here(path, ...)
+    if (verbose) { message(paste(' -', list.files(path), collapse="\n")) }
+  }
+}
+setDataPaths <- function(dataname, verbose=TRUE, print.length=10) {
+  dp <- here::here(datadir, dataname)
+  if (!dir.exists(dp)) {
+    warning('\n  Data directory "', dataname,
             '" not found. Did you mean one of these in /0_data/? ',
             paste("\n     -", list.files(datadir)))
   } else {
-    .metapath <<- function(...) file.path(datapath, 'meta', ...)
-    .rawpath  <<- function(...) file.path(datapath, 'raw', ...)
-    .procpath <<- function(...) file.path(datapath, 'processed', ...)
-    
+    .metapath <<- function(...) here::here(dp, 'meta', ...)
+    .rawpath  <<- function(...) here::here(dp, 'raw', ...)
+    .procpath <<- function(...) here::here(dp, 'processed', ...)
+
     if (verbose) {
       # function to easily print path names and files within
       printPathFiles <- function(slug) {
         # print directory name
         shortslug <- substr(slug, 0, 4)
-        fname <- file.path(gsub(".*01_data", "", datapath), slug)
+        fname <- file.path(gsub(".*01_data", "", dp), slug)
         fprint<- ifelse(str_count(shortslug) == 4,'path() <-','path()  <-' )
         cat('  ', paste0(shortslug, fprint), fname)
-        
+
         # print files
-        files <- list.files(file.path(datapath, slug))
+        files <- list.files(file.path(dp, slug))
         L=min(length(files), print.length)
         message(paste("\n     -", files[1:L]))
         if (length(files) > print.length) message('     ...')
@@ -102,6 +124,28 @@ setDataPaths <- function(dataname, verbose=TRUE, print.length=5) {
       printPathFiles('processed')
     }
   }
+}
+quickload <- function(dnames = c('linear_features', 'boundaries')) {
+  loadme <- function(dn) {
+    datalist <- list.files(datadir)
+    if ( dn %in% datalist) {
+      fname <- paste0(dn, ".rdata")
+      datapath <- here::here(datadir, dn, "processed")
+      path <- here::here(datapath, fname)
+      if (file.exists(path)) { 
+        load(file=path, envir=globalenv())
+        message('Loaded ', toupper(dn), ' data into global environment.')
+      } else { 
+        message("WARNING: ", fname, " does not exist. Available files: ")
+        print(datapath)
+        cat(paste(' -', list.files(datapath), collapse="\n" ))
+      }
+    } else {
+      message("WARNING: ", toupper(dn), " not in data directory. Available files: ")
+      cat(paste(' -', datalist[-1], collapse="\n" ))
+    }
+  }
+  for (dn in dnames) loadme(dn)
 }
 makeDataPaths <- setDataPaths #because I always forget which is which
 message("   ...Basic functions loaded.")
@@ -122,7 +166,7 @@ zoomTo <- function(shape, buffer=2) {
 
 # load protected areas maps
 # setDataPaths('khaudum_geography', verbose=FALSE)
-# load(here(procpath, "geographicData.RData"))
+# load(here::here(procpath, "geographicData.RData"))
 # khauPlot <- function(fill="transparent", lwd=1, ...) {
 #   ggplot(data=khau) + 
 #     geom_sf(fill=fill, linewidth=lwd, ...) + 
@@ -346,6 +390,26 @@ projectMe <- function(obj, crs) {
     if (class(obj)[1] == "sf") obj = sf::st_transform(obj, crs) 
   }
   return(obj)
+}
+
+cleanUpModel <- function(fit) {
+  # a function to clean up all the bloat in model returns.
+  message("Cleaning up your model! Starting size is: ",
+          format(object.size(fit), unit="Mb"))
+  message(' removing data...')
+  fit$data <- NULL
+  fit$y <- NULL
+  fit$linear.predictors <- NULL
+  fit$weights <- NULL
+  fit$fitted.values <- NULL
+  fit$model <- NULL
+  fit$prior.weights <- NULL
+  fit$residuals <- NULL
+  fit$effects <- NULL
+  fit$qr$qr <- NULL
+  message('Ending size is: ', format(object.size(fit), unit="Mb"))
+  gc()
+  return(fit)
 }
 message("   ...Custom functions loaded.")
 

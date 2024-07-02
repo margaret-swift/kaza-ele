@@ -1,6 +1,6 @@
 #' Generate Random Steps
 
-random_steps.bursted_steps_xyt <- function(
+.random_steps.bursted_steps_xyt <- function(
     x, n_control = 10,
     sl_distr = fit_distr(x$sl_, "gamma"), # this argument could be remove
     ta_distr = fit_distr(x$ta_, "vonmises"), # this argument could be remove

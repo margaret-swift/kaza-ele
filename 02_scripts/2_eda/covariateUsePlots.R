@@ -11,9 +11,8 @@
 here::i_am('02_scripts/2_eda/eleStats.R')
 source(here::here('02_scripts','utilities.R'))
 pacman::p_load(reshape2, nlme)
-setDataPaths('elephant')
-load(procpath('ele.rdata'))
-load(procpath('eleKhau.rdata'))
+quickload()
+quickload('elephant')
 
 
 # ******************************************************************************
