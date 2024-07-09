@@ -10,17 +10,13 @@ here::i_am('02_scripts/1_cleaning/addCovariates.R')
 source(here::here('02_scripts', 'utilities.R'))
 pacman::p_load(suncalc, zoo, lwgeom)
 
-setDataPaths('geographic')
-load(procpath('geographic.rdata'))
-# load(procpath('landcover_rasters.rdata'))
+quickload()
+quickload('elephant')
+quickload('precipitation')
+# setDataPaths('precipitation')
+# load(procpath('season_slices.rdata'))
 
-setDataPaths('precipitation')
-load(procpath('precipitation.rdata'))
-load(procpath('season_slices.rdata'))
 
-setDataPaths('elephant')
-load(procpath('ele.rdata'))
-# 
 # # ******************************************************************************
 # #                               Precipitation
 # # ******************************************************************************
@@ -58,25 +54,25 @@ load(procpath('ele.rdata'))
 # #                             Adding time of day
 # # ******************************************************************************
 # 
-# data <- ele.df %>% nog() %>% 
-#   rename(lat=LAT, lon=LON, date.time=DATE.TIME) %>% 
-#   mutate(date = as.Date(as.POSIXct(date.time)))
-# sun.times <- getSunlightTimes(data=data[,c('date', 'lat', 'lon')])
-# findDiff <- function(e) difftime( e, data$date.time )
-# 
-# dawn <- difftime (sun.times$dawn, data$date.time ) %>% as.n()
-# sunriseEnd <- difftime (sun.times$sunriseEnd, data$date.time ) %>% as.n()
-# sunset <- difftime (sun.times$sunset, data$date.time ) %>% as.n()
-# night <- difftime (sun.times$night, data$date.time ) %>% as.n()
-# df <- data.frame(dawn, sunriseEnd, sunset, night)
-# 
-# # account for before dawn
-# signs <- sign(df) == -1
-# sums <- rowSums(signs)
-# sums[sums == 0] <- 4
-# time.names <- c('DAWN', 'DAY', 'DUSK', "NIGHT")
-# TOD <- time.names[sums]
-# ele.df$TOD <- TOD
+data <- ele.df %>% nog() %>%
+  rename(lat=LAT, lon=LON, date.time=DATE.TIME) %>%
+  mutate(date = as.Date(as.POSIXct(date.time)))
+sun.times <- getSunlightTimes(data=data[,c('date', 'lat', 'lon')])
+findDiff <- function(e) difftime( e, data$date.time )
+
+dawn <- difftime (sun.times$dawn, data$date.time ) %>% as.n()
+sunriseEnd <- difftime (sun.times$sunriseEnd, data$date.time ) %>% as.n()
+sunset <- difftime (sun.times$sunset, data$date.time ) %>% as.n()
+night <- difftime (sun.times$night, data$date.time ) %>% as.n()
+df <- data.frame(dawn, sunriseEnd, sunset, night)
+
+# account for before dawn
+signs <- sign(df) == -1
+sums <- rowSums(signs)
+sums[sums == 0] <- 4
+time.names <- c('DAWN', 'DAY', 'DUSK', "NIGHT")
+TOD <- time.names[sums]
+ele.df$TOD <- TOD
 
 
 # ******************************************************************************

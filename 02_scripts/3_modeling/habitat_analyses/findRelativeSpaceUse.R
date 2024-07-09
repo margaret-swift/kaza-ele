@@ -15,7 +15,13 @@
 here::i_am('02_scripts/3_modeling/habitat_analyses/runHabitatSelection.R')
 source(here::here('02_scripts','utilities.R'))
 pacman::p_load(amt, reshape2)
-load(here(outdir, 'habitat_selection', 'hsf.rdata'))
+
+quickload() #loads common spatial features
+
+# load step selection dat
+setOutPath('habitat_selection')
+load(outpath('fitmodel.rdata'))
+
 
 # ******************************************************************************
 #                         COMPUTE RELATIVE SPACE USE
@@ -32,9 +38,9 @@ findUseAvail <- function(hsf, v, val) {
   use <- findUse(hsf, v)
   return(use * avail)
 }
-vals <- c(mean(ssf.df$hillslope, na.rm=TRUE),
-          mean(ssf.df$evi, na.rm=TRUE),
-          mean(ssf.df$waterdist, na.rm=TRUE))
+vals <- c(mean(ssf.df$evi, na.rm=TRUE))
+
+
 # bare, crop, open, sparse, closed
 val.bare   <- c(vals, c(0,0,0,0))
 val.crop   <- c(vals, c(1,0,0,0))

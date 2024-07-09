@@ -9,14 +9,11 @@
 here::i_am('02_scripts/2_eda/elePlots.R')
 source(here::here('02_scripts','utilities.R'))
 pacman::p_load(sp, adehabitatHR, reshape2, 
-               spData, ggspatial, move, terra)
-library(moveVis)
-setDataPaths('geographic')
-load(procpath('geographic.rdata'))
-er <- rast(rawpath('khaudum_landsat_rasters', 
-                   'waterdist_evi_raster_dry_2017.tif'))
-setDataPaths('elephant')
-load(procpath('ele.rdata'))
+               spData, ggspatial, move, terra, moveVis)
+quickload()
+quickload('elephant')
+# er <- rast(rawpath('khaudum_landsat_rasters', 
+#                    'waterdist_evi_raster_dry_2017.tif'))
 
 
 # ******************************************************************************
@@ -65,7 +62,7 @@ plotXY <- function(i) {
                aes(y=Y), color='black', size=2)
   px / py
 }
-plotRegion <- function(i, t=z) {
+plotRegion <- function(i, t=2) {
   bb <- ele.df %>% filter(ID==i) %>% st_bbox()
   tt <- 0.1
   ggplot() + 
@@ -101,7 +98,6 @@ makeY <- function(i) {
   base
 }
 plotPoints <- function(i) {
-  i=20
   data <- ele.df %>% filter(ID==i) %>% sample_frac(0.5)
   # data <- data %>% filter(DATE > as.Date("2021-01-01"), 
                           # DATE < as.Date("2021-02-28"))
@@ -109,7 +105,7 @@ plotPoints <- function(i) {
   width=abs(bb[['xmin']] - bb[['xmax']])
   height=abs(bb[['ymin']] - bb[['ymax']])
   nrow = ifelse(width > height, 2, 1)
-  
+  title = paste(i, data$SEX[1], data$COUNTRY[1])
   ext <- bb %>% 
     st_as_sfc() %>% 
     st_transform("EPSG:32734") 
@@ -119,33 +115,68 @@ plotPoints <- function(i) {
     geom_sf(data=roads, color='black', linewidth=2) + 
     geom_sf(data=roads, color='white', linewidth=1) + 
     geom_sf(data=rivers, color='blue', linewidth=2) + 
-    geom_sf(data=waters_art, color='darkblue', size=3) +
+    # geom_sf(data=waters_art, color='darkblue', size=3) +
     facet_wrap(~SEASON, nrow=nrow) +
     coord_sf(xlim=c(bb['xmin'], bb['xmax']),
              ylim=c(bb['ymin'], bb['ymax'])) +
     theme(axis.text = element_blank(),
           axis.ticks = element_blank()) + 
-    annotation_scale(text_cex=1) + 
+    annotation_scale(text_cex=1) + ggtitle(title) +
     plot.theme + blank.theme
 }
 plotAll <- function(i) {
   p1 <- makeHist(i) 
   p2 <- makeY(i) + geom_line(mapping=aes(y=X))
   p3 <- makeY(i) + geom_line(mapping=aes(y=Y))
-  p4 <- plotRegion(i)
+  p4 <- plotRegion(i,t=0.5)
   p5 <- plotPoints(i) 
   
   ( ( p1 + p2 + p3 + plot_layout(ncol=1) ) | 
-      ( p4 + p5 + plot_layout(ncol=1, heights=c(1,2)) ) ) + 
+      # p5 ) + plot_layout(widths=c(1,1))
+      ( p4 + p5 + plot_layout(ncol=1, heights=c(1,2)) ) ) +
     plot_layout( widths=c(3,1))
 }
 
-plotPoints(5)
+plotPoints(47)
+
+
+# ******************************************************************************
+data=ele.df %>% 
+  # sample_frac(0.05) %>% 
+  mutate(SEX_SEASON=paste(SEX, SEASON))
+bb <- st_bbox(ele.df)
+p_country <- ggplot() + 
+  # adding elephant data
+  geom_sf(data=data, 
+          mapping = aes(color=COUNTRY), 
+          alpha=0.1,
+          size=1) +
+  # adding linear data
+  geom_sf(data=fences, color='black') + 
+  geom_sf(data=roads, color='black', linewidth=2) + 
+  geom_sf(data=roads, color='white', linewidth=1) + 
+  geom_sf(data=rivers, color='blue', linewidth=1) + 
+  # making it pretty
+  facet_wrap(~SEX_SEASON, nrow=1) +
+  coord_sf(xlim=c(bb['xmin'], bb['xmax']),
+           ylim=c(bb['ymin'], bb['ymax'])) +
+  scale_color_manual(values=c('gray', 'red')) +
+  plot.theme + blank.theme +
+  theme(legend.position="bottom")
+
+setOutPath('maps')
+path=outpath('ele_by_country.png')
+ggsave(filename=path, 
+       plot=p_country, 
+       width=21, height=13)
+
+
 
 # ******************************************************************************
 
 # Plot all and save
 ids <- unique(ele.df$ID)
+# setOutPath('ele_paths')
 # tic()
 # for (i in ids) {
 #   message(i)

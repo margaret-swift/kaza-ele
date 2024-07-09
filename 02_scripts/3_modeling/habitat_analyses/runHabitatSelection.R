@@ -29,16 +29,13 @@ library(survival) # conditional logistic modeling with clogit()
 quickload() #loads common spatial features
 
 # load step selection dat
-setOutPath('habitat_selection')
+setOutPath(c('habitat_selection', 'ssf_data'))
+# load(outpath('fitmodel.rdata'))
 load(outpath('stepSelectionParamsHSF_DF.rdata'))
 
 # landcover metadata
 setDataPaths('landcover')
 lands.meta <- read.csv(metapath('landcover_meta_2005.csv'))
-
-## HSF selection
-data <-
-rm(ssf.df)
 
 # ******************************************************************************
 #                             BRIEF EDA - space use
@@ -229,7 +226,7 @@ rat.df %>%
   facet_wrap(~structure, nrow=1) +
   plot.theme + guides(color='none') + 
   scale_color_manual(values=c('gray', 'red')) +
-  xlab('structure by season') + ylab('odds ratio')
+  ylab('odds ratio') + theme(axis.title.x=element_blank())
 
 # set up dataframe to fill with predictions
 predictData <- function(id, hsf) {

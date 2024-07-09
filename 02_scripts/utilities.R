@@ -72,21 +72,24 @@ metapath <- function(...) .metapath(...)
 rawpath  <- function(...) .rawpath(...)
 procpath <- function(...) .procpath(...)
 outpath  <- function(...) .outpath(...)
-setOutPath <- makeOutPath <- function(name, create=FALSE, verbose=TRUE) {
+setOutPath <- makeOutPath <- function(name, 
+                                      create=FALSE, 
+                                      verbose=TRUE) {
+  if (length(name)>1) name <- paste(name, collapse="/")
   path <- here::here(outdir, name)
   if (!dir.exists(path)) {
     if (create) {
       message('\nOutput directory "', name, '" created. ')
       dir.create(path , showWarnings = FALSE)
     } else {
-      message('\nOutput directory "', name, '" not found.\n', 
+      message('\nOutput directory "', name, '" not found.\n',
         'To create new directory, use "create=TRUE".\n',
         'Or, check spelling against existing paths: ')
       cat(paste(' -', list.files(outdir), collapse="\n"))
     }
   } 
   if (dir.exists(path)){
-    cat('rebasing outpath() paths to ./03_output/', name, '\n', 
+    cat('rebasing outpath() paths to ./03_output/', name, '\n',
         'Existing files in directory:\n', sep='')
     .outpath <<- function(...) here::here(path, ...)
     if (verbose) { message(paste(' -', list.files(path), collapse="\n")) }

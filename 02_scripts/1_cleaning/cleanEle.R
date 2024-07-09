@@ -8,13 +8,13 @@
 
 here::i_am('02_scripts/1_cleaning/cleanEle.R')
 source(here::here('02_scripts', 'utilities.R'))
-setDataPaths('geographic')
-load(procpath('geographic.rdata'))
+quickload()
 setDataPaths('precipitation')
 load(procpath('precipitation.rdata'))
 setDataPaths('elephant')
-ele <- read.csv(rawpath('nam.eles.fences.csv'))
-
+ele.nam <- read.csv(rawpath('nam.eles.fences.csv'))
+ele.bots <- read.csv(rawpath('ecoexist.border.fence.pts.csv'))
+ele <- rbind(ele.nam, ele.bots)
 # ******************************************************************************
 #                             Initial looks
 # ******************************************************************************
@@ -54,20 +54,25 @@ tolag <- c("DIST", "DX", "DY", "DT", "DTS", "DTM", "R2N",
 ele$MPS <- ele$DIST / ele$DTS
 
 # set fixrate for collars manually -- I can't figure a way to do this nicely
-fillHours <- function(ids, before, fill="5 hours") {
-  before <- as.POSIXlt(before)
-  inx <- ele.df %>% nog() %>% filter(ID %in% ids, DATE.TIME < before)
-  ele.df$FIXRATE[ele.df$INX %in% inx$INX] <<- fill
+fillHours <- function(ids, before=NULL, nhours="5 hours") {
+  inx <- ele %>% nog() %>% filter(ID %in% ids)
+  if (!is.null(before)) {
+    before <- as.POSIXlt(before)
+    inx <- inx %>% filter(DATE.TIME < before)
+  }
+  ele$FIXRATE[ele$INX %in% inx$INX] <<- nhours
 }
 
-# i=i+1
-# df <- nog(ele) %>% filter(ID == i) %>% 
-#   dplyr::select(INX, ID, BURST, DATE.TIME, DTM) %>% 
-#   mutate(DATE.TIME = as.POSIXct(DATE.TIME))
-# ggplot(df %>% filter(DTM < 500)) +
-#   geom_bar(aes(x=INX, y=DTM), stat='identity') + 
-#   ggtitle(i)
+i=i+1
+df <- nog(ele) %>% filter(ID == i) %>%
+  mutate(DATE.TIME = as.POSIXct(DATE.TIME))
+ggplot(df %>% filter(DTM < 500)) +
+  geom_bar(aes(x=INX, y=DTM, fill=FIXRATE), stat='identity') +
+  ggtitle(paste(i,df$SEX[1], df$COUNTRY[1])) + big.theme
 # View(df)
+
+# BOTS notes
+# 52-68 start w 4-hour fixes
 
 ele$FIXRATE = "1 hour"
 fillHours(1:4,  '2015-08-13 13:00:00', '5 hours')
@@ -76,9 +81,13 @@ fillHours(7:12, '2016-03-22 08:00:00', '5 hours')
 fillHours(13:17,'2017-10-11 17:00:00', '5 hours')
 fillHours(c(18:19, 22), '2024-01-101 00:00:00', '4 hours')
 fillHours(38:43, "2013-11-01 11:00:00", "4 hours")
+# started : 2016-05-14 19:00:00
+fillHours(52:62, "2016-05-23 11:00:00", "4 hours")
+fillHours(63:68, nhours="4 hours")
+fillHours(c(63:64, 66:68), "2014-07-15 18:00:00", "8 hours")
 
 # TODO: set some rows to THROW AWAY when running 1hour analyses (data is too frequent)
-ele.df$THROW <- NA
+# ele.df$THROW <- NA
 # ID 20 has many of these
 # ID 18 and 22 have many of these (4 hours)
 
@@ -205,10 +214,11 @@ ele.df <- cbind(ele.df, latlon)
 
 # reassign INX and pull cols in order
 ele.df$INX <- 1:nrow(ele.df)
+ele.df$YEAR = year(ele.df$DATE.TIME)
 ele.df <- ele.df %>% 
   dplyr::select(INX, ID, BURST, START.COUNT,
                 ANIMAL_ID, SEX,
-                DATE.TIME, DATE, SEASON, LON, LAT,
+                DATE.TIME, DATE, YEAR, SEASON, LON, LAT,
                 X, Y, DX, DY, DIST, DTM, R2N,
                 ABS.ANGLE, REL.ANGLE, MPS,
                 FIXRATE, COUNTRY, PROVIDER)
@@ -219,9 +229,5 @@ ele.df <- ele.df %>%
 # ******************************************************************************
 
 setDataPaths('elephant')
-ele.df$YEAR = year(ele.df$DATE.TIME)
-save(ele.df, file=procpath("ele.rdata"))
-path <- file.path("C:/Users/mes473/OneDrive - Cornell University/Documents/Research/KAZA Ele Fencing",
-                  "geographic-files", "elephant_points.shp")
-st_write(ele.df, 
-         dsn=path)
+save(ele.df, file=procpath('elephant.rdata'))
+st_write(ele.df, dsn=procpath('elephants.shp'))
