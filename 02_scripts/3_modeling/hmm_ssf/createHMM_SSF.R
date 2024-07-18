@@ -12,27 +12,25 @@
 # ******************************************************************************
 
 # packages and HERE
-pacman::p_load(here, hmmSSF)
+pacman::p_load(here, hmmSSF, momentuHMM)
 i_am('02_scripts/3_modeling/hmm_ssf/createHMM_SSF.R')
 
 # utilities
 source(here('02_scripts', 'utilities.R'))
 
 # loading data
-setDataPaths('geographic')
-load(procpath('geographic.rdata'))
-load(procpath('stepSelectionParamsHSF.rdata'))
-load(here(outdir, 'hmm', 'hmm_ssf.rdata'))
-aoi = st_read(rawpath('kaza_aoi', 'kaza_aoi.shp'))
+# quickload()
+quickload('elephant')
+# setOutPath('habitat_selection')
+# load(outpath('ssf_data', 'stepSelectionParamsHSF_DF.rdata'))
+
+# load(here(outdir, 'hmm', 'hmm_ssf.rdata'))
+setDataPaths('boundaries')
+aoi = st_read(rawpath('aoi_bots_nam', 'aoi.shp'))
 
 # ******************************************************************************
 #                                PREP DATA FOR HMM
 # ******************************************************************************
-
-# load data
-library(momentuHMM)
-setDataPaths('elephant')
-load(procpath('ele.rdata'))
 
 # choose only females and 1-hour fix rates
 data <- ele.df %>% nog() %>%
@@ -43,23 +41,26 @@ data <- ele.df %>% nog() %>%
   dplyr::select(INX, ID, BURST, SEX, SEASON, DATE.TIME, X, Y, DIST, DTM)
 
 # remove first and last few fixes for each burst
-bursts <- unique(data$ID)
-inx.rm <- c()
-for (i in 1:length(bursts)) {
-  burst <- bursts[i]
-  d <- data[data$ID == burst,]
-}
-
+bursts.keep <- data.frame(table(data$ID, dnn=c('BURST'))) %>% 
+  filter(Freq > 4) %>% 
+  dplyr::select(BURST)
 
 # Crawl Wrap: Fill in missing data steps (85 tracks, t = 3m30s)
-crwOut <-crawlWrap(obsData  = data,
+# Crawl Wrap: Fill in missing data steps (100 tracks, t = 4m40s)
+freemem()
+tic()
+crwOut <-crawlWrap(obsData  = data %>% filter(ID %in% bursts.keep$BURST),
                    timeStep = "hour",
                    Time.name= "DATE.TIME",
                    coord=c('X', 'Y'),
                    ncore=3,
                    fillCols=TRUE,
-                   theta=c(6.855, -0.007)
+                   theta=c(6.855, -0.007) #this is from the tutorial, not sure how to choose
 )
+toc()
+rm(data)
+freemem(TRUE)
+gc()
 crwOut$crwPredict$date <- as.POSIXct(crwOut$crwPredict$DATE.TIME)
 
 # predicted vs. real data plot -- looks like it's just shifted a little
@@ -81,6 +82,11 @@ hmm.data <- pdata %>%
                 date, SEASON, x, y, step, angle, se.mu.x, se.mu.y
                 )
 
+rm(crwOut)
+rm(pdata)
+setOutPath('hmm')
+save(hmm.data, file=outpath('hmm_ssf.rdata'))
+
 # ******************************************************************************
 #                           CREATE USED/AVAILABLE DATA
 # ******************************************************************************
@@ -89,64 +95,76 @@ hmm.data <- pdata %>%
 track <- hmm.data %>%
   rename(time=date) %>% 
   dplyr::select(ID, x, y, time)
+ssf.track <- get_controls(obs = track, n_controls = 50, distr = "gamma")
 
-data <- get_controls(obs = track, n_controls = 50, distr = "gamma")
-xydat <- data[,c('x', 'y')]
+# ******************************************************************************
+#                             CREATE XY PROJECTIONS
+# ******************************************************************************
+
+xy.dat <- ssf.track[,c('x', 'y')]
+xy.dat.utm <- st_as_sf(xy.dat, coords=c('x', 'y'))
+st_crs(xy.dat.utm) <- "EPSG:32734"
+xy.dat.alb <- st_transform(xy.dat.utm, crs="ESRI:102022")
 
 # ******************************************************************************
 #                               ADD LANDSCAPE DATA
 # ******************************************************************************
 
-setDataPaths('geographic')
+# set up proper projection data
+ssf.lc <- xy.dat.alb
 
-# landcover data from WWF
-lands.meta <- read.csv(rawpath('kaza_landcover', 'landcover_metadata.csv'))
-lr <- rast(rawpath('kaza_landcover', 'eoss4wwf_kaza_tfca_landcover_2020.tif'))
-
-# extract LC to data; this should take about 30sec.
-data$category <- terra::extract(lr, xydat)$layer
+# landcover data from WWF (2005, not 2021)
+setDataPaths('landcover')
+lands.meta <- read.csv(metapath('landcover_meta_2005.csv'))
+lr <- raster::raster(rawpath('landcover_2005_fixed.tif'))
 
 # set cover level order
-cover_levels <- c('cropland', 'bare/water', 'open', 'sparse', 'closed')
-veg_levels <- c('nonveg', 'cropland', 'bushland', 'herbaceous/wet', 'forest/woodland')
-hmm.ssf.dat <- data %>%
-  # join classes from lands.meta
-  rename_with(tolower) %>%
-  left_join(lands.meta[,c('category', 'class')], by='category') %>%
-  left_join(lands.meta[,c('category', 'cover_class.x')], by='category') %>%
-  left_join(lands.meta[,c('category', 'veg_class.x')], by='category') %>%
-  rename("cover_class"="cover_class.x",
-         "veg_class"="veg_class.x") %>%
-  # reorder factor levels
-  mutate(cover_class=factor(cover_class, levels=cover_levels),
-         veg_class = factor(veg_class, levels=veg_levels),
-         category = factor(category), 
-         class=factor(class))
+cover_levels <- c('nonveg', 'open', 'closed', 'sparse')
+veg_levels <- c('nonveg', 'wetland', 'cropland', 'grassland', 'woodland', 'bushland')
+struc_levels <- c('nonveg', 'grassland','cropland',
+                  'wetland', 'omiramba', 
+                  'open bush', 'sparse bush', 'closed bush')
+
+# extract raster information
+lr.dat <- terra::extract(lr, ssf.lc)
+ssf.lc$category = lr.dat
+
+# join classes from lands.meta
+ssf.lc <- ssf.lc %>% 
+  nog() %>% 
+  left_join(lands.meta, by='category') %>% 
+  mutate(cover =      factor(cover,     levels=cover_levels),
+         vegetation = factor(vegetation,levels=veg_levels),
+         structure =  factor(structure, levels=struc_levels),
+         category =   factor(category),
+         class =      factor(class)) %>% 
 
 
 # ******************************************************************************
-#                                   EXTRACT EVI
+#                                 EXTRACT EVI
 # ******************************************************************************
-setDataPaths('geographic')
-hmm.ssf.dat$evi <- hmm.ssf.dat$season <- NA
+
+# set up proper projection data
+ssf.evi <- cbind(hmm.ssf.dat$time, xy.dat.utm)
+ssf.evi$evi <- ssf.evi$season <- NA
+names(ssf.evi)[1] <- 'time'
+
+# load data
+setDataPaths('evi')
+rastnames <- list.files(rawpath('evi_okavango'), full.names=TRUE)
 
 # set up dry and wet season boundaries
+sl <- c('11-01', '01-01', '03-01', '05-01', '07-01', '09-01')
+szn.df <- data.frame(start=sl, end=sl[c(2:length(sl), 1)])
+row.names(szn.df) <- c('wet_1', 'wet_2', 'wet_3', 'dry_1', 'dry_2', 'dry_3')
 makeSznInt <- function(y1, y2, d1, d2) { 
-  dd1 = as.Date(paste(y1, d1, sep="-"))
-  dd2 = as.Date(paste(y2, d2, sep="-"))
-  message('  pulling data from: ', dd1, ' - ', dd2)
-  return(interval(dd1, dd2))
+  interval( as.Date(paste(y1, d1, sep="-")), 
+            as.Date(paste(y2, d2, sep="-"))) 
 }
 
 # loop over rasters
-slices <- c('10-01', '01-15', '05-01', '07-15')
-szn.df <- data.frame(start=slices, end=slices[c(2:4, 1)])
-row.names(szn.df) <- c('wet_1', 'wet_2', 'dry_1', 'dry_2')
-
-rastnames <- list.files(rawpath('evi_rasters', 'evi_kaza_aoi'), full.names=TRUE)
-data <- hmm.ssf.dat
 for (f in rastnames) {
-  evi_rast <- rast(f)
+  evi_rast <- terra::rast(f)
   fname <- gsub('.*evi_', '', f)
   message('running raster ', fname)
   
@@ -155,41 +173,55 @@ for (f in rastnames) {
   szn=gsub('.*[0-9]{4}_|.tif$', '', fname)
   y1 = ifelse(szn=='wet_1', y2-1, y2)
   ds <- szn.df[szn,]
-  my.inx <- data$time %within% makeSznInt(y1,y2,ds$start,ds$end)
+  my.inx <- ssf.evi$time %within% makeSznInt(y1,y2,ds$start,ds$end)
   
   # extract covariates and save
-  evi.dat <- terra::extract(evi_rast, xydat[my.inx,])$EVI
+  evi.dat <- terra::extract(evi_rast, xy.dat.utm[my.inx,])$EVI
   message('  checksum: ', length(evi.dat) == sum(my.inx))
-  data$evi[my.inx] <- evi.dat
-  data$season[my.inx] <- szn
+  ssf.evi$evi[my.inx] <- evi.dat
+  ssf.evi$season[my.inx] <- szn
 }
-data <- data %>% 
-  # while we're working with landsat 8 we have to be mindful of availability
-  filter(time > as.Date('2013-05-01'),
-         time < as.Date('2022-10-01')) 
 
-# make sure all points are within the dataset
-crs='EPSG:32734'
-aoi_projected = st_transform(aoi, crs=crs)
-dat_projected = data %>% 
-  sample_n(50000) %>% 
-  st_as_sf(coords=c('x', 'y'), crs='EPSG:32734') %>% 
-  st_intersection(aoi_projected) %>% 
-  mutate(YEAR = as.factor(year(time)))
-ggplot() + 
-  geom_sf(data=aoi_projected, fill=NA, color='black') +
-  geom_sf(data=dat_projected, 
-          mapping=aes(color=evi)) + 
-  scale_color_distiller(palette="Greens", direction=1) + 
-  facet_wrap(~YEAR)
+inx.rm <- (ssf.evi$evi < 0) + (ssf.evi$evi > 1.0) > 0
+ssf.evi$evi[inx.rm] <- NA
+ssf.evi <- ssf.evi %>% dplyr::select(-time, -season)
+hist(ssf.evi$evi[!inx.rm], breaks=100)
 
-hmm.ssf.dat <- data
+
+# ******************************************************************************
+#                              LAST CHECK
+# ******************************************************************************
+
+# while we're working with landsat 8 we have to be mindful of availability
+hmm.ssf <- cbind(ssf.track, ssf.lc, ssf.evi) %>% 
+  nog() %>% 
+  filter(time > as.Date('2014-01-01'),
+         time < as.Date('2022-10-01')) %>% 
+  mutate(cos_ta = cos(angle),
+         log_sl = log(step)) %>% 
+  rename(id=ID)
+
+
+# # make sure all points are within the dataset
+# crs='EPSG:32734'
+# aoi_projected = st_transform(aoi, crs=crs)
+# dat_projected = hmm.ssf.dat %>% 
+#   sample_n(50000) %>% 
+#   st_as_sf(coords=c('x', 'y'), crs='EPSG:32734') %>% 
+#   st_intersection(aoi_projected) %>% 
+#   mutate(YEAR = as.factor(year(time)))
+# ggplot() + 
+#   geom_sf(data=aoi_projected, fill=NA, color='black') +
+#   geom_sf(data=dat_projected, 
+#           mapping=aes(color=evi)) + 
+#   scale_color_distiller(palette="Greens", direction=1) + 
+#   facet_wrap(~YEAR)
 
 # ******************************************************************************
 #                               SAVE DATA FILES
 # ******************************************************************************
-save(hmm.ssf.dat, file=here(outdir, "hmm", "hmm_ssf.rdata"))
-
+setOutPath('hmm')
+save(hmm.ssf, file=outpath("hmm_ssf.rdata"))
 
 
 # EOF

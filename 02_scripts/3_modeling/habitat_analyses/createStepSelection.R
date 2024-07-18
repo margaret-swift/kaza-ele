@@ -36,7 +36,7 @@ source(here::here('02_scripts','00_support', 'random_steps.R'))
 # water distance raster
 setDataPaths('waters')
 wdr <- rast(rawpath('waterdist_evi_raster_dry_2017',
-                   'waterdist_evi_raster_dry_2017.tif'))
+                    'waterdist_evi_raster_dry_2017.tif'))
 
 # landcover data from WWF
 setDataPaths('landcover')
@@ -54,13 +54,12 @@ struc_levels <- c('nonveg', 'grassland','cropland',
 #                           CREATE USED/AVAILABLE DATA
 # ******************************************************************************
 
-
 # create tracks from xy data
 dat <- ele.df %>% 
   arrange(INX) %>% 
   filter(SEX=="F") %>% 
-  dplyr::select(INX, ID, X, Y, DATE.TIME, TOD, BURST,
-                SZN_2, SZN_4, SZN_6) %>%
+  dplyr::select(INX, ID, X, Y, DATE.TIME, TOD, BURST, COUNTRY, 
+                SZN_2, SZN_3, SZN_4) %>%
   rename(x_=X, y_=Y, t_=DATE.TIME)
 # x = sample_n(dat, 10000)
 # plot(x$x_, x$y_)
@@ -122,20 +121,21 @@ ssf.lc$category = x
 ssf.lc <- ssf.lc %>% 
   nog() %>% 
   left_join(lands.meta, by='category') %>% 
-  mutate(cover=factor(cover, levels=cover_levels),
-         vegetation = factor(vegetation, levels=veg_levels),
-         structure = factor(structure, levels=struc_levels),
-         category = factor(category)) %>% 
-    dplyr::select(cover, structure, vegetation)
+  mutate(COVER=factor(cover, levels=cover_levels),
+         VEGETATION = factor(vegetation, levels=veg_levels),
+         STRUCTURE = factor(structure, levels=struc_levels),
+         CATEGORY = factor(category),
+         CLASS = factor(class)) %>% 
+    dplyr::select(CATEGORY, CLASS, COVER, STRUCTURE, VEGETATION)
 
 # ******************************************************************************
 #                           EXTRACT WATER DISTANCE
 # ******************************************************************************
 
-# pull raster and extract covariates
-setDataPaths('waters')
-ssf.wat <- terra::extract(wdr$waterDist, xy.dat.utm) %>% 
-  rename(water_dist = waterDist)
+# # pull raster and extract covariates
+# setDataPaths('waters')
+# ssf.wat <- terra::extract(wdr$waterDist, xy.dat.utm) %>% 
+#   rename(water_dist = waterDist)
 
 
 # ******************************************************************************
@@ -144,17 +144,16 @@ ssf.wat <- terra::extract(wdr$waterDist, xy.dat.utm) %>%
 
 # set up dry and wet season boundaries
 setDataPaths('evi')
-slices <- c('10-01', '01-15', '05-01', '07-15')
-szn.df <- data.frame(start=slices, end=slices[c(2:4, 1)])
-row.names(szn.df) <- c('wet_1', 'wet_2', 'dry_1', 'dry_2')
+sl <- c('11-01', '01-01', '03-01', '05-01', '07-01', '09-01')
+szn.df <- data.frame(start=sl, end=sl[c(2:length(sl), 1)])
+row.names(szn.df) <- c('wet_1', 'wet_2', 'wet_3', 'dry_1', 'dry_2', 'dry_3')
 makeSznInt <- function(y1, y2, d1, d2) { 
   interval( as.Date(paste(y1, d1, sep="-")), 
             as.Date(paste(y2, d2, sep="-"))) 
 }
 
 # loop over rasters
-rastnames <- list.files(rawpath('evi_kaza_aoi', 'evi_kaza_aoi'), 
-                        full.names=TRUE)
+rastnames <- list.files(rawpath('evi_okavango'), full.names=TRUE)
 ssf.evi <- base.data %>% filter(!FLAGME)
 for (f in rastnames) {
   evi_rast <- rast(f)
@@ -175,6 +174,9 @@ for (f in rastnames) {
   ssf.evi$season[my.inx] <- szn
 }
 
+inx.rm <- (ssf.evi$evi < 0) + (ssf.evi$evi > 1.0) > 0
+ssf.evi$evi[inx.rm] <- NA
+# hist(ssf.evi$evi[!inx.rm], breaks=100)
 
 # ******************************************************************************
 #                             EXTRACT BURNED AREA
@@ -221,14 +223,18 @@ for (f in rastnames) {
 # TODO
 # remove alternate points that might cross a barrier
 
-ssf <- cbind(ssf.evi, ssf.lc, ssf.wat) %>% 
-  nog() %>% dplyr::select(-geometry) %>% 
+ssf <- cbind(ssf.evi, ssf.lc) %>% #, ssf.wat) %>% 
+  nog() %>% #dplyr::select(-geometry) %>%
   # while we're working with landsat 8 we have to be mindful of availability
-  filter(t1_ > as.Date('2013-05-01'),
+  filter(t1_ > as.Date('2014-01-01'),
          t1_ < as.Date('2022-10-01')) %>% 
   mutate(cos_ta = cos(ta_),
          log_sl = log(sl_))
 
+# check and see how many missing values we have now
+sum(is.na(ssf$evi)) / nrow(ssf)
+names(ssf) <- tolower(names(ssf))
+
 # save that s!
 setOutPath('habitat_selection')
-save(ssf, file=outpath('stepSelectionParamsHSF_DF.rdata'))
+save(ssf, file=outpath('ssf_data', 'stepSelectionParamsHSF_DF.rdata'))

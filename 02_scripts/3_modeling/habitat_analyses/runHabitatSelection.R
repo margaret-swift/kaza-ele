@@ -42,26 +42,25 @@ lands.meta <- read.csv(metapath('landcover_meta_2005.csv'))
 # ******************************************************************************
 data <- ssf %>% 
   filter(!is.na(evi), !is.na(structure)) %>% 
-  mutate(tod=factor(TOD),
+  mutate(tod=factor(tod),
          newstruc = fct_collapse(structure,
-             other = c('cropland', 'wetland', 'closed bush')))
+            other = c('cropland', 'wetland', 'closed bush')))
 plotByFactor <- function(fac, dat) {
-  dat$CATEGORY <- dat[,fac]
+  dat$CAT <- dat[,fac]
   ntot <- dat %>%
-    group_by(case_, CATEGORY) %>%
+    group_by(case_, CAT, country) %>%
     dplyr::summarize(tot=n())
   use_vs_avail <- dat %>%
-    group_by(case_, CATEGORY, newstruc) %>%
+    group_by(case_, CAT, country, newstruc) %>%
     dplyr::summarize(n=n()) %>%
-    left_join(ntot, by=c('case_', 'CATEGORY')) %>%
+    left_join(ntot, by=c('case_', 'CAT', 'country')) %>%
     mutate(prop = n / tot,
            label = paste0(round(prop * 100, 1), "%"))
-
   use_vs_avail %>%
-    ggplot(aes(x=CATEGORY, y=prop, label=label,
+    ggplot(aes(x=CAT, y=prop, label=label,
                fill = case_, group = case_)) +
     geom_col(position = position_dodge2()) +
-    facet_wrap(~newstruc, nrow=2)+
+    facet_wrap(~country+newstruc, nrow=2)+
     geom_text(size = 4, vjust = -0.25, position = position_dodge(width = 1)) +
     labs(x = fac, y = "Proportion")+
     scale_fill_brewer(palette = "Paired",
@@ -77,17 +76,18 @@ plotByFactor('season', data)
 plotByFactor('tod', data)
 
 ntot <- data %>%
-  group_by(case_) %>%
+  group_by(case_, country) %>%
   dplyr::summarize(tot=n())
 data %>%
-  group_by(case_, structure) %>%
+  group_by(case_, country, structure) %>%
   dplyr::summarize(n=n()) %>%
-  left_join(ntot, by=c('case_')) %>%
+  left_join(ntot, by=c('case_', 'country')) %>%
   mutate(prop = n / tot,
          label = paste0(round(prop * 100, 1), "%")) %>% 
   ggplot(aes(x=structure, y=prop, label=label,
              fill = case_, group = case_)) +
   geom_col(position = position_dodge2()) +
+  facet_wrap(~country, nrow=2) +
   geom_text(size = 4, vjust = -0.25, position = position_dodge(width = 1)) +
   labs(x = 'veg structure', y = "Proportion")+
   scale_fill_manual(values=c('darkgray', 'black'),
@@ -118,8 +118,9 @@ hsfFunc <- function(f) {
   fit
 }
 
-names(data) <- tolower(names(data))
 # regular SSF
+m0 <- hsfFunc('country*structure')
+gc()
 m1 <- hsfFunc('evi')
 gc()
 m2 <- hsfFunc('evi*season')
@@ -179,11 +180,11 @@ getCoefs <- function(hsf) {
 # ******************************************************************************
 
 # we are going with state x evi and water distance
-hsf <- m5#hsfFunc("evi*tod + structure*cos_ta + structure*log_sl")
+hsf <- hsfFunc('evi*season + season*structure')
 summary(hsf)
 coefs <- getCoefs(hsf)
 print(coefs)
-save(hsf, file=outpath('fitmodel.rdata'))
+save(hsf, file=outpath('fitmodelBN.rdata'))
 
 ..glm.ratio <- function(GLM.RESULT, DIGITS = 2, P.DIGITS = 3, CONF.LEVEL = 0.95) {
   ## Extract coefficients and confidence interval

@@ -38,12 +38,13 @@ source(here('02_scripts', 'utilities.R'))
 
 # loading data
 quickload()
-load(here(outdir, 'hmm', 'hmm_ssf.rdata'))
-data <- hmm.ssf.dat %>% 
-  mutate(
-    ID = id, # ugh lol
-    step = step / 1000) #tutorial is in km not m
-rm(hmm.ssf.dat)
+setOutPath('hmm')
+load(outpath('hmm_ssf.rdata'))
+data <- hmm.ssf %>% 
+  mutate(ID=id, #wtf i can't win
+         step = step / 1000) #tutorial is in km not m
+rm(hmm.ssf)
+gc()
 
 
 # ******************************************************************************
@@ -55,7 +56,7 @@ rm(hmm.ssf.dat)
 n_states <- 3
 
 # The formula should include movement variables as well as covariates (@avgar2016). 
-ssf_formula <- ~ step + log(step) + cos(angle) + evi
+ssf_formula <- ~ step + log_sl + cos_ta + evi
 
 # In hmmSSF, the model is fitted through numerical likelihood optimization (nlm()), 
 #   and starting values need to be chosen for the model parameters. Poorly chosen 
@@ -119,16 +120,16 @@ ssf_par0 <- matrix(c(betaLParams,
                    ncol = n_states, byrow = TRUE)
 
 # Getting an ERROR: function cannot be evaluated at initial parameters
-# # removed EVI for the moment but this might help? 
-# # https://stackoverflow.com/questions/69850540/error-in-optim-r-cannot-be-evaluated-at-initial-parameters
+#  removed EVI for the moment but this might help? 
+#  https://stackoverflow.com/questions/69850540/error-in-optim-r-cannot-be-evaluated-at-initial-parameters
 
+# remove EVI NA's and replace with the mean
 emean <- mean(data$evi)
-data1 <- data %>% 
-  mutate(evi = ifelse(is.na(evi), emean, evi))
+data1 <- data %>% mutate(evi = ifelse(is.na(evi), emean, evi))
 
 # Finally, we can pass the above to fit the model.
 mod <- hmmSSF(ssf_formula = ssf_formula,
               n_states = n_states,
               data = data1,
               ssf_par0 = ssf_par0)
-save(mod, here(outdir, 'hmm', 'hmm_ssf_mod.rdata'))
+save(mod, file=outpath('hmm_ssf_mod.rdata'))

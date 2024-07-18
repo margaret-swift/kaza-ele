@@ -7,11 +7,9 @@
 message("\nLoading all utility functions and parameters from utilities.R\n")
 
 message('Loading base packages for all projects...')
-pacman::p_load(tidyverse, patchwork, 
-               sf, lubridate,#rgdal,
-               tictoc, here)
+pacman::p_load(tidyverse, patchwork, sf, lubridate, tictoc, here)
 sf_use_s2(FALSE) #fix errors for spherical geometry
-message('   ...Packages loaded.')
+message('   ...Base packages loaded.')
 
 message("Setting base objects...")
 datadir <- here::here("01_data")
@@ -44,9 +42,9 @@ transp.theme <- theme(
   legend.background = element_rect(fill='transparent'),
   legend.box.background = element_rect(fill='transparent')
 )
-scalebar <- ggspatial::annotation_scale( pad_x = unit(0.05, "in"), 
-                                         pad_y = unit(0.05, "in"),
-                                         text_face="bold") 
+# scalebar <- ggspatial::annotation_scale( pad_x = unit(0.05, "in"), 
+#                                          pad_y = unit(0.05, "in"),
+#                                          text_face="bold") 
 message("   ...Plot params loaded.")
 
 # ******************************************************************************
@@ -150,14 +148,22 @@ quickload <- function(dnames = c('linear_features', 'boundaries')) {
   }
   for (dn in dnames) loadme(dn)
 }
+freemem <- function (verbose=FALSE) {
+  gc()
+  if (verbose) {
+    message("Garbage collected.")
+    print(gc())
+    mem <- as.numeric(system("awk '/MemFree/ {print $2}' /proc/meminfo", intern=TRUE))
+    mem.gb <- round(mem/1000000, 1)
+    message('Free system memory: ', mem.gb, ' GB')
+  }
+}
 makeDataPaths <- setDataPaths #because I always forget which is which
 message("   ...Basic functions loaded.")
 
 # ******************************************************************************
 #                             PLOTTING FUNCTIONS
 # ******************************************************************************
-
-
 
 zoomTo <- function(shape, buffer=2) {
   bb <- st_bbox(shape)
