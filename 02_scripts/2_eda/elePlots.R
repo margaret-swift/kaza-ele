@@ -141,13 +141,15 @@ plotPoints(47)
 
 
 # ******************************************************************************
-data=ele.df %>% 
-  # sample_frac(0.05) %>% 
-  mutate(SEX_SEASON=paste(SEX, SEASON))
-bb <- st_bbox(ele.df)
+ele <- ele.df %>% 
+  st_as_sf(coords=c('X', 'Y'), crs=32734, remove=FALSE) %>% 
+  st_transform(crs = st_crs(khau))
+data=ele %>% 
+  mutate(SEX_SEASON=paste(SEX, SZN_2))
+bb <- st_bbox(ele)
 p_country <- ggplot() + 
   # adding elephant data
-  geom_sf(data=data, 
+  geom_sf(data=data %>% sample_frac(0.5), 
           mapping = aes(color=COUNTRY), 
           alpha=0.1,
           size=1) +
@@ -160,12 +162,13 @@ p_country <- ggplot() +
   facet_wrap(~SEX_SEASON, nrow=1) +
   coord_sf(xlim=c(bb['xmin'], bb['xmax']),
            ylim=c(bb['ymin'], bb['ymax'])) +
-  scale_color_manual(values=c('gray', 'red')) +
+  scale_color_manual(values=c('#5dd6f5', '#18ab3f')) +
+  # scale_color_manual(values=c('gray', 'red')) +
   plot.theme + blank.theme +
   theme(legend.position="bottom")
 
 setOutPath('maps')
-path=outpath('ele_by_country.png')
+path=outpath('elephants', 'ele_by_country_bg.png')
 ggsave(filename=path, 
        plot=p_country, 
        width=21, height=13)

@@ -20,7 +20,7 @@ quickload() #loads common spatial features
 
 # load step selection dat
 setOutPath('habitat_selection')
-load(outpath('fitmodel.rdata'))
+load(outpath('fitmodelBN.rdata'))
 
 
 # ******************************************************************************
