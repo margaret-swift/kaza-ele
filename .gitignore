@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-/00_metadata/**
+/00_meta/**
 /01_data/**
 /01_data/geographic/processed/*
 /03_output/**

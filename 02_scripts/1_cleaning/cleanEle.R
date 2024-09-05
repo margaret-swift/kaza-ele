@@ -46,6 +46,12 @@ ele <- ele %>%
     START.COUNT = ifelse(is.na(START.COUNT), TRUE, START.COUNT)
   ) 
 
+## add an end count as well.
+END.INX = which(ele$START.COUNT) - 1
+END.INX = c(END.INX[-1], nrow(ele))
+ele$END.COUNT = FALSE
+ele$END.COUNT[END.INX] <- TRUE
+
 # distances etc are tied to next point, not the previous... I don't like that.
 tolag <- c("DIST", "DX", "DY", "DT", "DTS", "DTM", "R2N",
            "ABS.ANGLE", "REL.ANGLE", "SPEED")
@@ -66,9 +72,9 @@ fillHours <- function(ids, before=NULL, nhours="5 hours") {
 i=i+1
 df <- nog(ele) %>% filter(ID == i) %>%
   mutate(DATE.TIME = as.POSIXct(DATE.TIME))
-ggplot(df %>% filter(DTM < 500)) +
-  geom_bar(aes(x=INX, y=DTM, fill=FIXRATE), stat='identity') +
-  ggtitle(paste(i,df$SEX[1], df$COUNTRY[1])) + big.theme
+# ggplot(df %>% filter(DTM < 500)) +
+#   geom_bar(aes(x=INX, y=DTM, fill=FIXRATE), stat='identity') +
+#   ggtitle(paste(i,df$SEX[1], df$COUNTRY[1])) + big.theme
 # View(df)
 
 # BOTS notes
@@ -216,13 +222,14 @@ ele.df <- cbind(ele.df, latlon)
 ele.df$INX <- 1:nrow(ele.df)
 ele.df$YEAR = year(ele.df$DATE.TIME)
 ele.df <- ele.df %>% 
-  dplyr::select(INX, ID, BURST, START.COUNT,
+  dplyr::select(INX, ID, BURST, START.COUNT, END.COUNT,
                 ANIMAL_ID, SEX,
                 DATE.TIME, DATE, YEAR, SEASON, LON, LAT,
                 X, Y, DX, DY, DIST, DTM, R2N,
                 ABS.ANGLE, REL.ANGLE, MPS,
                 FIXRATE, COUNTRY, PROVIDER)
-
+ele.df$DIST[ele.df$END.COUNT] <- NA
+ele.df$DTM[ele.df$END.COUNT] <- NA
 
 # ******************************************************************************
 #                                       STS
@@ -231,3 +238,5 @@ ele.df <- ele.df %>%
 setDataPaths('elephant')
 save(ele.df, file=procpath('elephant.rdata'))
 st_write(ele.df, dsn=procpath('elephants.shp'))
+
+
