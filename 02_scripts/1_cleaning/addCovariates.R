@@ -142,10 +142,22 @@ ele.df$SZN_4 <- factor(
   ), levels=levels)
 
 # ******************************************************************************
-#                             Adding distance from water
+#                             Adding distance from rivers
 # ******************************************************************************
-# x = st_distance(ele.df, rivers)
-# ele.df$RIV_DIST_MIN = apply(x, 1, min)
+x = st_distance(ele.df, rivers)
+riv.dist.min = apply(x, 1, min)
+ele.df$RIV_DIST_MIN = riv.dist.min
+
+
+# ******************************************************************************
+#                       Adding distance from natural waterholes
+# ******************************************************************************
+# setDataPaths('waters')
+# nat.df <- terra::rast(rawpath('nat_rast_2017', 'waterdist_evi_raster_dry_2017.tif'))$waterDist
+# water.dist <- terra::extract(nat.df, ele.df)
+
+
+
 
 # ******************************************************************************
 #                                       STS

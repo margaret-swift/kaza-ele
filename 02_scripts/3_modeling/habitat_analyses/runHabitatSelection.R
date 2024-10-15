@@ -38,6 +38,24 @@ setDataPaths('landcover')
 lands.meta <- read.csv(metapath('landcover_meta_2005.csv'))
 
 
+
+## REAL QUICK FOR DNRE: find distance from waterholes
+setDataPaths('waters')
+nat.rast <- terra::rast(rawpath('nat_rast_2017', 'waterdist_evi_raster_dry_2017.tif'))$waterDist
+ext = terra::ext(nat.rast)
+x = ssf %>% st_as_sf(coords=c('x2_', 'y2_'), crs=32734)
+# poly <- data.frame(
+#   x=c(ext[1], ext[1], ext[2], ext[2], ext[1]),
+#   y=c(ext[3], ext[4], ext[4], ext[3], ext[3])
+# ) %>%
+#   st_as_sf(coords = c("x", "y"), crs = 32734) %>%
+#   summarise(geometry = st_combine(geometry)) %>%
+#   st_cast("POLYGON")
+# ssf.sub <- st_intersection(x, poly)
+water.dists <- terra::extract(nat.rast, ssf[,c(2,4)])
+setOutPath(c('habitat_selection', 'ssf_data'))
+save(water.dists, file=outpath('waterdists.rdata'))
+
 # ******************************************************************************
 #                             RUN CONDITIONAL HSF GLM
 # ******************************************************************************

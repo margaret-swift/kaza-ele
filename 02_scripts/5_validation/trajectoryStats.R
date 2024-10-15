@@ -216,12 +216,12 @@ bounds = base.df %>%
 rcolor <- 'yellow'
 ralpha <- 0.2
 balpha <- 0.5
-ccolor <- c('black','red')
-base <- ggplot(base.df, aes(x=time, group=burst, color=country)) + 
+ccolor <- c('black','red'); scolor <- c('purple', 'black')
+base <- ggplot(base.df, aes(x=time, group=burst, color=sex)) + 
   theme_bw() + big.theme + 
   facet_wrap(~sex+country, scales='free_y', nrow=2) +
   scale_x_continuous(limits=c(0, 50)) + 
-  scale_color_manual(values=ccolor)
+  scale_color_manual(values=scolor)
   # scale_color_manual(values=c('black', 'purple'))
 p1 <- base +
   geom_ribbon(data=bounds, 
@@ -260,7 +260,7 @@ ggplot(stat.norm, aes(x=country, y=value, fill=sex)) +
   geom_boxplot(position="dodge") +
   facet_wrap(~variable, nrow=2) +
   theme_bw() + big.theme + 
-  scale_fill_manual(values=c('purple', 'black'))
+  scale_fill_manual(values=scolor)
 #
 fname <- outpath('elephant_movement_statistics', 'means_by_sex_cntry.png')
 ggsave(file=fname, width=7, height=7)

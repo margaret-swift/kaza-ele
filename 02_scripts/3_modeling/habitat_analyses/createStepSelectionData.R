@@ -25,8 +25,8 @@ quickload('elephant')
 source(here::here('02_scripts','00_support', 'random_steps.R'))
 
 # loading existing file if need be
-# setOutPath('habitat_selection')
-# load(outpath('stepSelectionParamsHSF_DF.rdata'))
+setOutPath('habitat_selection')
+load(outpath('stepSelectionParamsHSF_DF.rdata'))
 
 
 # ******************************************************************************
